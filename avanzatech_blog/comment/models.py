@@ -27,3 +27,6 @@ class Comment(BaseModel):
             raise ValueError(_("Invalid_status"))
 
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Comment {self.id} by {self.user.username}"
