@@ -12,10 +12,10 @@ class Post(BaseModel):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     READ_PERMISSIONS_CHOICES = [(key,value) for (key,value) in READ_PERMISSIONS.items()]
     read_permission = models.CharField(
-        max_length=20, choices=READ_PERMISSIONS_CHOICES, default=READ_PERMISSIONS['public'])
+        max_length=20, choices=READ_PERMISSIONS_CHOICES, default='public')
 
     def save(self, *args, **kwargs):
-        if self.read_permission not in dict(READ_PERMISSIONS):
+        if self.read_permission not in READ_PERMISSIONS.keys():
             raise ValueError(_('Invalid Permission'))
 
         if self.title is None or self.title == "":
