@@ -14,7 +14,8 @@ class PostAdmin(ModelAdmin):
         ('Owner', {'fields': ('user',)}),
         ('Permission', {'fields': ('read_permission',)}),  
     )
-
+    
+    # Show owner instead of user
     def owner(self, obj):
         return obj.user.upper()
     
