@@ -14,13 +14,13 @@ class Comment(BaseModel):
 
     def save(self, *args, **kwargs):
  
-        if not self.user or self.user == "":
+        if not self.user:
             raise ValueError(_("Invalid User"))
 
-        if not self.post or self.post == "":
+        if not self.post:
             raise ValueError(_("Invalid Post"))
 
-        if self.content is None or self.content == "":
+        if not self.content:
             raise ValueError(_("Invalid Content"))
 
         if self.status not in STATUS.keys():

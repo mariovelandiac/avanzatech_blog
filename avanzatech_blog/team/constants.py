@@ -1,1 +1,1 @@
-SUPER_USER_TEAM_NAME = 'superusers'
+DEFAULT_TEAM_NAME = 'no-team'

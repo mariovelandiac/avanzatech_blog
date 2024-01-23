@@ -18,7 +18,7 @@ class Post(BaseModel):
         if self.read_permission not in READ_PERMISSIONS.keys():
             raise ValueError(_('Invalid Permission'))
 
-        if self.title is None or self.title == "":
+        if not self.title:
             raise ValueError(_('Title must be set'))
         super().save(*args, **kwargs)
 
