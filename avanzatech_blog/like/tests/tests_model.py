@@ -3,6 +3,7 @@ from like.tests.factories import LikeFactory
 from like.models import Like
 from user.tests.factories import CustomUserFactory
 from post.tests.factories import PostFactory
+from post.models import Post
 
 class LikeModelTests(TestCase):
 
@@ -106,4 +107,18 @@ class LikeModelTests(TestCase):
         # Act & Assert
         with self.assertRaises(ValueError):
             like_db.save()
+
+    def test_delete_a_post_should_delete_associated_like(self):
+        # Arrange
+        like = LikeFactory()
+        post = Post.objects.get(pk=like.post.pk)
+        current_likes = Like.objects.count()
+        expected_likes = 0
+        # Act
+        post.delete()
+        total_likes = Like.objects.all().count()
+        # Assert
+        self.assertEqual(total_likes, expected_likes)
+        self.assertNotEqual(current_likes, total_likes)
+
 
