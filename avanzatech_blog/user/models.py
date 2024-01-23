@@ -2,31 +2,30 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from team.models import Team
-from team.constants import SUPER_USER_TEAM_NAME
+from team.constants import DEFAULT_TEAM_NAME
 from django.core.exceptions import ObjectDoesNotExist
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
+    def _validate_parameters(self, email, password, extra_fields):
         if not email:
             raise ValueError(_('The Email must be set'))
 
-        if password is None:
+        if not password:
             raise ValueError(_('Password filed must be set'))
 
-        team = extra_fields.get('team')
-        if team is None or not isinstance(team, Team):
-            raise ValueError(_('Team field must be set correctly'))
-
         username = extra_fields.get('username')
-        if username is None or username == "":
+        if not username:
             raise ValueError(_('Username is required'))
 
-        try:
-            team_db = Team.objects.get(id=team.id)
-        except ObjectDoesNotExist:
-            raise ValueError(_('Invalid Team'))
+        team = extra_fields.get('team')
+        if not team or not isinstance(team, Team):
+            team_instance = Team.objects.get_or_create(name=DEFAULT_TEAM_NAME)
+            extra_fields['team'] = team_instance[0]
+
     
+    def create_user(self, email, password=None, **extra_fields):
+        self._validate_parameters(email, password, extra_fields)
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
@@ -34,27 +33,13 @@ class CustomUserManager(BaseUserManager):
         return user
 
     def create_superuser(self, email, password=None, **extra_fields):
-        
-        if not email:
-            raise ValueError(_('The Email must be set'))
-        
-        if password is None:
-            raise ValueError(_('Password filed must be set'))
-
-        username = extra_fields.get('username')
-        if username is None or username == "":
-            raise ValueError(_('Username is required'))    
-
+        self._validate_parameters(email, password, extra_fields)
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         if extra_fields.get('is_staff') is not True:
             raise ValueError(_('Superuser must have is_staff=True.'))
         if extra_fields.get('is_superuser') is not True:
             raise ValueError(_('Superuser must have is_superuser=True.'))
-
-        # Superuser Team
-        team_instance = Team.objects.get_or_create(name=SUPER_USER_TEAM_NAME)
-        extra_fields.setdefault('team', team_instance[0])
 
         return self.create_user(email, password, **extra_fields)
 

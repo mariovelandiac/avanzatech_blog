@@ -4,7 +4,7 @@ from team.tests.factories import TeamFactory
 from user.models import CustomUser
 from team.models import Team
 from team.tests.factories import TeamFactory
-from team.constants import SUPER_USER_TEAM_NAME
+from team.constants import DEFAULT_TEAM_NAME
 from psycopg.errors import NotNullViolation
 
 class UserModelTests(TestCase):
@@ -41,7 +41,7 @@ class UserModelTests(TestCase):
         # Arrange
         self.assertNotEqual(user.password, example_user['password'])
         self.assertEqual(user.email, example_user['email'])
-        self.assertEqual(user.team.name, SUPER_USER_TEAM_NAME)
+        self.assertEqual(user.team.name, DEFAULT_TEAM_NAME)
         self.assertIs(user.is_staff, True)
         self.assertIs(user.is_superuser, True)
 
@@ -103,33 +103,6 @@ class UserModelTests(TestCase):
             with self.assertRaises(ValueError):
                 CustomUser.objects.create_user(**data)
 
-    def test_insert_an_user_without_a_team_should_raise_an_error(self):
-            # Arrange
-            data = {
-                "email": "test@test.com",
-                "password": "password_test",
-                "username": "username",
-            }
-            # Act & Assert
-            with self.assertRaises(ValueError):
-                CustomUser.objects.create_user(**data)
-
-    def test_insert_an_user_with_an_non_existing_team_should_raise_an_error(self):
-        # Arrange
-        team = {
-            "id": 1,
-            "name": "test_name"
-        }
-        data = {
-            "email": "test@test.com",
-            "password": "password_test",
-            "username": "username",
-            "team": team
-        }
-        # Act & Assert
-        with self.assertRaises(ValueError):
-            CustomUser.objects.create_user(**data)
-
     def test_create_super_user_without_email_should_raise_an_error(self):
         # Arrange
         example_user = {
@@ -165,3 +138,12 @@ class UserModelTests(TestCase):
         # Act & Arrange
         with self.assertRaises(ValueError):
             CustomUser.objects.create_superuser(**example_user)
+
+    def test_create_a_user_without_team_is_assigned_to_a_default_team(self):
+        data = {
+            "username": "test",
+            "password": "password",
+            "email": "test@test.com",
+            "team": ""
+        }
+        CustomUser.objects.create_user(**data)
