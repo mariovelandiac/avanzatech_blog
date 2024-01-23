@@ -19,4 +19,4 @@ class Like(BaseModel):
         super().save(*args, **kwargs)
     
     def __str__(self):
-        return str(post) + str(user)
+        return f"{str(self.user)} likes the post {str(self.post)}"
