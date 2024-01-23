@@ -17,7 +17,7 @@ class PostAdmin(ModelAdmin):
     
     # Show owner instead of user
     def owner(self, obj):
-        return obj.user.upper()
+        return obj.user.username    
     
 
 
