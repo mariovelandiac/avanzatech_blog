@@ -4,17 +4,16 @@ from django.contrib.admin import ModelAdmin
 
 class CustomUserAdmin(ModelAdmin):
     # read
-    list_display = ('email', 'is_active', 'is_staff', 'is_superuser','team')
-    search_fields = ('email', 'team')
+    list_display = ('username','email', 'is_active', 'is_staff', 'is_superuser','team')
+    search_fields = ('username', 'email', 'team')
     list_filter = ('is_active', 'is_staff', 'is_superuser','team')
     ## create or edit
     fieldsets = (
-        ('Personal Info', {'fields': ('email','password')}),
+        ('Personal Info', {'fields': ('username', 'email','password')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
         ('Important dates', {'fields': ('last_login',)}),
         ('Team', {'fields': ('team',)}),  
     )
-
 
 
 

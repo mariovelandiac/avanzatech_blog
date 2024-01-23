@@ -3,6 +3,7 @@ from user.tests.factories import CustomUserFactory
 from team.tests.factories import TeamFactory
 from user.models import CustomUser
 from team.models import Team
+from team.tests.factories import TeamFactory
 from team.constants import SUPER_USER_TEAM_NAME
 from psycopg.errors import NotNullViolation
 
@@ -20,22 +21,20 @@ class UserModelTests(TestCase):
 
     def test_raw_password_is_not_stored_in_database(self):
         # Arrange
-        team = Team.objects.create(name='team_test')
-        example_user = {
-            "email": "test@test.com",
-            "password": "test_password",
-            "team": team
-        }
+        team = TeamFactory()
+        raw_password = "raw_password"
         # Act
-        user = CustomUser.objects.create_user(**example_user)
+        user = CustomUserFactory(password=raw_password)
+        db_password = CustomUser.objects.get(id=user.id).password
         # Arrange
-        self.assertNotEqual(user.password, example_user['password'])
+        self.assertNotEqual(db_password, raw_password)
 
     def test_create_super_user_successfully_in_database(self):
         # Arrange
         example_user = {
             "email": "test@test.com",
             "password": "test_password",
+            "username": "username",
         }
         # Act
         user = CustomUser.objects.create_superuser(**example_user)
@@ -83,6 +82,7 @@ class UserModelTests(TestCase):
             # Arrange
             team = TeamFactory()
             data = {
+                "username": "username",
                 "email": "",
                 "password": "test_password",
                 "team": team
@@ -96,7 +96,8 @@ class UserModelTests(TestCase):
             team = TeamFactory()
             data = {
                 "email": "test@test.com",
-                "team": team
+                "team": team,
+                "username": "username",
             }
             # Act & Assert
             with self.assertRaises(ValueError):
@@ -106,7 +107,8 @@ class UserModelTests(TestCase):
             # Arrange
             data = {
                 "email": "test@test.com",
-                "password": "password_test"
+                "password": "password_test",
+                "username": "username",
             }
             # Act & Assert
             with self.assertRaises(ValueError):
@@ -121,6 +123,7 @@ class UserModelTests(TestCase):
         data = {
             "email": "test@test.com",
             "password": "password_test",
+            "username": "username",
             "team": team
         }
         # Act & Assert
@@ -132,6 +135,7 @@ class UserModelTests(TestCase):
         example_user = {
             "email": "",
             "password": "test_password",
+            "username": "username"
         }
         # Act & Arrange
         with self.assertRaises(ValueError):
@@ -141,6 +145,22 @@ class UserModelTests(TestCase):
         # Arrange
         example_user = {
             "email": "test@test.com",
+            "username": "username"
+        }
+        # Act & Arrange
+        with self.assertRaises(ValueError):
+            CustomUser.objects.create_superuser(**example_user)
+
+    def test_user_without_username_should_raise_an_error(self):
+        # Arrange
+        with self.assertRaises(ValueError):
+            CustomUserFactory(username="")
+
+    def test_superuser_without_username_should_raise_an_error(self):
+        # Arrange
+        example_user = {
+            "email": "super@user.com",
+            "password": "test_password",
         }
         # Act & Arrange
         with self.assertRaises(ValueError):
