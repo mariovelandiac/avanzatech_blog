@@ -3,7 +3,8 @@ from user.tests.factories import CustomUserFactory
 from team.tests.factories import TeamFactory
 from user.models import CustomUser
 from team.models import Team
-from user.constants import SUPER_USER_TEAM_NAME
+from team.constants import SUPER_USER_TEAM_NAME
+from psycopg.errors import NotNullViolation
 
 class UserModelTests(TestCase):
 
@@ -78,4 +79,69 @@ class UserModelTests(TestCase):
         # Assert
         self.assertEqual(users_by_team, amount_users_in_team)
 
-    
+    def test_insert_an_user_without_an_email_should_raise_an_error(self):
+            # Arrange
+            team = TeamFactory()
+            data = {
+                "email": "",
+                "password": "test_password",
+                "team": team
+            }
+            # Act & Assert
+            with self.assertRaises(ValueError):
+                CustomUser.objects.create_user(**data)
+
+    def test_insert_an_user_without_password_should_raise_an_error(self):
+            # Arrange
+            team = TeamFactory()
+            data = {
+                "email": "test@test.com",
+                "team": team
+            }
+            # Act & Assert
+            with self.assertRaises(ValueError):
+                CustomUser.objects.create_user(**data)
+
+    def test_insert_an_user_without_a_team_should_raise_an_error(self):
+            # Arrange
+            data = {
+                "email": "test@test.com",
+                "password": "password_test"
+            }
+            # Act & Assert
+            with self.assertRaises(ValueError):
+                CustomUser.objects.create_user(**data)
+
+    def test_insert_an_user_with_an_non_existing_team_should_raise_an_error(self):
+        # Arrange
+        team = {
+            "id": 1,
+            "name": "test_name"
+        }
+        data = {
+            "email": "test@test.com",
+            "password": "password_test",
+            "team": team
+        }
+        # Act & Assert
+        with self.assertRaises(ValueError):
+            CustomUser.objects.create_user(**data)
+
+    def test_create_super_user_without_email_should_raise_an_error(self):
+        # Arrange
+        example_user = {
+            "email": "",
+            "password": "test_password",
+        }
+        # Act & Arrange
+        with self.assertRaises(ValueError):
+            CustomUser.objects.create_superuser(**example_user)
+
+    def test_create_super_user_without_password_should_raise_an_error(self):
+        # Arrange
+        example_user = {
+            "email": "test@test.com",
+        }
+        # Act & Arrange
+        with self.assertRaises(ValueError):
+            CustomUser.objects.create_superuser(**example_user)
