@@ -23,3 +23,8 @@ def logout_view(request):
     # Redirect to a login page, home page, or any other page
     return redirect('login_page')
 
+def success_page(request):
+    return render(request, 'success_page.html')
+
+def login_page(request):
+    return redirect('login')
