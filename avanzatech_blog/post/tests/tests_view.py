@@ -172,7 +172,7 @@ class PostUpdateViewTests(APITestCase):
         self.url = reverse('post-retrieve-update-delete', args=[self.post.id])
         self.client.force_authenticate(self.user)
 
-    def test_update_an_attribute_with_put_method_is_allowed_for_owner_of_the_post(self):
+    def test_update_the_title_with_put_method_is_allowed_for_owner_of_the_post(self):
         # Arrange
         new_title = "this is a new title"
         self.data['title'] = new_title
@@ -184,9 +184,10 @@ class PostUpdateViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertLess(last_modified_db, last_modified_db_after_request)
         self.assertEqual(Post.objects.get(id=self.post.id).title, new_title)
+        self.assertEqual(self.post.id, response.data.get('id'))
 
 
-    def test_update_an_attribute_with_patch_method_is_allowed_for_owner_of_the_post(self):
+    def test_update_the_title_with_patch_method_is_allowed_for_owner_of_the_post(self):
         # Arrange
         new_title = "this is a new title"
         data = {
@@ -202,7 +203,7 @@ class PostUpdateViewTests(APITestCase):
         self.assertEqual(Post.objects.get(id=self.post.id).title, new_title)
     
 
-    def test_update_an_attribute_with_put_method_is_forbidden_for_another_user_from_the_request_user(self):
+    def test_update_the_title_with_put_method_is_forbidden_for_another_user_from_the_request_user(self):
         # Arrange
         another_user = CustomUserFactory()
         self.client.force_authenticate(another_user)
@@ -217,7 +218,7 @@ class PostUpdateViewTests(APITestCase):
         self.assertEqual(last_modified_db, last_modified_db_after_request)
         self.assertNotEqual(Post.objects.get(id=self.post.id).title, new_title)
 
-    def test_update_an_attribute_with_patch_method_is_forbidden_for_another_user_from_the_request_user(self):
+    def test_update_the_title_with_patch_method_is_forbidden_for_another_user_from_the_request_user(self):
         # Arrange
         another_user = CustomUserFactory()
         self.client.force_authenticate(another_user)
@@ -234,7 +235,7 @@ class PostUpdateViewTests(APITestCase):
         self.assertEqual(last_modified_db, last_modified_db_after_request)
         self.assertNotEqual(Post.objects.get(id=self.post.id).title, new_title)
 
-    def test_update_an_attribute_with_put_method_and_is_admin_user_is_carried_out_successfully(self):
+    def test_update_the_title_with_put_method_and_is_admin_user_is_carried_out_successfully(self):
         # Arrange
         admin_user = CustomUserFactory(is_staff=True)
         self.client.force_authenticate(admin_user)
@@ -249,7 +250,7 @@ class PostUpdateViewTests(APITestCase):
         self.assertLess(last_modified_db, last_modified_db_after_request)
         self.assertEqual(Post.objects.get(id=self.post.id).title, new_title)
 
-    def test_update_an_attribute_with_patch_method_and_is_admin_user_is_carried_out_successfully(self):
+    def test_update_the_title_with_patch_method_and_is_admin_user_is_carried_out_successfully(self):
         # Arrange
         admin_user = CustomUserFactory(is_staff=True)
         self.client.force_authenticate(admin_user)
@@ -266,7 +267,7 @@ class PostUpdateViewTests(APITestCase):
         self.assertLess(last_modified_db, last_modified_db_after_request)
         self.assertEqual(Post.objects.get(id=self.post.id).title, new_title)
 
-    def test_update_read_permission_is_carried_out_successfully(self):
+    def test_update_put_read_permission_is_carried_out_successfully(self):
         # Arrange
         for permission in list(READ_PERMISSIONS.keys()):
             if permission != self.post.read_permission:
@@ -282,7 +283,7 @@ class PostUpdateViewTests(APITestCase):
         self.assertEqual(Post.objects.get(id=self.post.id).read_permission, self.data['read_permission'])
 
 
-    def test_update_read_permission_by_unauthorized_user_returns_403(self):
+    def test_update_put_read_permission_by_unauthorized_user_returns_403(self):
         # Arrange
         another_user = CustomUserFactory()
         self.client.force_authenticate(another_user)
@@ -299,7 +300,7 @@ class PostUpdateViewTests(APITestCase):
         self.assertEqual(last_modified_db, last_modified_db_after_request)
         self.assertNotEqual(Post.objects.get(id=self.post.id).read_permission, self.data['read_permission'])
 
-    def test_update_read_permission_by_admin_is_carried_out_successfully(self):
+    def test_update_put_read_permission_by_admin_is_carried_out_successfully(self):
         # Arrange
         another_user = CustomUserFactory(is_staff=True)
         self.client.force_authenticate(another_user)
@@ -315,3 +316,158 @@ class PostUpdateViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertLess(last_modified_db, last_modified_db_after_request)
         self.assertEqual(Post.objects.get(id=self.post.id).read_permission, self.data['read_permission'])
+
+    def test_update_patch_read_permission_is_carried_out_successfully(self):
+        # Arrange
+        new_permission = None
+        for permission in list(READ_PERMISSIONS.keys()):
+            if permission != self.post.read_permission:
+                new_permission = permission
+                break
+        data = {
+            "read_permission": new_permission
+        }
+        last_modified_db = Post.objects.get(id=self.post.id).last_modified
+        # Act
+        response = self.client.patch(self.url, data)
+        # Assert
+        last_modified_db_after_request = Post.objects.get(id=self.post.id).last_modified
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertLess(last_modified_db, last_modified_db_after_request)
+        self.assertEqual(Post.objects.get(id=self.post.id).read_permission, new_permission)
+
+    def test_update_patch_read_permission_by_unauthorized_user_returns_403(self):
+        # Arrange
+        another_user = CustomUserFactory()
+        self.client.force_authenticate(another_user)
+        new_permission = None
+        for permission in list(READ_PERMISSIONS.keys()):
+            if permission != self.post.read_permission:
+                new_permission = permission
+                break
+        data = {
+            "read_permission": new_permission
+        }
+        last_modified_db = Post.objects.get(id=self.post.id).last_modified
+        # Act
+        response = self.client.patch(self.url, data)
+        # Assert
+        last_modified_db_after_request = Post.objects.get(id=self.post.id).last_modified
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(last_modified_db, last_modified_db_after_request)
+        self.assertNotEqual(Post.objects.get(id=self.post.id).read_permission, new_permission)
+
+    def test_update_patch_read_permission_by_admin_is_carried_out_successfully(self):
+        # Arrange
+        another_user = CustomUserFactory(is_staff=True)
+        self.client.force_authenticate(another_user)
+        new_permission = None
+        for permission in list(READ_PERMISSIONS.keys()):
+            if permission != self.post.read_permission:
+                new_permission = permission
+                break
+        data = {
+            "read_permission": new_permission
+        }
+        last_modified_db = Post.objects.get(id=self.post.id).last_modified
+        # Act
+        response = self.client.patch(self.url, data)
+        # Assert
+        last_modified_db_after_request = Post.objects.get(id=self.post.id).last_modified
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertLess(last_modified_db, last_modified_db_after_request)
+        self.assertEqual(Post.objects.get(id=self.post.id).read_permission, new_permission)
+
+    def test_update_the_content_with_patch_method_is_allowed_for_owner_of_the_post(self):
+        # Arrange
+        new_content = "This is the new content"
+        self.data['content'] = new_content
+        last_modified_db = Post.objects.get(id=self.post.id).last_modified
+        # Act
+        response = self.client.patch(self.url, self.data)
+        # Assert
+        last_modified_db_after_request = Post.objects.get(id=self.post.id).last_modified
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertLess(last_modified_db, last_modified_db_after_request)
+        self.assertEqual(Post.objects.get(id=self.post.id).content, new_content)
+
+
+    def test_update_the_content_with_patch_method_is_allowed_for_owner_of_the_post(self):
+        # Arrange
+        new_content = "This is the new content"
+        data = {
+            "content": new_content
+        }
+        last_modified_db = Post.objects.get(id=self.post.id).last_modified
+        # Act
+        response = self.client.patch(self.url, data)
+        # Assert
+        last_modified_db_after_request = Post.objects.get(id=self.post.id).last_modified
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertLess(last_modified_db, last_modified_db_after_request)
+        self.assertEqual(Post.objects.get(id=self.post.id).content, new_content)
+    
+
+    def test_update_the_content_with_put_method_is_forbidden_for_another_user_from_the_request_user(self):
+        # Arrange
+        another_user = CustomUserFactory()
+        self.client.force_authenticate(another_user)
+        new_content = "This is the new content"
+        self.data['content'] = new_content
+        last_modified_db = Post.objects.get(id=self.post.id).last_modified
+        # Act
+        response = self.client.put(self.url, self.data)
+        # Assert
+        last_modified_db_after_request = Post.objects.get(id=self.post.id).last_modified
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(last_modified_db, last_modified_db_after_request)
+        self.assertNotEqual(Post.objects.get(id=self.post.id).content, new_content)
+
+    def test_update_the_content_with_patch_method_is_forbidden_for_another_user_from_the_request_user(self):
+        # Arrange
+        another_user = CustomUserFactory()
+        self.client.force_authenticate(another_user)
+        new_content = "This is the new content"
+        data = {
+            "content": new_content
+        }
+        last_modified_db = Post.objects.get(id=self.post.id).last_modified
+        # Act
+        response = self.client.patch(self.url, data)
+        # Assert
+        last_modified_db_after_request = Post.objects.get(id=self.post.id).last_modified
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(last_modified_db, last_modified_db_after_request)
+        self.assertNotEqual(Post.objects.get(id=self.post.id).content, new_content)
+
+    def test_update_the_content_with_put_method_and_is_admin_user_is_carried_out_successfully(self):
+        # Arrange
+        admin_user = CustomUserFactory(is_staff=True)
+        self.client.force_authenticate(admin_user)
+        new_content = "This is the new content"
+        self.data['content'] = new_content
+        last_modified_db = Post.objects.get(id=self.post.id).last_modified
+        # Act
+        response = self.client.put(self.url, self.data)
+        # Assert
+        last_modified_db_after_request = Post.objects.get(id=self.post.id).last_modified
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertLess(last_modified_db, last_modified_db_after_request)
+        self.assertEqual(Post.objects.get(id=self.post.id).content, new_content)
+
+    def test_update_the_content_with_patch_method_and_is_admin_user_is_carried_out_successfully(self):
+        # Arrange
+        admin_user = CustomUserFactory(is_staff=True)
+        self.client.force_authenticate(admin_user)
+        new_content = "This is the new content"
+        data = {
+            "content": new_content
+        }
+        last_modified_db = Post.objects.get(id=self.post.id).last_modified
+        # Act
+        response = self.client.patch(self.url, data)
+        # Assert
+        last_modified_db_after_request = Post.objects.get(id=self.post.id).last_modified
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertLess(last_modified_db, last_modified_db_after_request)
+        self.assertEqual(Post.objects.get(id=self.post.id).content, new_content)
