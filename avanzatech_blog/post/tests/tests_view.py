@@ -39,7 +39,6 @@ class PostAuthenticatedUserViewTests(APITestCase):
         self.data = {
             "title": "test_title",
             "content": "This is the content of the Post",
-            "user": self.user.id,
             "read_permission": "public"
         }
         self.url = reverse('post-list-create')
@@ -57,7 +56,6 @@ class PostAuthenticatedUserViewTests(APITestCase):
         self.assertNotEqual(response.data.get('id'), "")
         self.assertEqual(response.data['title'], self.data['title'])
         self.assertEqual(response.data['content'], self.data['content'])
-        self.assertEqual(response.data['user'], self.data['user'])
         self.assertEqual(response.data['read_permission'], self.data['read_permission'])
 
     def test_create_a_post_with_no_title_should_return_400(self):
@@ -121,25 +119,11 @@ class PostAuthenticatedUserViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Post.objects.count(), current_posts)
 
-    def test_create_a_post_without_associated_user_should_return_400(self):
-        # Arrange
-        self.data.pop('user')
-        current_posts = Post.objects.count()
+    def test_create_a_post_sets_automatically_user_id_from_the_request(self):
         # Act
         response = self.client.post(self.url, self.data)
         # Assert
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(Post.objects.count(), current_posts)
-
-    def test_create_a_post_with_an_invalid_user_should_return_400(self):
-        # Arrange
-        self.data['user'] = self.data['user'] + 1 # This user doesn't exist
-        current_posts = Post.objects.count()
-        # Act
-        response = self.client.post(self.url, self.data)
-        # Assert
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(Post.objects.count(), current_posts)
+        self.assertEqual(response.data.get('user'), self.user.id)
 
 
 
