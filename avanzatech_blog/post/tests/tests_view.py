@@ -53,6 +53,8 @@ class PostAuthenticatedUserViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Post.objects.count(), current_posts + 1)
         self.assertIsNotNone(response.data.get('id'))
+        self.assertIsNotNone(response.data.get('user'))
+        self.assertIsNotNone(response.data.get('created_at'))
         self.assertNotEqual(response.data.get('id'), "")
         self.assertEqual(response.data['title'], self.data['title'])
         self.assertEqual(response.data['content'], self.data['content'])

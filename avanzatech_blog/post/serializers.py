@@ -6,5 +6,5 @@ class PostListSerializer(serializers.ModelSerializer):
     read_permission = serializers.ChoiceField(choices=list(READ_PERMISSIONS.keys()))
     class Meta:
         model = Post
-        fields = ['id','title', 'content','user','read_permission']
-        read_only_fields = ('id','user')
+        fields = ['id','title', 'content','user','read_permission','created_at']
+        read_only_fields = ('id','user','created_at')
