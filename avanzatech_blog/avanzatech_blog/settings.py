@@ -146,3 +146,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 TEST_RUNNER = "redgreenunittest.django.runner.RedGreenDiscoverRunner"
 
 APPEND_SLASH = False
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+}
