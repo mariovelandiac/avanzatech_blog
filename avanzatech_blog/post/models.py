@@ -15,7 +15,7 @@ class Post(BaseModel):
         max_length=20, choices=READ_PERMISSIONS_CHOICES, default='public')
 
     def save(self, *args, **kwargs):
-        if self.read_permission not in READ_PERMISSIONS.keys():
+        if self.read_permission not in list(READ_PERMISSIONS.keys()):
             raise ValueError(_('Invalid Permission'))
 
         if not self.title:
