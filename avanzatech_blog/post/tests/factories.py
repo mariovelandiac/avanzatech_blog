@@ -7,7 +7,7 @@ from user.tests.factories import CustomUserFactory
 class PostFactory(DjangoModelFactory):
     
     user = SubFactory(CustomUserFactory)
-    title = Faker('word')
+    title = Faker('sentence')
     content = Faker('text')
     read_permission = Faker('random_element', elements = list(READ_PERMISSIONS.keys()))
 

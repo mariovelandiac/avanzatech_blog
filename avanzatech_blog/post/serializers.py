@@ -12,5 +12,5 @@ class PostListCreateSerializer(serializers.ModelSerializer):
 class PostRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
-        fields = ['id', 'title', 'content', 'read_permission', 'last_modified']
-        read_only_fields = ('last_modified',)
+        fields = ['id', 'title', 'content', 'read_permission','user', 'last_modified']
+        read_only_fields = ('last_modified', 'user')

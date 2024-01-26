@@ -1,12 +1,15 @@
+import random
 from django.forms.models import model_to_dict
 from rest_framework.test import APITestCase
 from rest_framework.reverse import reverse
 from rest_framework import status
-from user.tests.factories import CustomUserFactory
 from post.tests.factories import PostFactory
 from post.models import Post
-from post.constants import READ_PERMISSIONS
+from post.constants import READ_PERMISSIONS, ReadPermissions
+from user.tests.factories import CustomUserFactory
 from user.models import CustomUser
+from team.tests.factories import TeamFactory
+from common.paginator import TenResultsSetPagination
 
 class PostUnauthenticatedUserViewTests(APITestCase):
 
@@ -471,3 +474,394 @@ class PostUpdateViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertLess(last_modified_db, last_modified_db_after_request)
         self.assertEqual(Post.objects.get(id=self.post.id).content, new_content)
+
+class PostListViewTests(APITestCase):
+
+    def setUp(self):
+        self.team = TeamFactory()
+        self.user = CustomUserFactory(team=self.team)
+        self.url = reverse('post-list-create')
+        self.client.force_authenticate(self.user)
+        
+
+    def test_anonymous_user_only_can_list_public_posts(self):
+        # Arrange
+        self.client.logout()
+        expected_count = 3
+        PostFactory.create_batch(3, read_permission=ReadPermissions.PUBLIC)
+        PostFactory.create_batch(3, read_permission=ReadPermissions.AUTHENTICATED)
+        # Act
+        response = self.client.get(self.url)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        self.assertLessEqual(len(results), TenResultsSetPagination.page_size)
+        for post in results:
+            self.assertEqual(post['read_permission'], 'public')
+               
+
+    def test_admin_user_can_list_every_post_regardless_of_the_permission(self):
+        # Arrange
+        PostFactory.create_batch(2, read_permission=ReadPermissions.PUBLIC)
+        PostFactory.create_batch(2, read_permission=ReadPermissions.AUTHENTICATED)
+        PostFactory.create_batch(2, read_permission=ReadPermissions.TEAM)
+        PostFactory.create_batch(2, read_permission=ReadPermissions.AUTHOR)
+        expected_count = 8
+        admin_user = CustomUserFactory(is_staff=True)
+        self.client.force_authenticate(admin_user)
+        # Act
+        response = self.client.get(self.url)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        for post in results:
+            self.assertNotEqual(admin_user.id, post['user'])
+
+    def test_logged_in_user_can_list_public_and_authenticated_posts(self):
+        # Arrange
+        PostFactory.create_batch(2, read_permission=ReadPermissions.PUBLIC)
+        PostFactory.create_batch(3, read_permission=ReadPermissions.AUTHENTICATED)
+        expected_count = 5
+        # Act
+        response = self.client.get(self.url)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        for post in results:
+            self.assertNotEqual(post['read_permission'], ReadPermissions.TEAM)
+            self.assertNotEqual(post['read_permission'], ReadPermissions.AUTHOR)
+
+    def test_logged_in_user_can_list_team_posts(self):
+        # Arrange
+        other_user = CustomUserFactory(team=self.team)
+        PostFactory.create_batch(2, read_permission=ReadPermissions.TEAM, user=other_user)
+        PostFactory.create_batch(3, read_permission=ReadPermissions.TEAM, user=self.user)
+        expected_count = 5
+        # Act
+        response = self.client.get(self.url)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        for post in results:
+            self.assertNotEqual(post['read_permission'], ReadPermissions.AUTHOR)
+
+    def test_logged_in_user_can_list_same_team_posts_but_not_those_with_author_permission_by_other_user(self):
+        # Arrange
+        other_user = CustomUserFactory(team=self.team)
+        PostFactory.create_batch(3, read_permission=ReadPermissions.TEAM, user=other_user)
+        PostFactory.create_batch(2, read_permission=ReadPermissions.AUTHOR, user=other_user)
+        expected_count = 3
+        # Act
+        response = self.client.get(self.url)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        for post in results:
+            self.assertNotEqual(post['read_permission'], ReadPermissions.AUTHOR)
+
+    def test_logged_in_user_can_list_public_authenticated_team_and_self_posts(self):
+        # Arrange
+        other_user = CustomUserFactory(team=self.team)
+        PostFactory.create_batch(2, read_permission=ReadPermissions.PUBLIC)
+        PostFactory.create_batch(2, read_permission=ReadPermissions.AUTHENTICATED)
+        PostFactory.create_batch(2, read_permission=ReadPermissions.TEAM, user=other_user)
+        PostFactory.create_batch(2, read_permission=ReadPermissions.AUTHOR, user=self.user)
+        expected_count = 8
+        # Act
+        response = self.client.get(self.url)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+
+    def test_logged_in_user_can_list_team_and_self_posts(self):
+        # Arrange
+        other_user = CustomUserFactory(team=self.team)
+        PostFactory.create_batch(1, read_permission=ReadPermissions.TEAM, user=self.user)
+        PostFactory.create_batch(1, read_permission=ReadPermissions.TEAM, user=other_user)
+        PostFactory.create_batch(2, read_permission=ReadPermissions.AUTHOR, user=self.user)
+        expected_count = 4
+        # Act
+        response = self.client.get(self.url)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+
+    def test_logged_in_user_can_not_list_author_posts_by_other_user(self):
+        # Arrange
+        other_user = CustomUserFactory(team=self.team)
+        PostFactory.create_batch(2, read_permission=ReadPermissions.AUTHOR, user=self.user)
+        PostFactory.create_batch(2, read_permission=ReadPermissions.AUTHOR, user=other_user)
+        expected_count = 2
+        # Act
+        response = self.client.get(self.url)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+
+    def test_user_without_any_post_available_to_see_will_receive_empty_list(self):
+        # Arrange
+        user = CustomUserFactory()
+        self.client.force_authenticate(user)
+        PostFactory.create_batch(10, read_permission=ReadPermissions.AUTHOR)
+        url = reverse('post-list-create')
+        expected_count = 0
+        #  Act
+        response = self.client.get(url)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        self.assertLessEqual(len(results), expected_count)
+       
+class PostRetrieveViewTests(APITestCase):
+
+    def setUp(self):
+        self.team = TeamFactory()
+        self.user = CustomUserFactory(team=self.team)
+        self.client.force_authenticate(self.user)
+
+    def test_anonymous_user_can_retrieve_a_public_post(self):
+        # Arrange
+        self.client.logout()
+        post = PostFactory(read_permission=ReadPermissions.PUBLIC)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)  
+        self.assertEqual(response.data.get('user'), post.user.id)
+        self.assertEqual(response.data.get('read_permission'), post.read_permission)
+        self.assertEqual(response.data.get('id'), post.id)
+        self.assertEqual(response.data.get('title'), post.title)
+        self.assertEqual(response.data.get('content'), post.content)
+
+    def test_anonymous_user_can_not_retrieve_an_authenticated_post(self):
+        # Arrange
+        self.client.logout()
+        post = PostFactory(read_permission=ReadPermissions.AUTHENTICATED)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_anonymous_user_can_not_retrieve_an_team_post(self):
+        # Arrange
+        self.client.logout()
+        post = PostFactory(read_permission=ReadPermissions.TEAM)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+    def test_anonymous_user_can_not_retrieve_an_author_post(self):
+        # Arrange
+        self.client.logout()
+        post = PostFactory(read_permission=ReadPermissions.AUTHOR)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_logged_in_user_can_retrieve_a_public_post(self):
+        # Arrange
+        post = PostFactory(read_permission=ReadPermissions.PUBLIC)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data)
+        self.assertEqual(response.data.get('user'), post.user.id)
+        self.assertEqual(response.data.get('read_permission'), post.read_permission)
+        self.assertEqual(response.data.get('id'), post.id)
+        self.assertEqual(response.data.get('title'), post.title)
+        self.assertEqual(response.data.get('content'), post.content)
+
+    def test_logged_in_user_can_retrieve_an_authenticated_post(self):
+        # Arrange
+        post = PostFactory(read_permission=ReadPermissions.AUTHENTICATED)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data)
+        self.assertEqual(response.data.get('user'), post.user.id)
+        self.assertEqual(response.data.get('read_permission'), post.read_permission)
+        self.assertEqual(response.data.get('id'), post.id)
+        self.assertEqual(response.data.get('title'), post.title)
+        self.assertEqual(response.data.get('content'), post.content)
+
+    def test_logged_in_user_can_retrieve_a_team_post_when_the_user_is_in_the_same_team(self):
+        # Arrange
+        other_user = CustomUserFactory(team=self.team)
+        post = PostFactory(read_permission=ReadPermissions.TEAM, user=other_user)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data)
+        self.assertEqual(response.data.get('user'), post.user.id)
+        self.assertEqual(response.data.get('read_permission'), post.read_permission)
+        self.assertEqual(response.data.get('id'), post.id)
+        self.assertEqual(response.data.get('title'), post.title)
+        self.assertEqual(response.data.get('content'), post.content)
+
+    def test_logged_in_user_can_not_retrieve_a_team_post_if_the_user_does_not_belong_to_that_team(self):
+        # Arrange
+        other_user = CustomUserFactory()
+        post = PostFactory(read_permission=ReadPermissions.TEAM, user=other_user)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_logged_in_user_can_retrieve_an_author_post_when_the_user_wrote_it(self):
+        # Arrange
+        post = PostFactory(read_permission=ReadPermissions.AUTHOR, user=self.user)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data)
+        self.assertEqual(response.data.get('user'), post.user.id)
+        self.assertEqual(response.data.get('read_permission'), post.read_permission)
+        self.assertEqual(response.data.get('id'), post.id)
+        self.assertEqual(response.data.get('title'), post.title)
+        self.assertEqual(response.data.get('content'), post.content)
+
+    def test_logged_in_user_can_not_retrieve_an_author_post_when_the_user_does_not_wrote_it(self):
+        # Arrange
+        other_user = CustomUserFactory()
+        post = PostFactory(read_permission=ReadPermissions.AUTHOR, user=other_user)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_logged_in_user_can_retrieve_a_public_post_if_was_written_by_themselves(self):
+        # Arrange
+        post = PostFactory(read_permission=ReadPermissions.PUBLIC, user=self.user)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data)
+        self.assertEqual(response.data.get('user'), post.user.id)
+        self.assertEqual(response.data.get('read_permission'), post.read_permission)
+        self.assertEqual(response.data.get('id'), post.id)
+        self.assertEqual(response.data.get('title'), post.title)
+        self.assertEqual(response.data.get('content'), post.content)
+
+    def test_logged_in_user_can_retrieve_an_authenticated_post_if_was_written_by_themselves(self):
+        # Arrange
+        post = PostFactory(read_permission=ReadPermissions.AUTHENTICATED, user=self.user)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data)
+        self.assertEqual(response.data.get('user'), post.user.id)
+        self.assertEqual(response.data.get('read_permission'), post.read_permission)
+        self.assertEqual(response.data.get('id'), post.id)
+        self.assertEqual(response.data.get('title'), post.title)
+        self.assertEqual(response.data.get('content'), post.content)
+
+    def test_logged_in_user_can_retrieve_a_team_post_if_was_written_by_themselves(self):
+        # Arrange
+        post = PostFactory(read_permission=ReadPermissions.TEAM, user=self.user)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data)
+        self.assertEqual(response.data.get('user'), post.user.id)
+        self.assertEqual(response.data.get('read_permission'), post.read_permission)
+        self.assertEqual(response.data.get('id'), post.id)
+        self.assertEqual(response.data.get('title'), post.title)
+        self.assertEqual(response.data.get('content'), post.content)
+
+
+    def test_admin_user_can_retrieve_a_public_post(self):
+        # Arrange
+        admin_user = CustomUserFactory(is_staff=True)
+        self.client.force_authenticate(admin_user)
+        post = PostFactory(read_permission=ReadPermissions.PUBLIC)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data)
+        self.assertEqual(response.data.get('user'), post.user.id)
+        self.assertEqual(response.data.get('read_permission'), post.read_permission)
+        self.assertEqual(response.data.get('id'), post.id)
+        self.assertEqual(response.data.get('title'), post.title)
+        self.assertEqual(response.data.get('content'), post.content)
+
+    def test_admin_user_can_retrieve_an_authenticated_post(self):
+        # Arrange
+        admin_user = CustomUserFactory(is_staff=True)
+        self.client.force_authenticate(admin_user)
+        post = PostFactory(read_permission=ReadPermissions.AUTHENTICATED, user=self.user)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data)
+        self.assertEqual(response.data.get('user'), post.user.id)
+        self.assertEqual(response.data.get('read_permission'), post.read_permission)
+        self.assertEqual(response.data.get('id'), post.id)
+        self.assertEqual(response.data.get('title'), post.title)
+        self.assertEqual(response.data.get('content'), post.content)
+        
+
+    def test_admin_user_can_retrieve_a_team_post(self):
+        # Arrange
+        admin_user = CustomUserFactory(is_staff=True)
+        self.client.force_authenticate(admin_user)
+        post = PostFactory(read_permission=ReadPermissions.TEAM, user=self.user)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data)
+        self.assertEqual(response.data.get('user'), post.user.id)
+        self.assertEqual(response.data.get('read_permission'), post.read_permission)
+        self.assertEqual(response.data.get('id'), post.id)
+        self.assertEqual(response.data.get('title'), post.title)
+        self.assertEqual(response.data.get('content'), post.content)
+        
+
+    def test_admin_user_can_retrieve_an_author_post(self):
+        # Arrange
+        admin_user = CustomUserFactory(is_staff=True)
+        self.client.force_authenticate(admin_user)
+        post = PostFactory(read_permission=ReadPermissions.AUTHOR, user=self.user)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act & Assert
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data)
+        self.assertEqual(response.data.get('user'), post.user.id)
+        self.assertEqual(response.data.get('read_permission'), post.read_permission)
+        self.assertEqual(response.data.get('id'), post.id)
+        self.assertEqual(response.data.get('title'), post.title)
+        self.assertEqual(response.data.get('content'), post.content)
+
+        
+
