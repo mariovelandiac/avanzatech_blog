@@ -57,8 +57,10 @@ class RetrieveUpdateDeletePostView(RetrieveUpdateDestroyAPIView):
         # Edit and Delete permission
         if user != obj.user and self.request.method not in SAFE_METHODS:
             raise PermissionDenied("You do not have permission to perform this action.")
+        # Team permission but not in the same Team
         if obj.read_permission == ReadPermissions.TEAM and obj.user.team != user.team:
             raise NotFound
+        # Author Permission but not the same author
         if obj.read_permission == ReadPermissions.AUTHOR and obj.user != user:
             raise NotFound
         return obj
