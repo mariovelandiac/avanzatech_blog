@@ -1,12 +1,12 @@
 from factory.django import DjangoModelFactory
-from factory import Faker, SubFactory
+from factory import Faker, SubFactory, Sequence
 from user.models import CustomUser
 from team.tests.factories import TeamFactory
 
 class CustomUserFactory(DjangoModelFactory):
     
-    username = Faker('name')
-    email = Faker('email')
+    username = Sequence(lambda n: f'username{n}')
+    email = Sequence(lambda n: f'user{n}@example.com')
     password = Faker('password')
     team = SubFactory(TeamFactory)
 
