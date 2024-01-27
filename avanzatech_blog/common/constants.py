@@ -1,6 +1,11 @@
+class Status:
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+
 STATUS = {
-    "active": "resource is active",
-    "inactive": "resource is not active"
+    Status.ACTIVE: "resource is active",
+    Status.INACTIVE: "resource is not active"
 }
 
 STATUS_CHOICES = [(status, description) for (status, description) in STATUS.items()]
+
