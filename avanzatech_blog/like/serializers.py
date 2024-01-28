@@ -18,14 +18,10 @@ class LikeListCreateSerializer(serializers.ModelSerializer):
             if user != authenticated_user:
                 raise serializers.ValidationError("Invalid user in the payload.")
             return data
-        # If like already exists
-        if existing_like.is_active:
-            raise serializers.ValidationError("Current like already exists and is active")
-        else:
-            # Update Like Status    
-            data['is_active'] = True
-            self.instance = existing_like
-            return data
+        # If like already exists, toggle like status
+        data['is_active'] = not existing_like.is_active
+        self.instance = existing_like
+        return data
 
 
     class Meta:

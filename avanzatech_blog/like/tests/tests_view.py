@@ -45,7 +45,7 @@ class LikeCreateViewTests(APITestCase):
         response = self.client.post(self.url, self.data)
         expected_likes_db = 1
         # Assert
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Like.objects.count(), expected_likes_db)
 
     def test_logged_in_user_can_create_a_like_in_a_public_post(self):
@@ -241,18 +241,30 @@ class LikeCreateViewTests(APITestCase):
         # Arrange
         like = Like.objects.create(user=self.user, post=self.post, is_active=False)
         expected_likes_db = 1
-        print("this is the like status", like.is_active)
         # Act
         response = self.client.post(self.url, self.data)
-        total_likes = Like.objects.count()
         # Assert
+        total_likes = Like.objects.count()
         like_db = Like.objects.get(id=like.id)
-        print(list(Like.objects.all().values()))
-        print("this is the like status", like_db.is_active)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(total_likes, expected_likes_db)
         self.assertEqual(response.data['is_active'], like_db.is_active)
         self.assertIs(response.data['is_active'], True)
+
+    def test_a_logged_in_user_can_change_a_like_from_active_to_inactive(self):
+        # Arrange
+        like = Like.objects.create(user=self.user, post=self.post, is_active=True)
+        expected_likes_db = 1
+        # Act
+        response = self.client.post(self.url, self.data)
+        # Assert
+        total_likes = Like.objects.count()
+        like_db = Like.objects.get(id=like.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(total_likes, expected_likes_db)
+        self.assertEqual(response.data['is_active'], like_db.is_active)
+        self.assertIs(response.data['is_active'], False)
+
 
 class LikeListViewTests(APITestCase):
 
