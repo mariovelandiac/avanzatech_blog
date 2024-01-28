@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.core.exceptions import ValidationError
 from like.tests.factories import LikeFactory
 from like.models import Like
 from user.tests.factories import CustomUserFactory
@@ -16,31 +17,22 @@ class LikeModelTests(TestCase):
         self.assertEqual(like.id, like_db.id)
         self.assertEqual(like.user, like_db.user)
         self.assertEqual(like.post, like_db.post)
-        self.assertEqual(like.status, like_db.status)
+        self.assertEqual(like.is_active, like_db.is_active)
         self.assertEqual(like.created_at, like_db.created_at)
         self.assertEqual(like.last_modified, like_db.last_modified)
 
-    def test_an_invalid_status_should_raise_an_error(self):
+    def test_an_invalid_is_active_should_raise_an_error(self):
         #Arrange
         post = PostFactory()
         user = CustomUserFactory()
         like = {
             "user": user,
             "post": post,
-            "status": "invalid"
+            "is_active": "invalid"
         }
         # Act & Assert
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValidationError):
             Like.objects.create(**like)
-
-    def test_update_an_status_with_one_too_long_should_raise_an_error(self):
-        #Arrange
-        like = LikeFactory()
-        like_db = Like.objects.get(id=like.id)
-        like_db.status = "this status is way too long for the database options"
-        # Act & Assert
-        with self.assertRaises(ValueError):
-            like_db.save()
 
 
     def test_create_a_like_with_an_invalid_user_should_raise_an_error(self):
@@ -55,7 +47,7 @@ class LikeModelTests(TestCase):
         like = {
             "user": user,
             "post": post,
-            "status": "invalid status"
+            "is_active": "invalid is_active"
         }
         # Act & Assert
         with self.assertRaises(ValueError):
@@ -72,40 +64,40 @@ class LikeModelTests(TestCase):
         like = {
             "user": user,
             "post": post,
-            "status": "invalid status"
+            "is_active": "invalid is_active"
         }
         # Act & Assert
         with self.assertRaises(ValueError):
             Like.objects.create(**like)
 
-    def test_create_a_like_set_status_active_by_default(self):
+    def test_create_a_like_set_status_is_true_by_default(self):
         # Arrange
         like = LikeFactory()
-        default_status = 'active'
+        default_is_active = True
         # Act
         like_db = Like.objects.get(id=like.id)
         # Assert
-        self.assertEqual(like_db.status, default_status)
+        self.assertEqual(like_db.is_active, default_is_active)
 
-    def test_update_a_like_status_to_inactive_should_save_new_status_in_database(self):
+    def test_update_a_like_is_active_to_inactive_should_save_new_is_active_in_database(self):
         # Arrange
         like = LikeFactory()
         like_db = Like.objects.get(id=like.id)
-        like_db.status = 'inactive'
+        like_db.is_active = False
         # Act
         like_db.save()
         # Assert
         like_db_updated = Like.objects.get(id=like.id)
-        self.assertEqual(like_db_updated.status, 'inactive')
+        self.assertIs(like_db_updated.is_active, False)
         self.assertLess(like.last_modified, like_db_updated.last_modified, "Last modified date not updated")
 
-    def test_update_a_like_status_to_invalid_status_should_raise_an_error(self):
+    def test_update_a_like_status_to_invalid_is_active_should_raise_an_error(self):
         # Arrange
         like = LikeFactory()
         like_db = Like.objects.get(id=like.id)
-        like_db.status = 'invalid status'
+        like_db.is_active = 'invalid is_active'
         # Act & Assert
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValidationError):
             like_db.save()
 
     def test_delete_a_post_should_delete_associated_like(self):
