@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.core.exceptions import ValidationError
 from common.constants import STATUS
 from comment.tests.factories import CommentFactory
 from comment.models import Comment
@@ -71,48 +72,28 @@ class CommentModelTests(TestCase):
         total_comments = Comment.objects.count()
         # Assert
         self.assertEqual(expected_comments, total_comments)
-        self.assertNotEqual(current_comments, total_comments)
-
-
-    def test_update_an_empty_status_should_raise_an_error(self):
-        # Arrange
-        comment = CommentFactory()
-        comment_db = Comment.objects.get(pk=comment.pk)
-        comment_db.status = ""
-        # Act & Arrange
-        with self.assertRaises(ValueError):
-            comment_db.save()
-        
+        self.assertNotEqual(current_comments, total_comments)        
 
     def test_update_a_invalid_status_should_raise_an_error(self):
         # Arrange
         comment = CommentFactory()
         comment_db = Comment.objects.get(pk=comment.pk)
-        comment_db.status = "invalid"
+        comment_db.is_active = "invalid"
         # Act & Arrange
-        with self.assertRaises(ValueError):
-            comment_db.save()
-
-    def test_update_a_none_status_should_raise_an_error(self):
-        # Arrange
-        comment = CommentFactory()
-        comment_db = Comment.objects.get(pk=comment.pk)
-        comment_db.status = None
-        # Act & Arrange
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValidationError):
             comment_db.save()
 
     def test_update_a_valid_status_should_modify_status_in_database(self):
         # Arrange
         comment = CommentFactory()
         comment_db = Comment.objects.get(pk=comment.pk)
-        new_status = 'inactive'
-        comment_db.status = new_status
+        new_status = False
+        comment_db.is_active = new_status
         # Act
         comment_db.save()
         comment_updated = Comment.objects.get(pk=comment.pk)
         # Assert
-        self.assertEqual(comment_updated.status, new_status)
+        self.assertEqual(comment_updated.is_active, new_status)
 
 
 

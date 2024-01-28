@@ -10,7 +10,7 @@ class Comment(BaseModel):
     content = models.TextField(blank=False)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)    
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
+    is_active = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
  
@@ -22,9 +22,6 @@ class Comment(BaseModel):
 
         if not self.content:
             raise ValueError(_("Invalid Content"))
-
-        if self.status not in STATUS.keys():
-            raise ValueError(_("Invalid_status"))
 
         super().save(*args, **kwargs)
 
