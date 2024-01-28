@@ -1,6 +1,6 @@
 class Status:
-    ACTIVE = "active"
-    INACTIVE = "inactive"
+    ACTIVE = True
+    INACTIVE = False
 
 STATUS = {
     Status.ACTIVE: "resource is active",
