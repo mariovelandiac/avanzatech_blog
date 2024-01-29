@@ -3,6 +3,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from like.models import Like
 from common.constants import Status
+from common.validators import validate_user
 
 
 
@@ -14,10 +15,7 @@ class LikeListCreateSerializer(serializers.ModelSerializer):
         read_only_fields = ('id','is_active')
     
     def validate_user(self, user):
-        authenticated_user = self.context['request'].user
-        if user != authenticated_user:
-            raise serializers.ValidationError("Invalid user in the payload.")
-        return user
+        return validate_user(user, serializer_self=self)
 
     def run_validation(self, data=serializers.empty):
         # Check the payload
