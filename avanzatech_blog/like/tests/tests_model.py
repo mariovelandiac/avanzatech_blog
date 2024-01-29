@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.core.exceptions import ValidationError
+from django.db.utils import IntegrityError
 from like.tests.factories import LikeFactory
 from like.models import Like
 from user.tests.factories import CustomUserFactory
@@ -112,5 +113,14 @@ class LikeModelTests(TestCase):
         # Assert
         self.assertEqual(total_likes, expected_likes)
         self.assertNotEqual(current_likes, total_likes)
+
+    def test_create_two_likes_with_same_user_id_and_post_id_should_raise_an_error(self):
+        # Arrange
+        post = PostFactory()
+        user = CustomUserFactory()
+        like = LikeFactory(user=user, post=post)
+        # Act & Assert
+        with self.assertRaises(IntegrityError):
+            LikeFactory(user=user, post=post)
 
 

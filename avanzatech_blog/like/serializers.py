@@ -4,25 +4,13 @@ from rest_framework.validators import UniqueTogetherValidator
 from like.models import Like
 from common.constants import Status
 
-class LikeListCreateSerializer(serializers.ModelSerializer):
+class LikeListCreateUpdateSerializer(serializers.ModelSerializer):
 
-    def validate(self, data):
-        post = data['post']
-        user = data['user']
-        # Check if an inactive like already exists for this post and user
-        existing_like = Like.objects.filter(post=post, user=user).first()
-
-        # If like does not exist
-        if existing_like is None:
-            authenticated_user = self.context['request'].user
-            if user != authenticated_user:
-                raise serializers.ValidationError("Invalid user in the payload.")
-            return data
-        # If like already exists, toggle like status
-        data['is_active'] = not existing_like.is_active
-        self.instance = existing_like
-        return data
-
+    def validate_user(self, user):
+        authenticated_user = self.context['request'].user
+        if user != authenticated_user:
+            raise serializers.ValidationError("Invalid user in the payload.")
+        return user
 
     class Meta:
         model = Like

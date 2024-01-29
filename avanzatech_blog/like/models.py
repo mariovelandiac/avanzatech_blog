@@ -14,3 +14,7 @@ class Like(BaseModel):
     
     def __str__(self):
         return f"{str(self.user)} likes the post {str(self.post)}"
+        
+    class Meta:
+        unique_together = ('user', 'post')
+        ordering = ["-created_at"]
