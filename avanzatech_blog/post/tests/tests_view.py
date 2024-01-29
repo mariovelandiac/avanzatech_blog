@@ -5,10 +5,14 @@ from rest_framework.reverse import reverse
 from rest_framework import status
 from post.tests.factories import PostFactory
 from post.models import Post
-from common.constants import READ_PERMISSIONS, ReadPermissions
 from user.tests.factories import CustomUserFactory
 from user.models import CustomUser
 from team.tests.factories import TeamFactory
+from like.models import Like
+from like.tests.factories import LikeFactory
+from comment.tests.factories import CommentFactory
+from comment.models import Comment
+from common.constants import READ_PERMISSIONS, ReadPermissions
 from common.paginator import TenResultsSetPagination
 
 class PostUnauthenticatedUserViewTests(APITestCase):
@@ -862,5 +866,90 @@ class PostRetrieveViewTests(APITestCase):
         self.assertEqual(response.data.get('title'), post.title)
         self.assertEqual(response.data.get('content'), post.content)
 
-        
+class PostDeleteViewTests(APITestCase):
+    
+    def setUp(self):
+        self.team = TeamFactory()
+        self.user = CustomUserFactory(team=self.team)
+        self.post = PostFactory(user=self.user, read_permission=ReadPermissions.PUBLIC)
+        self.url = "post-retrieve-update-delete"
+        self.client.force_authenticate(self.user)
+
+    def test_unauthenticated_user_can_not_delete_posts(self):
+        # Arrange
+        self.client.logout()
+        url = reverse(self.url, kwargs={"pk": self.post.id})
+        expected_count = 1
+        # Act
+        response = self.client.delete(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(Post.objects.count(), expected_count)
+
+    def test_logged_in_user_can_not_delete_a_post_that_does_not_belong_to_themselves(self):
+        # Arrange
+        other_user = CustomUserFactory()
+        self.client.force_authenticate(other_user)
+        url = reverse(self.url, kwargs={"pk": self.post.id})
+        expected_count = 1
+        # Act
+        response = self.client.delete(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(Post.objects.count(), expected_count)
+
+    def test_logged_in_user_can_delete_a_post_that_belong_to_themselves(self):
+        # Arrange
+        url = reverse(self.url, kwargs={"pk": self.post.id})
+        expected_count = 0
+        # Act
+        response = self.client.delete(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Post.objects.count(), expected_count)
+
+    def test_logged_in_user_delete_a_post_and_likes_and_comments_are_also_destroyed(self):
+        # Arrange
+        LikeFactory.create_batch(2, post=self.post)
+        CommentFactory.create_batch(2, post=self.post)
+        url = reverse(self.url, kwargs={"pk": self.post.id})
+        expected_count = 0
+        # Act
+        response = self.client.delete(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Post.objects.count(), expected_count)
+        self.assertEqual(Comment.objects.count(), expected_count)
+        self.assertEqual(Like.objects.count(), expected_count)
+
+    def test_admin_user_can_delete_any_post_regardless_of_permission(self):
+        # Arrange
+        admin_user = CustomUserFactory(is_staff=True)
+        self.client.force_authenticate(admin_user)
+        LikeFactory.create_batch(2, post=self.post)
+        CommentFactory.create_batch(2, post=self.post)
+        url = reverse(self.url, kwargs={"pk": self.post.id})
+        expected_count = 0
+        # Act
+        response = self.client.delete(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Post.objects.count(), expected_count)
+        self.assertEqual(Comment.objects.count(), expected_count)
+        self.assertEqual(Like.objects.count(), expected_count)
+
+    def test_logged_in_user_try_to_delete_a_non_existing_post_and_404_is_returned(self):
+        # Arrange
+        post = Post.objects.get(id=self.post.id)
+        post.delete()
+        url = reverse(self.url, kwargs={"pk": self.post.id})
+        expected_count = 0
+        # Act
+        response = self.client.delete(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Post.objects.count(), expected_count)
+
+
+
 
