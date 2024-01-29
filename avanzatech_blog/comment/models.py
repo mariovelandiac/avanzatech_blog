@@ -27,3 +27,6 @@ class Comment(BaseModel):
 
     def __str__(self):
         return f"Comment {self.id} by {self.user.username}"
+
+    class Meta:
+        ordering = ["-created_at"]

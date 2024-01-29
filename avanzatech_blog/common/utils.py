@@ -4,21 +4,19 @@ from .constants import ReadPermissions
 
 '''
     This utility function allow to get a queryset based on the model, 
-    the user and wheter if the model is post related or not
+    the user and whether if the model is post related or not
 '''
 def set_queryset_by_permissions(user, model_class, is_related=True):
-    
+    queryset = model_class.objects.all()
     # User is admin
     if user.is_staff:
-        return model_class.objects.all()
+        return queryset
 
     # Related fields
     field_name = "read_permission"
     if is_related:
         field_name = "post__" + field_name
-        queryset = model_class.objects.filter(is_active=True)
-    else:
-        queryset = model_class.objects.all()
+        queryset = queryset.filter(is_active=True)
 
     # Public posts
     if isinstance(user, AnonymousUser):
