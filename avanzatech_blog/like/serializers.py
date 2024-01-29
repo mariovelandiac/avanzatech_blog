@@ -43,5 +43,8 @@ class LikeListCreateSerializer(serializers.ModelSerializer):
 
 
 
-class LikeUpdateSerializer(serializers.ModelSerializer):
-    pass
+class LikeDeleteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Like
+        fields = ['id','user','post','is_active']
+        read_only_fields = ('id','user','post','is_active')
