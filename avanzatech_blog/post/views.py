@@ -31,7 +31,7 @@ class RetrieveUpdateDeletePostView(RetrieveUpdateDestroyAPIView):
 
     permission_classes = [IsAuthenticatedOrReadOnly]
     serializer_class = PostRetrieveUpdateDestroySerializer
-
+            
     def get_queryset(self):
         user = self.request.user   
         # List Public posts

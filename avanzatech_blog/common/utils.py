@@ -7,15 +7,22 @@ from .constants import ReadPermissions
     the user and wheter if the model is post related or not
 '''
 def set_queryset_by_permissions(user, model_class, is_related=True):
+    
+    # User is admin
+    if user.is_staff:
+        return model_class.objects.all()
+
+    # Related fields
     field_name = "read_permission"
     if is_related:
         field_name = "post__" + field_name
+        queryset = model_class.objects.filter(is_active=True)
+    else:
+        queryset = model_class.objects.all()
+
     # Public posts
     if isinstance(user, AnonymousUser):
-        return model_class.objects.filter(**{f"{field_name}": ReadPermissions.PUBLIC})
-    # User is admin
-    elif user.is_staff:
-        return model_class.objects.all()
+        return queryset.filter(**{f"{field_name}": ReadPermissions.PUBLIC})
     # User is authenticated and not admin
     else:
         filter_conditions = (
@@ -23,6 +30,6 @@ def set_queryset_by_permissions(user, model_class, is_related=True):
             Q(user_id=user.id, **{f"{field_name}": ReadPermissions.AUTHOR}) |
             Q(user__team=user.team, **{f"{field_name}": ReadPermissions.TEAM})
         )
-        return model_class.objects.filter(filter_conditions)
+        return queryset.filter(filter_conditions)
 
     
