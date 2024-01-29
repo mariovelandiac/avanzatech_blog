@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from post.constants import READ_PERMISSIONS
+from common.constants import READ_PERMISSIONS
 from post.models import Post
 
 class PostListCreateSerializer(serializers.ModelSerializer):

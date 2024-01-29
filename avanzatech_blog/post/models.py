@@ -1,7 +1,7 @@
 from common.models import BaseModel
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from post.constants import READ_PERMISSIONS
+from common.constants import READ_PERMISSIONS
 from user.models import CustomUser
 
 

@@ -1,7 +1,7 @@
 from factory.django import DjangoModelFactory
 from factory import Faker, SubFactory
 from post.models import Post
-from post.constants import READ_PERMISSIONS
+from common.constants import READ_PERMISSIONS
 from user.tests.factories import CustomUserFactory  
 
 class PostFactory(DjangoModelFactory):

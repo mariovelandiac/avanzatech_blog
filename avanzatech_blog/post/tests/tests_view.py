@@ -5,7 +5,7 @@ from rest_framework.reverse import reverse
 from rest_framework import status
 from post.tests.factories import PostFactory
 from post.models import Post
-from post.constants import READ_PERMISSIONS, ReadPermissions
+from common.constants import READ_PERMISSIONS, ReadPermissions
 from user.tests.factories import CustomUserFactory
 from user.models import CustomUser
 from team.tests.factories import TeamFactory
@@ -619,10 +619,9 @@ class PostListViewTests(APITestCase):
         user = CustomUserFactory()
         self.client.force_authenticate(user)
         PostFactory.create_batch(10, read_permission=ReadPermissions.AUTHOR)
-        url = reverse('post-list-create')
         expected_count = 0
         #  Act
-        response = self.client.get(url)
+        response = self.client.get(self.url)
         count = response.data.get('count')
         results = response.data.get('results')
         # Assert

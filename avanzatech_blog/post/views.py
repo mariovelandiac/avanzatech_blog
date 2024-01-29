@@ -6,7 +6,8 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from post.models import Post
 from post.serializers import PostListCreateSerializer, PostRetrieveUpdateDestroySerializer
-from post.constants import ReadPermissions
+from common.constants import ReadPermissions
+from common.utils import set_queryset_by_permissions
 from common.paginator import TenResultsSetPagination
 
 
@@ -22,15 +23,8 @@ class ListCreatePostView(ListCreateAPIView):
 
     def get_queryset(self): 
         user = self.request.user   
-        # List Public posts
-        if isinstance(user, AnonymousUser):
-            return Post.objects.filter(read_permission=ReadPermissions.PUBLIC)
-        # User is admin
-        if user.is_staff:
-            return Post.objects.all()
-        # User is authenticated and not admin
-        filter_conditions = Q(read_permission__in=[ReadPermissions.PUBLIC, ReadPermissions.AUTHENTICATED]) | Q(user_id=user.id, read_permission=ReadPermissions.AUTHOR) | Q(user__team=user.team, read_permission=ReadPermissions.TEAM)
-        return Post.objects.filter(filter_conditions)
+        queryset = set_queryset_by_permissions(user, Post, is_related=False)
+        return queryset
         
 
 class RetrieveUpdateDeletePostView(RetrieveUpdateDestroyAPIView):
