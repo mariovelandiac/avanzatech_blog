@@ -47,8 +47,8 @@ SECRET_KEY=secret_key
 ```
 **4**. Start the virtual environment with ```pipenv```
 ```sh
-# Create virtual environment
-$ pipenv --python $(which python3) install
+# Create virtual environment with Pipfile.lock
+$ pipenv install --ignore-pipfile
 ```
 This project requires Python version 3.10 or 3.11. If you don't have either of these versions in your local environment, you can install it with:
 ```sh
