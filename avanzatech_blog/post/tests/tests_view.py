@@ -364,6 +364,17 @@ class PostUpdateViewTests(APITestCase):
         self.assertEqual(last_modified_db, last_modified_db_after_request)
         self.assertNotEqual(Post.objects.get(id=self.post.id).read_permission, new_permission)
 
+    def test_update_put_read_permission_with_an_invalid_permission_returns_400(self):
+        # Arrange
+        self.data['read_permission'] = 'invalid permission'
+        last_modified_db = Post.objects.get(id=self.post.id).last_modified
+        # Act
+        response = self.client.put(self.url, self.data)
+        # Assert
+        post_db = Post.objects.get(id=self.post.id)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotEqual(post_db.read_permission, self.data['read_permission'])
+
     def test_update_patch_read_permission_by_admin_is_carried_out_successfully(self):
         # Arrange
         another_user = CustomUserFactory(is_staff=True)
