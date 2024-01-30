@@ -777,7 +777,7 @@ class CommentDeleteViewTests(APITestCase):
     def test_unauthenticated_user_can_not_delete_a_active_public_comment(self):
         # Assert
         self.client.logout()
-        url = reverse(self.url, kwargs={"user": self.user.id, "post": self.post.id})
+        url = reverse(self.url, kwargs={"pk": self.comment.id})
         # Act
         response = self.client.delete(url)
         # Assert
@@ -785,7 +785,7 @@ class CommentDeleteViewTests(APITestCase):
 
     def test_a_logged_in_user_can_delete_a_comment_created_by_themselves(self):
         # Arrange
-        url = reverse(self.url, kwargs={"user": self.user.id, "post": self.post.id})
+        url = reverse(self.url, kwargs={"pk": self.comment.id})
         expected_count = 1
         # Act
         response = self.client.delete(url)
@@ -802,7 +802,7 @@ class CommentDeleteViewTests(APITestCase):
         # Arrange
         other_user = CustomUserFactory()
         self.client.force_authenticate(other_user)
-        url = reverse(self.url, kwargs={"user": self.user.id, "post": self.post.id})
+        url = reverse(self.url, kwargs={"pk": self.comment.id})
         expected_count = 1
         # Act
         response = self.client.delete(url)
@@ -819,7 +819,7 @@ class CommentDeleteViewTests(APITestCase):
         # Arrange
         admin_user = CustomUserFactory(is_staff=True)
         self.client.force_authenticate(admin_user)
-        url = reverse(self.url, kwargs={"user": self.user.id, "post": self.post.id})
+        url = reverse(self.url, kwargs={"pk": self.comment.id})
         expected_count = 1
         # Act
         response = self.client.delete(url)
@@ -831,11 +831,10 @@ class CommentDeleteViewTests(APITestCase):
         self.assertEqual(comment_db_count, expected_count)
         self.assertFalse(comment_db[0].is_active)
 
-    def test_logged_in_user_can_not_delete_comment_with_invalid_lookup_fields_post_invalid(self):
+    def test_logged_in_user_can_not_delete_comment_with_invalid_lookup_fields_invalid(self):
         # Arrange
-        url = reverse(self.url, kwargs={"user": self.user.id, "post": (self.post.id + 1)}) # This post does not exists
+        url = reverse(self.url, kwargs={"pk": self.comment.id + 1}) # This comment does not exists
         expected_count = 1
-        comment_db = Comment.objects.filter(user=self.user.id, post=self.post.id+1)
         # Act
         response = self.client.delete(url)
         # Assert
@@ -846,20 +845,6 @@ class CommentDeleteViewTests(APITestCase):
         self.assertEqual(comment_db_count, expected_count)
         self.assertTrue(comment_db[0].is_active)
 
-    def test_logged_in_user_can_not_delete_comment_with_invalid_lookup_fields_user_invalid(self):
-        # Arrange
-        url = reverse(self.url, kwargs={"user": self.user.id + 1, "post": (self.post.id)}) # This post does not exists
-        expected_count = 1
-        comment_db = Comment.objects.filter(user=self.user.id, post=self.post.id+1)
-        # Act
-        response = self.client.delete(url)
-        # Assert
-        comment_db_count = Comment.objects.count()
-        comment_db = Comment.objects.filter(id=self.comment.id)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertNotEqual(len(comment_db), 0)
-        self.assertEqual(comment_db_count, expected_count)
-        self.assertTrue(comment_db[0].is_active)
 
 
 

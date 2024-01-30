@@ -27,3 +27,6 @@ class DeleteCommentView(DestroyMixin, DestroyAPIView):
     serializer_class = CommentDeleteSerializer
     queryset = Comment.objects.all()
 
+    
+
+
