@@ -272,6 +272,19 @@ class CommentCreateViewTests(APITestCase):
         self.assertEqual(comment_db_count, expected_comments_db)
         self.assertIs(comment_db.is_active, not self.data['is_active'])
 
+    def test_logged_in_user_can_not_create_a_comment_in_a_valid_post_with_other_user_in_payload(self):
+        # Arrange
+        other_user = CustomUserFactory()
+        post = PostFactory(read_permission=ReadPermissions.PUBLIC, user=other_user)
+        self.data['post'] = post.id
+        self.data['user'] = other_user.id
+        expected_comments_db = 0   
+        # Act
+        response = self.client.post(self.url, self.data)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Comment.objects.count(), expected_comments_db)
+
 class CommentListViewTests(APITestCase):
 
     def setUp(self):
