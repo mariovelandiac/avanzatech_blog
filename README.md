@@ -93,6 +93,7 @@ Once you have created a superuser in the 8th step in the last section, you can n
 - Team
 - Comment
 - Like
+
 Additionally, from this panel, an admin user can be created by activating the `is_staff` attribute in the User-panel creation. To log in into the Django admin panel site you need to access
 ```text
 http://localhost:8000/admin/
@@ -209,9 +210,9 @@ http://localhost:8000/blog/
 ```text
 http://localhost:8000/blog/?page_size=23
 ```
-___
 - The order of the results is by the most recent post by default
 - The list posts operation returns an `HTTP 200` status code
+___
 ### Retrieve a Blog Post 🔍 <a name="retrieve-post"></a>
 - To retrieve a single blog post, send an `HTTP GET` request to this endpoint:
 ```text
@@ -436,4 +437,4 @@ To access a resource, `Avanzatech Blog` RESTful API implements the following rea
     **team**: Any user on the same team as the post author can access the post.
     **author**: Only the author can access the post.
 ### Made by
-[<img src="https://github.com/mariovelandiac.png" width=115><br><sub>Mario Velandia Ciendúa</sub>]
+[<img src="https://avatars.githubusercontent.com/u/103077180?v=4" width=115><br><sub>Mario Velandia Ciendúa</sub>]
