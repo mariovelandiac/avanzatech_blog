@@ -60,24 +60,19 @@ $ pipenv --python 3.x.y install
 # Start virtual environment
 $ pipenv shell
 ```
-**6**. Install dependencies
-```sh
-# Install dependencies
-$ pipenv install
-```
-**7**. Generate the migrations in the database and apply them
+**6**. Generate the migrations in the database and apply them
 ```sh
 # Generate migrations
 $ python manage.py makemigrations
 # Apply the migrations
 $ python manage.py migrate
 ```
-**8**. Create a superuser to access the admin panel. When you run this command, the prompt will ask you for an email, a password, and a username. The email and the password will be used for logging in to the site admin.
+**7**. Create a superuser to access the admin panel. When you run this command, the prompt will ask you for an email, a password, and a username. The email and the password will be used for logging in to the site admin.
 ```sh
 # Create Superuser
 $ python manage.py createsuperuser
 ```
-**9**. Now you can run the development server
+**8**. Now you can run the development server
 ```sh
 # Run development server
 $ python manage.py runserver
