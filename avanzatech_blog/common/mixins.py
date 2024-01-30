@@ -16,22 +16,6 @@ class DestroyMixin:
         instance.is_active = False
         instance.save()
 
-    def get_object(self):
-        user_request = self.request.user
-        # Check the kwargs
-        user_kwargs = self.kwargs.get('user')
-        post_kwargs = self.kwargs.get('post')
-        if user_kwargs is None or post_kwargs is None:
-            raise NotFound
-
-        # Find object
-        filter_kwargs = {
-            'user': user_kwargs,
-            'post': post_kwargs
-        }
-        queryset = self.get_queryset()
-        obj = get_object_or_404(queryset, **filter_kwargs)
-        return obj
 
     def get_queryset(self):
         assert self.queryset is not None, (
