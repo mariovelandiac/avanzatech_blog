@@ -437,4 +437,4 @@ To access a resource, `Avanzatech Blog` RESTful API implements the following rea
     **team**: Any user on the same team as the post author can access the post.
     **author**: Only the author can access the post.
 ### Made by
-[<img src="https://avatars.githubusercontent.com/u/103077180?v=4" width=115><br><sub>Mario Velandia Ciendúa</sub>]
+[<img src="https://avatars.githubusercontent.com/u/103077180?v=4" width=115><br><sub>Mario Velandia Ciendúa</sub>](https://github.com/mariovelandiac)
