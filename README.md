@@ -11,7 +11,7 @@ AvanzaTech Blog is a blogging platform built with Django in the backend, utilizi
 8. [Retrieve a Blog Post](#retrieve-a-blog-post-🔍)
 9. [Delete a Blog Post](#delete-a-blog-post-🗑️)
 10. [Create a Like for a Blog Post](#create-a-like-for-a-blog-post-❤️)
-11. [List Likes for a Blog Post](#list-likes-for-a-blog-post-👍)
+11. [List Likes for a Blog Post](#list-like)
 12. [Delete a Like from a Blog Post](#delete-a-like-from-a-blog-post-❌)
 13. [Create a Comment for a Blog Post](#create-a-comment-for-a-blog-post-💬)
 14. [List Comments for a Blog Post](#list-comments-for-a-blog-post-💬)
@@ -151,7 +151,7 @@ http://localhost:8000/blog/<int:pk>
 ### Retrieve a Blog Post 🔍
 ### Delete a Blog Post 🗑️
 ### Create a Like for a Blog Post ❤️
-### List Likes for a Blog Post 👍
+### List Likes for a Blog Post 👍 <a name="list-like"></a>
 ```text
 http://localhost:8000/like/?post=3&user=5
 ```
