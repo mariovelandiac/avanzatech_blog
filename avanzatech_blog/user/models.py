@@ -51,9 +51,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     #is_superuser = models.BooleanField(_("superuser status"), default=False)    
     #last_login = models.DateTimeField(_("last login"), blank=True, null=True)
     username = models.CharField(_("username"), max_length=64, unique=True,
-        help_text=_(
-            "Required. 64 characters or fewer. Letters, digits and @/./+/-/_ only."
-        ),
         error_messages={
             "unique": _("A user with that username already exists."),
         },
