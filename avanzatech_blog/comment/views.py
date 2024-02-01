@@ -18,7 +18,8 @@ class ListCreateCommentView(PerformCreateMixin, ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user   
-        queryset = set_queryset_by_permissions(user, Comment)
+        method = self.request.method
+        queryset = set_queryset_by_permissions(user, Comment, method, is_related=True)
         return queryset
 
 class DeleteCommentView(DestroyMixin, DestroyAPIView):

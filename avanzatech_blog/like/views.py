@@ -19,7 +19,8 @@ class ListCreateLikeView(PerformCreateMixin, ListCreateAPIView):
         
     def get_queryset(self):
         user = self.request.user   
-        queryset = set_queryset_by_permissions(user, Like)
+        method = self.request.method
+        queryset = set_queryset_by_permissions(user, Like, method, is_related=True)
         return queryset
 
     def get_object(self):
