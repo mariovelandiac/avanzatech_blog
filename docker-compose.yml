@@ -10,7 +10,7 @@ services:
       python3 avanzatech_blog/manage.py shell < setup.py && 
       python3 avanzatech_blog/manage.py runserver 0.0.0.0:8000"
     volumes:
-      - .:/avanzatech_blog
+      - .:/app
     ports:
       - "8000:8000"
     env_file:
@@ -19,6 +19,9 @@ services:
       - db
     networks:
       - mynetwork
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
 
   db:
     image: postgres:16

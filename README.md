@@ -2,26 +2,64 @@
 AvanzaTech Blog is a blogging platform built with Django in the backend, utilizing a RESTful architecture. The backend offers services such as user authentication, permission management for resource access, and CRUD operations for blog posts. Additionally, users can create, read, and delete likes and comments associated with the posts.
 ___
 ### Table of Contents 🗒️
-1. [Setup Environment](#setup)
-2. [Admin Panel](#admin)
-3. [Log In](#login)
-4. [Endpoints](#endpoints)
-5. [Create a Blog Post](#create-post)
-6. [Edit a Blog Post](#edit-post)
-7. [List Blog Posts](#list-post)
-8. [Retrieve a Blog Post](#retrieve-post)
-9. [Delete a Blog Post](#delete-post)
-10. [Create a Like for a Blog Post](#create-like)
-11. [List Likes for a Blog Post](#list-like)
-12. [Delete a Like from a Blog Post](#delete-like)
-13. [Create a Comment for a Blog Post](#create-comment)
-14. [List Comments for a Blog Post](#list-comment)
-15. [Delete a Comment from a Blog Post](#delete-comment)
-16. [Database Design](#db)
-17. [Edit Permissions](#edit-permissions)
-18. [Read Permissions](#read-permissions)
+1. [Run project in Docker Containers](#run-containers)
+2. [Setup Development Environment](#setup)
+3. [Admin Panel](#admin)
+4. [Log In](#login)
+5. [Endpoints](#endpoints)
+6. [Create a Blog Post](#create-post)
+7. [Edit a Blog Post](#edit-post)
+8. [List Blog Posts](#list-post)
+9. [Retrieve a Blog Post](#retrieve-post)
+10. [Delete a Blog Post](#delete-post)
+11. [Create a Like for a Blog Post](#create-like)
+12. [List Likes for a Blog Post](#list-like)
+13. [Delete a Like from a Blog Post](#delete-like)
+14. [Create a Comment for a Blog Post](#create-comment)
+15. [List Comments for a Blog Post](#list-comment)
+16. [Delete a Comment from a Blog Post](#delete-comment)
+17. [Database Design](#db)
+18. [Edit Permissions](#edit-permissions)
+19. [Read Permissions](#read-permissions)
 ___
-## Setup Environment 🛠️ <a name="setup"></a>
+## Run project in Docker Containers 🐳 <a name=run-containers></a>
+**1**. Clone the repository in your local environment
+```sh
+# Clone repository
+$ git clone git@github.com:mariovelandiac/avanzatech_blog
+```
+**2**. Create your own ```.env``` file based on ```.envexample``` file in the repository
+```sh
+# Copy the .envexample file to create your own .env file
+$ cp .envexample .env
+```
+Set the ```.env``` file with the required fields. The `DB_HOST` and `DB_PORT` fields are automatically configured during container building and execution
+```python
+# Database settings
+DB_NAME=avanzatech_blog_db
+DB_USER=username
+DB_PASSWORD=password
+DB_HOST=host
+DB_PORT=port
+SECRET_KEY=secret_key
+# Django superuser settings
+DJANGO_SUPERUSER_USERNAME=admin
+DJANGO_SUPERUSER_EMAIL=admin@admin.com
+DJANGO_SUPERUSER_PASSWORD=admin
+```
+**3**. Build and Run Docker containers
+```sh
+# Build and execute containers
+$ sudo docker compose build
+$ sudo docker compose up &
+```
+Now, you can access to admin panel with the superuser credentials provided in the `.env` file at:
+```text
+http://localhost:8000/admin/
+```
+You can then start making CRUD operations with the API'S [endpoints](#endpoints)
+___
+## Setup Development Environment 🛠️ <a name="setup"></a>
 **1**. Clone the repository in your local environment
 ```sh
 # Clone repository
@@ -36,14 +74,19 @@ CREATE DATABASE avanzatech_blog_db;
 # Copy the .envexample file to create your own .env file
 $ cp .envexample .env
 ```
-Set the ```.env``` file with the required fields. The database's user should have permissions to create tables and insert rows in the database
-```text
+Set the ```.env``` file with the required fields. The database's user should have permissions to create tables and insert rows in the database.
+```python
+# Database settings
 DB_NAME=avanzatech_blog_db
 DB_USER=username
 DB_PASSWORD=password
 DB_HOST=host
 DB_PORT=port
 SECRET_KEY=secret_key
+# Django superuser settings
+DJANGO_SUPERUSER_USERNAME=admin
+DJANGO_SUPERUSER_EMAIL=admin@admin.com
+DJANGO_SUPERUSER_PASSWORD=admin
 ```
 **4**. Start the virtual environment with ```pipenv```
 ```sh
@@ -67,10 +110,10 @@ $ python manage.py makemigrations
 # Apply the migrations
 $ python manage.py migrate
 ```
-**7**. Create a superuser to access the admin panel. When you run this command, the prompt will ask you for an email, a password, and a username. The email and the password will be used for logging in to the site admin.
+**7**. Create a superuser to access the admin panel. You can change credentials for superuser in the `.env` file.
 ```sh
 # Create Superuser
-$ python manage.py createsuperuser
+$ python manage.py createsuperuser --no-input
 ```
 **8**. Now you can run the development server
 ```sh
