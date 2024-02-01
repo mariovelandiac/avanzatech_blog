@@ -1,12 +1,14 @@
+from rest_framework.permissions import SAFE_METHODS
 from django.db.models import Q
 from django.contrib.auth.models import AnonymousUser
 from .constants import ReadPermissions
 
 '''
     This utility function allow to get a queryset based on the model, 
-    the user and whether if the model is post related or not
+    the user and whether if the model is post related or not. 
+    This handle function needs models that implements the attribute is_active as a boolean attribute
 '''
-def set_queryset_by_permissions(user, model_class, is_related=True):
+def set_queryset_by_permissions(user, model_class, method, is_related=True):
     queryset = model_class.objects.all()
     # User is admin
     if user.is_staff:
@@ -21,13 +23,17 @@ def set_queryset_by_permissions(user, model_class, is_related=True):
     # Public posts
     if isinstance(user, AnonymousUser):
         return queryset.filter(**{f"{field_name}": ReadPermissions.PUBLIC})
-    # User is authenticated and not admin
-    else:
-        filter_conditions = (
-            Q(**{f"{field_name}__in": [ReadPermissions.PUBLIC, ReadPermissions.AUTHENTICATED]}) |
-            Q(user_id=user.id, **{f"{field_name}": ReadPermissions.AUTHOR}) |
-            Q(user__team=user.team, **{f"{field_name}": ReadPermissions.TEAM})
-        )
-        return queryset.filter(filter_conditions)
+
+    # Update: User is authenticated and not admin
+    if method not in SAFE_METHODS:
+        return queryset.filter(user=user)
+
+    # Read: User is authenticated and not admin
+    filter_conditions = (
+        Q(**{f"{field_name}__in": [ReadPermissions.PUBLIC, ReadPermissions.AUTHENTICATED]}) |
+        Q(user_id=user.id, **{f"{field_name}": ReadPermissions.AUTHOR}) |
+        Q(user__team=user.team, **{f"{field_name}": ReadPermissions.TEAM})
+    )
+    return queryset.filter(filter_conditions)
 
     

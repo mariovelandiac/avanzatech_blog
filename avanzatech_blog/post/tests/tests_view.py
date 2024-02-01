@@ -25,7 +25,7 @@ class PostUnauthenticatedUserViewTests(APITestCase):
             "read_permission": "public"
         }
 
-    def test_an_unauthenticated_user_can_not_create_a_post_and_403_its_returned(self):
+    def test_a_unauthenticated_user_can_not_create_a_post_and_403_its_returned(self):
         # Arrange
         current_posts = Post.objects.count()
         expected_response = "not_authenticated"
@@ -38,7 +38,7 @@ class PostUnauthenticatedUserViewTests(APITestCase):
         self.assertEqual(auth_response, expected_response)
         self.assertEqual(Post.objects.count(), current_posts)
 
-    def test_an_authenticated_user_can_not_edit_a_post_with_put_and_403_is_returned(self):
+    def test_a_unauthenticated_user_can_not_edit_a_post_with_put_and_403_is_returned(self):
         # Arrange
         post = PostFactory(user=self.user)
         current_posts = Post.objects.count()
@@ -53,7 +53,7 @@ class PostUnauthenticatedUserViewTests(APITestCase):
         self.assertEqual(auth_response, expected_response)
         self.assertEqual(Post.objects.count(), current_posts)
 
-    def test_an_authenticated_user_can_not_edit_a_post_with_patch_and_403_is_returned(self):
+    def test_an_unauthenticated_user_can_not_edit_a_post_with_patch_and_403_is_returned(self):
         # Arrange
         post = PostFactory(user=self.user)
         current_posts = Post.objects.count()
@@ -221,7 +221,7 @@ class PostUpdateViewTests(APITestCase):
         response = self.client.put(self.url, self.data)
         # Assert
         last_modified_db_after_request = Post.objects.get(id=self.post.id).last_modified
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(last_modified_db, last_modified_db_after_request)
         self.assertNotEqual(Post.objects.get(id=self.post.id).title, new_title)
 
@@ -238,7 +238,7 @@ class PostUpdateViewTests(APITestCase):
         response = self.client.patch(self.url, data)
         # Assert
         last_modified_db_after_request = Post.objects.get(id=self.post.id).last_modified
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(last_modified_db, last_modified_db_after_request)
         self.assertNotEqual(Post.objects.get(id=self.post.id).title, new_title)
 
@@ -290,7 +290,7 @@ class PostUpdateViewTests(APITestCase):
         self.assertEqual(Post.objects.get(id=self.post.id).read_permission, self.data['read_permission'])
 
 
-    def test_update_put_read_permission_by_unauthorized_user_returns_403(self):
+    def test_update_put_read_permission_by_unauthorized_user_returns_404(self):
         # Arrange
         another_user = CustomUserFactory()
         self.client.force_authenticate(another_user)
@@ -303,7 +303,7 @@ class PostUpdateViewTests(APITestCase):
         response = self.client.put(self.url, self.data)
         # Assert
         last_modified_db_after_request = Post.objects.get(id=self.post.id).last_modified
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(last_modified_db, last_modified_db_after_request)
         self.assertNotEqual(Post.objects.get(id=self.post.id).read_permission, self.data['read_permission'])
 
@@ -343,7 +343,7 @@ class PostUpdateViewTests(APITestCase):
         self.assertLess(last_modified_db, last_modified_db_after_request)
         self.assertEqual(Post.objects.get(id=self.post.id).read_permission, new_permission)
 
-    def test_update_patch_read_permission_by_unauthorized_user_returns_403(self):
+    def test_update_patch_read_permission_by_unauthorized_user_returns_404(self):
         # Arrange
         another_user = CustomUserFactory()
         self.client.force_authenticate(another_user)
@@ -360,7 +360,7 @@ class PostUpdateViewTests(APITestCase):
         response = self.client.patch(self.url, data)
         # Assert
         last_modified_db_after_request = Post.objects.get(id=self.post.id).last_modified
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(last_modified_db, last_modified_db_after_request)
         self.assertNotEqual(Post.objects.get(id=self.post.id).read_permission, new_permission)
 
@@ -437,7 +437,7 @@ class PostUpdateViewTests(APITestCase):
         response = self.client.put(self.url, self.data)
         # Assert
         last_modified_db_after_request = Post.objects.get(id=self.post.id).last_modified
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(last_modified_db, last_modified_db_after_request)
         self.assertNotEqual(Post.objects.get(id=self.post.id).content, new_content)
 
@@ -454,7 +454,7 @@ class PostUpdateViewTests(APITestCase):
         response = self.client.patch(self.url, data)
         # Assert
         last_modified_db_after_request = Post.objects.get(id=self.post.id).last_modified
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(last_modified_db, last_modified_db_after_request)
         self.assertNotEqual(Post.objects.get(id=self.post.id).content, new_content)
 
@@ -906,7 +906,7 @@ class PostDeleteViewTests(APITestCase):
         # Act
         response = self.client.delete(url)
         # Assert
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(Post.objects.count(), expected_count)
 
     def test_logged_in_user_can_delete_a_post_that_belong_to_themselves(self):
