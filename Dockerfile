@@ -5,4 +5,6 @@ WORKDIR /app
 COPY . .
 RUN pip install pipenv; \
     pip install "psycopg[binary]"; \
-    pipenv install --system --deploy --ignore-pipfile
+    pipenv requirements > requirements.txt; \
+    pip install -r requirements.txt \
+    
