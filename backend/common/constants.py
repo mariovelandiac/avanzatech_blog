@@ -18,14 +18,14 @@ class AvailablePermissions:
     """
     Constants for different permissions.
     """
-    READ = 'Can read the post'
-    EDIT = 'Can read and edit the post'
-    NO_PERMISSION = 'No permission to the post'
+    READ = 'read'
+    EDIT = 'edit'
+    NO_PERMISSION = 'no permission'
 
 PERMISSIONS = {
-    AvailablePermissions.READ: 'Read',
-    AvailablePermissions.EDIT: 'Edit',
-    AvailablePermissions.NO_PERMISSION: 'No permission'
+    AvailablePermissions.READ: 'Can read the post',
+    AvailablePermissions.EDIT: 'Can read and edit the post',
+    AvailablePermissions.NO_PERMISSION: 'No permission to the post'
 }
 
 class Status:

@@ -1,0 +1,66 @@
+[
+    {
+        "model": "category.category",
+        "pk": 1,
+        "fields": {
+            "name": "public",
+            "description": "Anyone can access the post"
+        }
+    },
+    {
+        "model": "category.category",
+        "pk": 2,
+        "fields": {
+            "name": "authenticated",
+            "description": "Any authenticated user can access the post"
+        }
+    },
+    {
+        "model": "category.category",
+        "pk": 3,
+        "fields": {
+            "name": "team",
+            "description": "Any user on the same team as the post author can access the post"
+        }
+    },
+    {
+        "model": "category.category",
+        "pk": 4,
+        "fields": {
+            "name": "author",
+            "description": "Only the author can access the post"
+        }
+    },
+    {
+        "model": "permission.permission",
+        "pk": 1,
+        "fields": {
+            "name": "read",
+            "description": "Can read the post"
+        }
+    },
+    {
+        "model": "permission.permission",
+        "pk": 2,
+        "fields": {
+            "name": "edit",
+            "description": "Can read and edit the post"
+        }
+    },
+    {
+        "model": "permission.permission",
+        "pk": 3,
+        "fields": {
+            "name": "no permission",
+            "description": "No permission to the post"
+        }
+    },
+    {
+        "model": "team.team",
+        "pk": 1,
+        "fields": {
+            "name": "default team"
+        }
+    }
+]
+

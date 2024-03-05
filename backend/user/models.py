@@ -20,8 +20,8 @@ class CustomUserManager(BaseUserManager):
 
         team = extra_fields.get('team')
         if not team or not isinstance(team, Team):
-            team_instance = Team.objects.get_or_create(name=DEFAULT_TEAM_NAME)
-            extra_fields['team'] = team_instance[0]
+            team_instance = Team.objects.get(name=DEFAULT_TEAM_NAME)
+            extra_fields['team'] = team_instance
 
     
     def create_user(self, email, password=None, **extra_fields):
