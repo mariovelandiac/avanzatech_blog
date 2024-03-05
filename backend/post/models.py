@@ -8,8 +8,9 @@ from user.models import CustomUser
 class Post(BaseModel):
 
     title = models.CharField(max_length=255, null=False, blank=False)
-    content = models.TextField(blank=True)
+    content = models.TextField(null=False, blank=False)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    excerpt = models.CharField(max_length=200, null=False, default="")
     READ_PERMISSIONS_CHOICES = [(key,value) for (key,value) in READ_PERMISSIONS.items()]
     read_permission = models.CharField(
         max_length=20, choices=READ_PERMISSIONS_CHOICES, default='public')

@@ -2,6 +2,7 @@ from django.test import TestCase
 from post.tests.factories import PostFactory
 from user.tests.factories import CustomUserFactory
 from post.models import Post
+from common.constants import EXCERPT_LENGTH
 
 # Create your tests here.
 class PostModelTests(TestCase):
@@ -16,6 +17,8 @@ class PostModelTests(TestCase):
         self.assertEqual(post.title, post_db.title)
         self.assertEqual(post.user, post_db.user)
         self.assertEqual(post.content, post_db.content)
+        self.assertEqual(post.excerpt, post_db.excerpt)
+        self.assertEqual(len(post_db.excerpt), EXCERPT_LENGTH)
         self.assertEqual(post.created_at, post_db.created_at)
         self.assertEqual(post.last_modified, post_db.last_modified)
         self.assertEqual(post.read_permission, post_db.read_permission)

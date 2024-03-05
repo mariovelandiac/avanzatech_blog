@@ -24,4 +24,6 @@ STATUS = {
 
 STATUS_CHOICES = [(status, description) for (status, description) in STATUS.items()]
 
+EXCERPT_LENGTH = 200
+
 

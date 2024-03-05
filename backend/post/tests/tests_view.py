@@ -12,7 +12,7 @@ from like.models import Like
 from like.tests.factories import LikeFactory
 from comment.tests.factories import CommentFactory
 from comment.models import Comment
-from common.constants import READ_PERMISSIONS, ReadPermissions
+from common.constants import READ_PERMISSIONS, ReadPermissions, EXCERPT_LENGTH
 from common.paginator import TenResultsSetPagination
 
 class PostUnauthenticatedUserViewTests(APITestCase):
@@ -77,7 +77,7 @@ class PostCreateViewTests(APITestCase):
         self.user = CustomUserFactory()
         self.data = {
             "title": "test_title",
-            "content": "This is the content of the Post",
+            "content": "In the vast expanse of the digital realm, where data flows like rivers and information is the currency of the age, a new frontier emerges. This frontier is not of the physical world, but of the digital, where the boundaries between the tangible and the intangible blur. It is a place where the lines between reality and virtuality are as thin as a whisper, and where the fabric of the universe is woven from the threads of code and binary. In this realm, the heroes are not knights in shining armor, but programmers and engineers, wizards of the code, who conjure up solutions from the ether of logic and creativity. They are the architects of the digital world, building bridges between the old and the new, between the familiar and the unknown. Their tools are not swords or shields, but algorithms and frameworks, their weapons are not physical but digital, their battles are not fought with steel but with bytes.",
             "read_permission": "public"
         }
         self.url = reverse('post-list-create')
@@ -88,6 +88,7 @@ class PostCreateViewTests(APITestCase):
         current_posts = Post.objects.count()
         # Act
         response = self.client.post(self.url, self.data)
+        post_db = Post.objects.get(id=response.data.get('id'))
         # Assert
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Post.objects.count(), current_posts + 1)
@@ -97,6 +98,8 @@ class PostCreateViewTests(APITestCase):
         self.assertNotEqual(response.data.get('id'), "")
         self.assertEqual(response.data['title'], self.data['title'])
         self.assertEqual(response.data['content'], self.data['content'])
+        self.assertEqual(response.data["excerpt"], self.data["content"][:EXCERPT_LENGTH])
+        self.assertLessEqual(len(response.data["excerpt"]), EXCERPT_LENGTH)
         self.assertEqual(response.data['read_permission'], self.data['read_permission'])
 
     def test_create_a_post_with_no_title_should_return_400(self):
@@ -119,25 +122,25 @@ class PostCreateViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Post.objects.count(), current_posts)
 
-    def test_create_a_post_with_no_content_should_return_201_and_the_post_is_created(self):
+    def test_create_a_post_with_no_content_should_return_400_and_the_post_is_not_created(self):
         # Arrange
         self.data['content'] = ""
         current_posts = Post.objects.count()
         # Act
         response = self.client.post(self.url, self.data)
         # Assert
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Post.objects.count(), current_posts + 1)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Post.objects.count(), current_posts)
 
-    def test_create_a_post_without_content_should_return_201_and_the_post_is_created(self):
+    def test_create_a_post_without_content_should_return_400_and_the_post_is_not_created(self):
         # Arrange
         self.data.pop('content')
         current_posts = Post.objects.count()
         # Act
         response = self.client.post(self.url, self.data)
         # Assert
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Post.objects.count(), current_posts + 1)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Post.objects.count(), current_posts)
 
 
     def test_create_a_post_without_read_permission_should_return_400(self):
@@ -490,6 +493,56 @@ class PostUpdateViewTests(APITestCase):
         self.assertLess(last_modified_db, last_modified_db_after_request)
         self.assertEqual(Post.objects.get(id=self.post.id).content, new_content)
 
+
+    def test_update_the_content_with_patch_method_and_is_admin_user_also_updates_the_excerpt(self):
+        # Arrange
+        admin_user = CustomUserFactory(is_staff=True)
+        self.client.force_authenticate(admin_user)
+        new_content = "This is the new content"
+        self.data['content'] = new_content
+        post_db = Post.objects.get(id=self.post.id)
+        # Act
+        response = self.client.put(self.url, self.data)
+        post_db_after_request = Post.objects.get(id=self.post.id)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(post_db.excerpt, post_db_after_request.excerpt)
+        self.assertEqual(post_db_after_request.excerpt, data["content"][:EXCERPT_LENGTH])
+        self.assertLessEqual(len(post_db_after_request.excerpt), EXCERPT_LENGTH)
+
+
+    def test_update_the_content_with_patch_method_and_is_admin_user_also_updates_the_excerpt(self):
+        # Arrange
+        admin_user = CustomUserFactory(is_staff=True)
+        self.client.force_authenticate(admin_user)
+        new_content = "This is the new content"
+        data = {
+            "content": new_content
+        }
+        post_db = Post.objects.get(id=self.post.id)
+        # Act
+        response = self.client.patch(self.url, data)
+        post_db_after_request = Post.objects.get(id=self.post.id)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(post_db.excerpt, post_db_after_request.excerpt)
+        self.assertEqual(post_db_after_request.excerpt, data["content"][:EXCERPT_LENGTH])
+        self.assertLessEqual(len(post_db_after_request.excerpt), EXCERPT_LENGTH)
+
+
+    def test_update_the_content_with_put_method_and_is_write_public_post_also_updates_the_excerpt(self):
+        pass
+
+    def test_update_the_content_with_put_method_and_is_write_authenticated_post_also_updates_the_excerpt(self):
+        pass
+
+    def test_update_the_content_with_put_method_and_is_write_team_post_also_updates_the_excerpt(self):
+        pass
+
+    def test_update_the_content_with_put_method_and_is_write_author_post_also_updates_the_excerpt(self):
+        pass
+
+
 class PostListViewTests(APITestCase):
 
     def setUp(self):
@@ -664,6 +717,8 @@ class PostRetrieveViewTests(APITestCase):
         self.assertEqual(response.data.get('id'), post.id)
         self.assertEqual(response.data.get('title'), post.title)
         self.assertEqual(response.data.get('content'), post.content)
+        self.assertEqual(response.data.get('excerpt'), post.excerpt)
+        self.assertLessEqual(len(response.data.get('excerpt')), EXCERPT_LENGTH)
 
     def test_anonymous_user_can_not_retrieve_an_authenticated_post(self):
         # Arrange
@@ -674,7 +729,7 @@ class PostRetrieveViewTests(APITestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_anonymous_user_can_not_retrieve_an_team_post(self):
+    def test_anonymous_user_can_not_retrieve_a_team_post(self):
         # Arrange
         self.client.logout()
         post = PostFactory(read_permission=ReadPermissions.TEAM)
@@ -706,6 +761,8 @@ class PostRetrieveViewTests(APITestCase):
         self.assertEqual(response.data.get('id'), post.id)
         self.assertEqual(response.data.get('title'), post.title)
         self.assertEqual(response.data.get('content'), post.content)
+        self.assertEqual(response.data.get('excerpt'), post.excerpt)
+        self.assertLessEqual(len(response.data.get('excerpt')), EXCERPT_LENGTH)
 
     def test_logged_in_user_can_retrieve_an_authenticated_post(self):
         # Arrange
@@ -720,6 +777,8 @@ class PostRetrieveViewTests(APITestCase):
         self.assertEqual(response.data.get('id'), post.id)
         self.assertEqual(response.data.get('title'), post.title)
         self.assertEqual(response.data.get('content'), post.content)
+        self.assertEqual(response.data.get('excerpt'), post.excerpt)
+        self.assertLessEqual(len(response.data.get('excerpt')), EXCERPT_LENGTH)
 
     def test_logged_in_user_can_retrieve_a_team_post_when_the_user_is_in_the_same_team(self):
         # Arrange
@@ -735,6 +794,8 @@ class PostRetrieveViewTests(APITestCase):
         self.assertEqual(response.data.get('id'), post.id)
         self.assertEqual(response.data.get('title'), post.title)
         self.assertEqual(response.data.get('content'), post.content)
+        self.assertEqual(response.data.get('excerpt'), post.excerpt)
+        self.assertLessEqual(len(response.data.get('excerpt')), EXCERPT_LENGTH)
 
     def test_logged_in_user_can_not_retrieve_a_team_post_if_the_user_does_not_belong_to_that_team(self):
         # Arrange
@@ -758,6 +819,8 @@ class PostRetrieveViewTests(APITestCase):
         self.assertEqual(response.data.get('id'), post.id)
         self.assertEqual(response.data.get('title'), post.title)
         self.assertEqual(response.data.get('content'), post.content)
+        self.assertEqual(response.data.get('excerpt'), post.excerpt)
+        self.assertLessEqual(len(response.data.get('excerpt')), EXCERPT_LENGTH)
 
     def test_logged_in_user_can_not_retrieve_an_author_post_when_the_user_does_not_wrote_it(self):
         # Arrange
@@ -781,6 +844,8 @@ class PostRetrieveViewTests(APITestCase):
         self.assertEqual(response.data.get('id'), post.id)
         self.assertEqual(response.data.get('title'), post.title)
         self.assertEqual(response.data.get('content'), post.content)
+        self.assertEqual(response.data.get('excerpt'), post.excerpt)
+        self.assertLessEqual(len(response.data.get('excerpt')), EXCERPT_LENGTH)
 
     def test_logged_in_user_can_retrieve_an_authenticated_post_if_was_written_by_themselves(self):
         # Arrange
@@ -795,6 +860,8 @@ class PostRetrieveViewTests(APITestCase):
         self.assertEqual(response.data.get('id'), post.id)
         self.assertEqual(response.data.get('title'), post.title)
         self.assertEqual(response.data.get('content'), post.content)
+        self.assertEqual(response.data.get('excerpt'), post.excerpt)
+        self.assertLessEqual(len(response.data.get('excerpt')), EXCERPT_LENGTH)
 
     def test_logged_in_user_can_retrieve_a_team_post_if_was_written_by_themselves(self):
         # Arrange
@@ -808,7 +875,9 @@ class PostRetrieveViewTests(APITestCase):
         self.assertEqual(response.data.get('read_permission'), post.read_permission)
         self.assertEqual(response.data.get('id'), post.id)
         self.assertEqual(response.data.get('title'), post.title)
-        self.assertEqual(response.data.get('content'), post.content)
+        self.assertEqual(response.data.get('content'), post.content)        
+        self.assertEqual(response.data.get('excerpt'), post.excerpt)
+        self.assertLessEqual(len(response.data.get('excerpt')), EXCERPT_LENGTH)
 
 
     def test_admin_user_can_retrieve_a_public_post(self):
@@ -825,7 +894,9 @@ class PostRetrieveViewTests(APITestCase):
         self.assertEqual(response.data.get('read_permission'), post.read_permission)
         self.assertEqual(response.data.get('id'), post.id)
         self.assertEqual(response.data.get('title'), post.title)
-        self.assertEqual(response.data.get('content'), post.content)
+        self.assertEqual(response.data.get('content'), post.content)        
+        self.assertEqual(response.data.get('excerpt'), post.excerpt)
+        self.assertLessEqual(len(response.data.get('excerpt')), EXCERPT_LENGTH)
 
     def test_admin_user_can_retrieve_an_authenticated_post(self):
         # Arrange
@@ -841,7 +912,9 @@ class PostRetrieveViewTests(APITestCase):
         self.assertEqual(response.data.get('read_permission'), post.read_permission)
         self.assertEqual(response.data.get('id'), post.id)
         self.assertEqual(response.data.get('title'), post.title)
-        self.assertEqual(response.data.get('content'), post.content)
+        self.assertEqual(response.data.get('content'), post.content)        
+        self.assertEqual(response.data.get('excerpt'), post.excerpt)
+        self.assertLessEqual(len(response.data.get('excerpt')), EXCERPT_LENGTH)
         
 
     def test_admin_user_can_retrieve_a_team_post(self):
@@ -858,7 +931,9 @@ class PostRetrieveViewTests(APITestCase):
         self.assertEqual(response.data.get('read_permission'), post.read_permission)
         self.assertEqual(response.data.get('id'), post.id)
         self.assertEqual(response.data.get('title'), post.title)
-        self.assertEqual(response.data.get('content'), post.content)
+        self.assertEqual(response.data.get('content'), post.content)        
+        self.assertEqual(response.data.get('excerpt'), post.excerpt)
+        self.assertLessEqual(len(response.data.get('excerpt')), EXCERPT_LENGTH)
         
 
     def test_admin_user_can_retrieve_an_author_post(self):
@@ -875,7 +950,9 @@ class PostRetrieveViewTests(APITestCase):
         self.assertEqual(response.data.get('read_permission'), post.read_permission)
         self.assertEqual(response.data.get('id'), post.id)
         self.assertEqual(response.data.get('title'), post.title)
-        self.assertEqual(response.data.get('content'), post.content)
+        self.assertEqual(response.data.get('content'), post.content)        
+        self.assertEqual(response.data.get('excerpt'), post.excerpt)
+        self.assertLessEqual(len(response.data.get('excerpt')), EXCERPT_LENGTH)
 
 class PostDeleteViewTests(APITestCase):
     

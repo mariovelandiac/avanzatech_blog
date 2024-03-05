@@ -19,6 +19,7 @@ class ListCreatePostView(ListCreateAPIView):
 
     # Set the user field in the serializer to the user making the request
     def perform_create(self, serializer):
+        serializer.create_or_update_excerpt()
         serializer.save(user=self.request.user)
 
     def get_queryset(self): 
@@ -37,6 +38,10 @@ class RetrieveUpdateDeletePostView(RetrieveUpdateDestroyAPIView):
         method = self.request.method
         queryset = set_queryset_by_permissions(user, Post, method, is_related=False)
         return queryset
+
+    def perform_update(self, serializer):
+        serializer.create_or_update_excerpt()
+        serializer.save()
 
 
 
