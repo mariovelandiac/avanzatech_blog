@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'team',
     'post',
     'like',
-    'comment'
+    'comment',
+    'category',
 ]
 
 MIDDLEWARE = [
