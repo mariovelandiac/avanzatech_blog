@@ -1,4 +1,49 @@
-# Permission Constant for Views
+class AvailableCategories:
+    """
+    Constants for different categories of views.
+    """
+    PUBLIC = 'public'
+    AUTHENTICATED = 'authenticated'
+    TEAM = 'team'
+    AUTHOR = 'author'
+
+CATEGORIES = {
+    AvailableCategories.PUBLIC: 'Anyone can access the post',
+    AvailableCategories.AUTHENTICATED: 'Any authenticated user can access the post',
+    AvailableCategories.TEAM: 'Any user on the same team as the post author can access the post',
+    AvailableCategories.AUTHOR: 'Only the author can access the post',
+}
+
+class AvailablePermissions:
+    """
+    Constants for different permissions.
+    """
+    READ = 'Can read the post'
+    EDIT = 'Can read and edit the post'
+    NO_PERMISSION = 'No permission to the post'
+
+PERMISSIONS = {
+    AvailablePermissions.READ: 'Read',
+    AvailablePermissions.EDIT: 'Edit',
+    AvailablePermissions.NO_PERMISSION: 'No permission'
+}
+
+class Status:
+    """
+    Constants for different status values.
+    """
+    ACTIVE = True
+    INACTIVE = False
+
+STATUS = {
+    Status.ACTIVE: "resource is active",
+    Status.INACTIVE: "resource is not active"
+}
+
+STATUS_CHOICES = [(status, description) for (status, description) in STATUS.items()]
+
+EXCERPT_LENGTH = 200
+
 class ReadPermissions:
     PUBLIC = 'public'
     AUTHENTICATED = 'authenticated'
@@ -13,17 +58,5 @@ READ_PERMISSIONS = {
     ReadPermissions.AUTHOR: 'Author: Only the author can access the post',
 }
 
-class Status:
-    ACTIVE = True
-    INACTIVE = False
-
-STATUS = {
-    Status.ACTIVE: "resource is active",
-    Status.INACTIVE: "resource is not active"
-}
-
-STATUS_CHOICES = [(status, description) for (status, description) in STATUS.items()]
-
-EXCERPT_LENGTH = 200
 
 
