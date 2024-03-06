@@ -42,6 +42,9 @@ class PostCategoryPermission(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"{self.post.title} - {self.category.name} - {self.permission.name}"
+    
     class Meta:
         unique_together = ('post', 'category')
 

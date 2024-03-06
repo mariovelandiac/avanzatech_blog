@@ -28,6 +28,13 @@ PERMISSIONS = {
     AvailablePermissions.NO_PERMISSION: 'No permission to the post'
 }
 
+DEFAULT_ACCESS_CONTROL = {
+    AvailableCategories.PUBLIC: AvailablePermissions.READ,
+    AvailableCategories.AUTHENTICATED: AvailablePermissions.READ,
+    AvailableCategories.TEAM: AvailablePermissions.EDIT,
+    AvailableCategories.AUTHOR: AvailablePermissions.EDIT
+}
+
 class Status:
     """
     Constants for different status values.
@@ -43,6 +50,7 @@ STATUS = {
 STATUS_CHOICES = [(status, description) for (status, description) in STATUS.items()]
 
 EXCERPT_LENGTH = 200
+WORDS_MOCK_TEXT = 100
 
 class ReadPermissions:
     PUBLIC = 'public'

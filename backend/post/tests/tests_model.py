@@ -1,14 +1,21 @@
 from django.test import TestCase
 from post.tests.factories import PostFactory
 from user.tests.factories import CustomUserFactory
-from post.models import Post
-from common.constants import EXCERPT_LENGTH
+from post.models import Post, PostCategoryPermission
+from category.tests.factories import CategoryFactory
+from permission.tests.factories import PermissionFactory
+from common.constants import EXCERPT_LENGTH, CATEGORIES, PERMISSIONS
 
 # Create your tests here.
 class PostModelTests(TestCase):
 
+    def setUp(self):
+        CategoryFactory.create_batch()
+        PermissionFactory.create_batch()
+
     def test_create_a_post_in_the_database_successfully(self):
         # Arrange
+        # Post with DEFAULT_ACCESS_CONTROL
         post = PostFactory()
         # Act
         post_db = Post.objects.get(id=post.id)
@@ -18,10 +25,32 @@ class PostModelTests(TestCase):
         self.assertEqual(post.user, post_db.user)
         self.assertEqual(post.content, post_db.content)
         self.assertEqual(post.excerpt, post_db.excerpt)
-        self.assertEqual(len(post_db.excerpt), EXCERPT_LENGTH)
+        self.assertLessEqual(len(post_db.excerpt), EXCERPT_LENGTH)
         self.assertEqual(post.created_at, post_db.created_at)
         self.assertEqual(post.last_modified, post_db.last_modified)
-        self.assertEqual(post.read_permission, post_db.read_permission)
+
+    def test_create_a_post_in_the_database_also_creates_four_post_category_permission(self):
+        # Arrange
+        post = PostFactory()
+        expected_categories = list(CATEGORIES.keys())
+        expected_permissions = list(PERMISSIONS.keys())
+        # Act
+        post_db = Post.objects.get(id=post.id)
+        post_category_permission = PostCategoryPermission.objects.filter(post=post_db)
+        # Assert
+        self.assertEqual(post_category_permission.count(), len(expected_categories))
+
+    def test_create_a_post_in_the_database_creates_valid_categories_and_permissions(self):
+        # Arrange
+        post = PostFactory()
+        # Act
+        post_db = Post.objects.get(id=post.id)
+        post_category_permission = PostCategoryPermission.objects.filter(post=post_db)
+        # Assert
+        for pcp in post_category_permission:
+            self.assertIn(pcp.category.name, CATEGORIES)
+            self.assertIn(pcp.permission.name, PERMISSIONS)
+        
 
     def test_create_a_post_without_an_associated_user_should_raise_an_error(self):
         # Arrange
