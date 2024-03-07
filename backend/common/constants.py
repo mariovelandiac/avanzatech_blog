@@ -1,4 +1,4 @@
-class AvailableCategories:
+class AccessCategory:
     """
     Constants for different categories of views.
     """
@@ -8,13 +8,13 @@ class AvailableCategories:
     AUTHOR = 'author'
 
 CATEGORIES = {
-    AvailableCategories.PUBLIC: 'Anyone can access the post',
-    AvailableCategories.AUTHENTICATED: 'Any authenticated user can access the post',
-    AvailableCategories.TEAM: 'Any user on the same team as the post author can access the post',
-    AvailableCategories.AUTHOR: 'Only the author can access the post',
+    AccessCategory.PUBLIC: 'Anyone can access the post',
+    AccessCategory.AUTHENTICATED: 'Any authenticated user can access the post',
+    AccessCategory.TEAM: 'Any user on the same team as the post author can access the post',
+    AccessCategory.AUTHOR: 'Only the author can access the post',
 }
 
-class AvailablePermissions:
+class AccessPermission:
     """
     Constants for different permissions.
     """
@@ -23,16 +23,16 @@ class AvailablePermissions:
     NO_PERMISSION = 'no permission'
 
 PERMISSIONS = {
-    AvailablePermissions.READ: 'Can read the post',
-    AvailablePermissions.EDIT: 'Can read and edit the post',
-    AvailablePermissions.NO_PERMISSION: 'No permission to the post'
+    AccessPermission.READ: 'Can read the post',
+    AccessPermission.EDIT: 'Can read and edit the post',
+    AccessPermission.NO_PERMISSION: 'No permission to the post'
 }
 
 DEFAULT_ACCESS_CONTROL = {
-    AvailableCategories.PUBLIC: AvailablePermissions.READ,
-    AvailableCategories.AUTHENTICATED: AvailablePermissions.READ,
-    AvailableCategories.TEAM: AvailablePermissions.EDIT,
-    AvailableCategories.AUTHOR: AvailablePermissions.EDIT
+    AccessCategory.PUBLIC: AccessPermission.READ,
+    AccessCategory.AUTHENTICATED: AccessPermission.READ,
+    AccessCategory.TEAM: AccessPermission.EDIT,
+    AccessCategory.AUTHOR: AccessPermission.EDIT
 }
 
 class Status:
