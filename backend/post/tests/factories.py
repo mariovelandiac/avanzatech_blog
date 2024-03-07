@@ -14,25 +14,6 @@ class PostFactory(DjangoModelFactory):
     title = Faker('sentence')
     content = Faker('sentence', nb_words=WORDS_MOCK_TEXT)
     excerpt = LazyAttribute(lambda obj: obj.content[:EXCERPT_LENGTH])
-    
-    @classmethod
-    def create(cls, **kwargs):
-        post = super().create(**kwargs)
-        if not kwargs.get('access_control'):
-            kwargs['access_control'] = DEFAULT_ACCESS_CONTROL
-        return PostFactory._set_access_control(post, kwargs['access_control'])
-
-    @classmethod
-    def _set_access_control(cls, post, access_control):
-        for category, permission in access_control.items():
-            post_category_permission = PostCategoryPermissionFactory(
-                post=post,
-                category=Category.objects.get(name=category),
-                permission=Permission.objects.get(name=permission)
-            )
-            post_category_permission.save()
-        return post
-
     class Meta:
         model = Post
 
@@ -43,5 +24,24 @@ class PostCategoryPermissionFactory(DjangoModelFactory):
 
     class Meta:
         model = PostCategoryPermission
+
+    @classmethod
+    def create(cls, **kwargs):
+        access = []
+        access_control = DEFAULT_ACCESS_CONTROL if not kwargs.get('access_control') else kwargs.get('access_control')
+        post = PostFactory.create() if not kwargs.get('post') else kwargs.get('post')
+        for category, permission in access_control.items():
+            category = Category.objects.get(name=category)
+            permission = Permission.objects.get(name=permission)
+            post_category_permission = PostCategoryPermission.objects.create(post=post, category=category, permission=permission)
+            access.append(post_category_permission)
+        return access
+    
+    @classmethod
+    def create_batch(cls, posts, **kwargs):
+        batch = []
+        for post in posts:
+            batch.append(cls.create(post=post, **kwargs))
+        return batch
 
     

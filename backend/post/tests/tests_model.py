@@ -1,5 +1,5 @@
 from django.test import TestCase
-from post.tests.factories import PostFactory
+from post.tests.factories import PostFactory, PostCategoryPermissionFactory
 from user.tests.factories import CustomUserFactory
 from post.models import Post, PostCategoryPermission
 from category.tests.factories import CategoryFactory
@@ -32,6 +32,7 @@ class PostModelTests(TestCase):
     def test_create_a_post_in_the_database_also_creates_four_post_category_permission(self):
         # Arrange
         post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory.create(post=post)
         expected_categories = list(CATEGORIES.keys())
         expected_permissions = list(PERMISSIONS.keys())
         # Act

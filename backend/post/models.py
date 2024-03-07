@@ -38,7 +38,7 @@ class Post(BaseModel):
         ordering = ["-created_at"]
 
 class PostCategoryPermission(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='post_category_permissions')
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
 
