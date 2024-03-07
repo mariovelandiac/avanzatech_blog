@@ -45,11 +45,11 @@ class CustomUserManager(BaseUserManager):
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     '''
-    Commented attributes are given by superclasses
+    This attributes are given by superclasses
+    password 
+    is_superuser
+    last_login
     '''
-    #password = models.CharField(_("password"), max_length=128)
-    #is_superuser = models.BooleanField(_("superuser status"), default=False)    
-    #last_login = models.DateTimeField(_("last login"), blank=True, null=True)
     username = models.CharField(_("username"), max_length=64, unique=True,
         error_messages={
             "unique": _("A user with that username already exists."),
@@ -60,6 +60,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_('email address'), unique=True)
     is_staff = models.BooleanField(_('staff status'), default=False)
     is_active = models.BooleanField(_('active'), default=True)
+    first_name = models.CharField(_('first name'), max_length=30, null=False, blank=False)
+    last_name = models.CharField(_('last name'), max_length=30, null=False, blank=False)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
 
     objects = CustomUserManager()
