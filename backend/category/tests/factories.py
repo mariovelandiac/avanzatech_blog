@@ -6,7 +6,7 @@ from common.constants import CATEGORIES
 
 class CategoryFactory(DjangoModelFactory):
     name = Faker('random_element', elements=CATEGORIES.keys())
-    description = Faker('text')
+    description = Faker('sentence')
 
     class Meta:
         model = Category
@@ -14,6 +14,5 @@ class CategoryFactory(DjangoModelFactory):
     @classmethod
     def create_batch(cls, **kwargs):
         names = CATEGORIES.keys()
-        description = list(CATEGORIES.values())
-        results = [CategoryFactory.create(name=name, description=description[i]) for i, name in enumerate(names)]
+        results = [cls.create(name=name, description=CATEGORIES[name]) for name in names]
         return results

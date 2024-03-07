@@ -6,7 +6,7 @@ from common.constants import PERMISSIONS
 
 class PermissionFactory(DjangoModelFactory):
     name = Faker('random_element', elements=PERMISSIONS.keys())
-    description = Faker('text')
+    description = Faker('sentence')
 
     class Meta:
         model = Permission
@@ -14,6 +14,5 @@ class PermissionFactory(DjangoModelFactory):
     @classmethod
     def create_batch(cls, **kwargs):
         names = PERMISSIONS.keys()
-        description = list(PERMISSIONS.values())
-        results = [PermissionFactory.create(name=name, description=description[i]) for i, name in enumerate(names)]
+        results = [cls.create(name=name, description=PERMISSIONS[name]) for name in names]
         return results
