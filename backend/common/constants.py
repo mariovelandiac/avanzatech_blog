@@ -52,6 +52,9 @@ STATUS_CHOICES = [(status, description) for (status, description) in STATUS.item
 EXCERPT_LENGTH = 200
 WORDS_MOCK_TEXT = 100
 
+CONTENT_MOCK = "If you really want to hear about it, the first thing you'll probably want to know is where I was born, and what my lousy childhood was like, and how my parents were occupied and all before they had me, and all that David Copperfield kind of crap, but I don't feel like going into it."
+
+
 class ReadPermissions:
     PUBLIC = 'public'
     AUTHENTICATED = 'authenticated'
