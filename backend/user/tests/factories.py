@@ -9,6 +9,8 @@ class CustomUserFactory(DjangoModelFactory):
     email = Sequence(lambda n: f'user{n}@example.com')
     password = Faker('password')
     team = SubFactory(TeamFactory)
+    first_name = Faker('first_name')
+    last_name = Faker('last_name')
 
     class Meta:
         model = CustomUser

@@ -13,7 +13,7 @@ from comment.tests.factories import CommentFactory
 from comment.models import Comment
 from category.tests.factories import CategoryFactory
 from permission.tests.factories import PermissionFactory
-from common.constants import EXCERPT_LENGTH, DEFAULT_ACCESS_CONTROL, ReadPermissions, READ_PERMISSIONS
+from common.constants import EXCERPT_LENGTH, DEFAULT_ACCESS_CONTROL, AccessCategory, AccessPermission
 from common.paginator import TenResultsSetPagination
 
 
@@ -46,10 +46,25 @@ class PostUnauthenticatedUserListViewTests(APITestCase):
         self.category_permission = DEFAULT_ACCESS_CONTROL
 
     
-    def test_unauthenticated_user_only_can_see_public_posts_when_posts_have_public_read_permission(self):
+    def test_unauthenticated_user_can_see_public_posts_when_posts_have_public_read_permission(self):
         # Arrange
         amount_posts = 4
-        self.category_permission["public"] = "read"
+        self.category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        posts = PostFactory.create_batch(amount_posts)
+        post_category_permission = PostCategoryPermissionFactory.create_batch(posts, category_permission=self.category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(amount_posts, count)
+        self.assertEqual(len(results), amount_posts)
+
+    def test_unauthenticated_user_can_see_public_posts_when_posts_have_public_edit_permission(self):
+        # Arrange
+        amount_posts = 4
+        self.category_permission[AccessCategory.PUBLIC] = AccessPermission.EDIT
         posts = PostFactory.create_batch(amount_posts)
         post_category_permission = PostCategoryPermissionFactory.create_batch(posts, category_permission=self.category_permission)
         # Act
@@ -62,22 +77,386 @@ class PostUnauthenticatedUserListViewTests(APITestCase):
         self.assertEqual(len(results), amount_posts)
 
 
-    def test_unauthenticated_user_receive_user_first_and_last_name_when_lists_public_posts(self):
+    def test_unauthenticated_user_can_not_list_public_post_when_post_have_not_public_permission(self):
         # Arrange
-        self.category_permission["public"] = "read"
-        post = PostFactory()
-        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.category_permission)
+        no_permission_public_posts = 2
+        self.category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        posts_no_permission = PostFactory.create_batch(no_permission_public_posts)
+        post_category_permission = PostCategoryPermissionFactory.create_batch(posts_no_permission, category_permission=self.category_permission)
+        read_public_posts = 2
+        self.category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        posts_read = PostFactory.create_batch(read_public_posts)
+        post_category_permission = PostCategoryPermissionFactory.create_batch(posts_read, category_permission=self.category_permission)
         # Act
         response = self.client.get(self.url)
         # Assert
-        results = response.data.get('results')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(results[0].get('user').get('first_name'), post.user.first_name)
-        self.assertEqual(results[0].get('user').get('last_name'), post.user.last_name)
-
+        self.assertEqual(response.data.get('count'), read_public_posts)
+        self.assertEqual(len(response.data.get('results')), read_public_posts)
         
 
+class PostUnauthenticatedUserRetrieveViewTests(APITestCase):
 
+    def setUp(self):
+        CategoryFactory.create_batch()
+        PermissionFactory.create_batch()
+        self.category_permission = DEFAULT_ACCESS_CONTROL
+
+    def test_unauthenticated_user_receive_user_first_and_last_name_when_lists_public_posts(self):
+        # Arrange
+        self.category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        data = response.data
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(data.get('user').get('first_name'), post.user.first_name)
+        self.assertEqual(data.get('user').get('last_name'), post.user.last_name)
+
+    def test_unauthenticated_user_does_not_receive_excerpt_when_see_post_details(self):
+        # Arrange
+        self.category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        data = response.data
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn('excerpt', data)
+
+    def test_unauthenticated_user_can_not_see_post_details_when_post_has_not_public_permission(self):
+        # Arrange
+        self.category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_unauthenticated_user_can_see_post_details_when_post_has_public_read_permission(self):
+        # Arrange
+        self.category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('id'), post.id)
+
+    def test_unauthenticated_user_can_see_post_details_when_post_has_public_edit_permission(self):
+        # Arrange
+        self.category_permission[AccessCategory.PUBLIC] = AccessPermission.EDIT
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('id'), post.id)
+
+class PostUnauthenticatedUserEditViewTests(APITestCase):
+
+    def setUp(self):
+        self.factory_category_permission = DEFAULT_ACCESS_CONTROL
+        self.categories = CategoryFactory.create_batch()
+        self.permissions = PermissionFactory.create_batch()
+        self.category_permissions = []
+        for category in self.categories:
+            self.category_permissions.append({
+                "category": category.id,
+                "permission": self.permissions[0].id
+            })
+        self.data = {
+            "title": "test title",
+            "content": "This is the content of the Post",
+            "category_permission": self.category_permissions
+        }
+    
+
+    def test_unauthenticated_user_can_edit_with_patch_title_of_a_post_with_public_edit_permission(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.EDIT
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        new_title = "new title"
+        data = {
+            "title": new_title
+        }
+        # Act
+        response = self.client.patch(url, data, format='json')
+        # Assert
+        post_db = Post.objects.get(id=post.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('title'), new_title)
+        self.assertEqual(post_db.title, data["title"])
+
+    def test_unauthenticated_user_can_edit_with_patch_content_of_a_post_with_public_edit_permission(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.EDIT
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        new_content = "new content"
+        data = {
+            "content": new_content
+        }
+        # Act
+        response = self.client.patch(url, data, format='json')
+        # Assert
+        post_db = Post.objects.get(id=post.id)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('content'), new_content)
+        self.assertEqual(post_db.content, data["content"])
+
+    def test_unauthenticated_user_can_not_edit_with_patch_title_of_a_post_with_public_read_permission(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        new_title = "new title"
+        data = {
+            "title": new_title
+        }
+        # Act
+        response = self.client.patch(url, data, format='json')
+        # Assert
+        post_db = Post.objects.get(id=post.id)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertNotEqual(response.data.get('title'), new_title)
+        self.assertNotEqual(post_db.title, data["title"])
+
+    def test_unauthenticated_user_can_not_edit_with_patch_content_of_a_post_with_public_read_permission(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        new_content = "new content"
+        data = {
+            "content": new_content
+        }
+        # Act
+        response = self.client.patch(url, data, format='json')
+        # Assert
+        post_db = Post.objects.get(id=post.id)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertNotEqual(response.data.get('content'), new_content)
+        self.assertNotEqual(post_db.content, data["content"])
+
+    def test_unauthenticated_user_can_not_edit_with_patch_title_of_a_post_with_no_permissions_at_all(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        new_title = "new title"
+        data = {
+            "title": new_title
+        }
+        # Act
+        response = self.client.patch(url, data, format='json')
+        # Assert
+        post_db = Post.objects.get(id=post.id)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertNotEqual(response.data.get('title'), new_title)
+        self.assertNotEqual(post_db.title, data["title"])
+
+    def test_unauthenticated_user_can_not_edit_with_patch_content_of_a_post_with_permissions_at_all(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        new_content = "new content"
+        data = {
+            "content": new_content
+        }
+        # Act
+        response = self.client.patch(url, data, format='json')
+        # Assert
+        post_db = Post.objects.get(id=post.id)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertNotEqual(response.data.get('content'), new_content)
+        self.assertNotEqual(post_db.content, data["content"])
+
+    def test_an_unauthenticated_user_with_edit_permission_can_edit_a_public_post_with_put_and_200_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.EDIT
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.put(url, self.data, format='json')
+        post_after_updating = Post.objects.get(id=post.id)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(post_after_updating.title, self.data['title'])
+
+    def test_an_unauthenticated_user_without_edit_permission_can_not_edit_a_post_with_put_and_404_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.put(url, self.data, format='json')
+        post_after_updating = Post.objects.get(id=post.id)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertNotEqual(post_after_updating.title, self.data['title'])
+
+    def test_an_unauthenticated_user_without_any_permission_can_not_edit_a_post_with_put_and_404_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.put(url, self.data, format='json')
+        post_after_updating = Post.objects.get(id=post.id)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertNotEqual(post_after_updating.title, self.data['title'])
+
+    def test_an_unauthenticated_user_with_edit_permission_can_edit_post_permissions_with_patch_and_200_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.EDIT
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        category_position = 2
+        permission_before_updating = self.data['category_permission'][category_position]['permission']
+        self.data['category_permission'] = [
+            {
+                "category": self.categories[category_position].id,
+                "permission": self.permissions[1].id
+            }
+        ]
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.patch(url, self.data, format='json')
+        permissions_after_updating = PostCategoryPermission.objects.get(post=post, category__name=self.categories[category_position].name)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(permissions_after_updating.permission, self.permissions[1])
+        self.assertNotEqual(permissions_after_updating.permission, permission_before_updating)
+
+    def test_an_unauthenticated_user_with_edit_permission_can_edit_post_permissions_with_put_and_200_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.EDIT
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        category_position = 2
+        permission_before_updating = self.data['category_permission'][category_position]['permission']
+        self.data['category_permission'] = [
+            {
+                "category": self.categories[category_position].id,
+                "permission": self.permissions[1].id
+            }
+        ]
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.put(url, self.data, format='json')
+        permissions_after_updating = PostCategoryPermission.objects.get(post=post, category__name=self.categories[category_position].name)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(permissions_after_updating.permission, self.permissions[1])
+        self.assertNotEqual(permissions_after_updating.permission, permission_before_updating)
+    
+    def test_an_unauthenticated_user_can_not_edit_post_permission_with_invalid_permission_id_with_patch_and_400_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.EDIT
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        category_position = 2
+        invalid_permission = self.permissions[1].id + 200
+        self.data['category_permission'] = [
+            {
+                "category": self.categories[category_position].id,
+                "permission": invalid_permission
+            }
+        ]
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.patch(url, self.data, format='json')
+        permissions_after_updating = PostCategoryPermission.objects.get(post=post, category__name=self.categories[category_position].name)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotEqual(permissions_after_updating.permission.id, invalid_permission)
+
+    
+    def test_an_unauthenticated_user_can_not_edit_post_permission_with_invalid_permission_id_with_put_and_400_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.EDIT
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        category_position = 2
+        invalid_permission = self.permissions[1].id + 200
+        self.data['category_permission'] = [
+            {
+                "category": self.categories[category_position].id,
+                "permission": invalid_permission
+            }
+        ]
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.put(url, self.data, format='json')
+        permissions_after_updating = PostCategoryPermission.objects.get(post=post, category__name=self.categories[category_position].name)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotEqual(permissions_after_updating.permission.id, invalid_permission)
+
+    def test_an_unauthenticated_user_without_permissions_can_not_edit_post_permission(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        category_position = 2
+        self.data['category_permission'] = [
+            {
+                "category": self.categories[category_position].id,
+                "permission": self.permissions[1].id
+            }
+        ]
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.put(url, self.data, format='json')
+        permissions_after_updating = PostCategoryPermission.objects.get(post=post, category__name=self.categories[category_position].name)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertNotEqual(permissions_after_updating.id, self.permissions[1].id)
+
+
+    def test_an_unauthenticated_user_with_read_permissions_can_not_edit_post_permissioin(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        category_position = 2
+        self.data['category_permission'] = [
+            {
+                "category": self.categories[category_position].id,
+                "permission": self.permissions[1].id
+            }
+        ]
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.put(url, self.data, format='json')
+        permissions_after_updating = PostCategoryPermission.objects.get(post=post, category__name=self.categories[category_position].name)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertNotEqual(permissions_after_updating.id, self.permissions[1].id)
 
 
 # class PostCreateUpdateUnauthenticatedUserViewTests(APITestCase):
