@@ -11,7 +11,7 @@ class PostCategoryPermissionSerializer(serializers.ModelSerializer):
         fields = ['category', 'permission']
 
 class PostListCreateSerializer(serializers.ModelSerializer):
-    categories_permission = PostCategoryPermissionSerializer(many=True, read_only=True)
+    categories_permission = PostCategoryPermissionSerializer(many=True, source='post_category_permissions')
     user = CustomUserSerializer()
 
     class Meta:
