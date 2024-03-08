@@ -28,9 +28,9 @@ class PostCategoryPermissionFactory(DjangoModelFactory):
     @classmethod
     def create(cls, **kwargs):
         access = []
-        access_control = DEFAULT_ACCESS_CONTROL if not kwargs.get('access_control') else kwargs.get('access_control')
+        category_permission = DEFAULT_ACCESS_CONTROL if not kwargs.get('category_permission') else kwargs.get('category_permission')
         post = PostFactory.create() if not kwargs.get('post') else kwargs.get('post')
-        for category, permission in access_control.items():
+        for category, permission in category_permission.items():
             category = Category.objects.get(name=category)
             permission = Permission.objects.get(name=permission)
             post_category_permission = PostCategoryPermission.objects.create(post=post, category=category, permission=permission)

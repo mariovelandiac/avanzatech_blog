@@ -58,7 +58,6 @@ class PostModelTests(TestCase):
         data = {
             "title": "my_title",
             "content": "the content of the post",
-            "read_permission": "public",
             "user": ""
         }
         # Act & Assert
@@ -96,27 +95,12 @@ class PostModelTests(TestCase):
         data = {
             "user": user,
             "content": "the content of the post",
-            "read_permission": "public"
         }
         # Act & Assert
         with self.assertRaises(ValueError):
             Post.objects.create(**data)
 
 
-    def test_create_a_post_with_an_invalid_permission_should_rise_an_error(self):
-        # Arrange
-        user = CustomUserFactory()
-        data = {
-            "title": "post title",
-            "user": user,
-            "content": "the content of the post",
-            "read_permission": "invalid permission"
-        }
-        # Act & Assert
-        with self.assertRaises(ValueError):
-            Post.objects.create(**data)
-            posts = Post.objects.all()
-            print(posts[0].read_permission)
 
     def test_create_a_post_with_an_invalid_user_should_raise_an_error(self):
         # Arrange
@@ -129,7 +113,6 @@ class PostModelTests(TestCase):
         data = {
             "title": "my_title",
             "content": "the content of the post",
-            "read_permission": "public",
             "user": user
         }
         # Act & Assert

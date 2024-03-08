@@ -14,13 +14,9 @@ class Post(BaseModel):
     content = models.TextField(null=False, blank=False)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     excerpt = models.CharField(max_length=200, null=False, default="")
-    READ_PERMISSIONS_CHOICES = [(key,value) for (key,value) in READ_PERMISSIONS.items()]
-    read_permission = models.CharField(
-        max_length=20, choices=READ_PERMISSIONS_CHOICES, default='public')
+
 
     def save(self, *args, **kwargs):
-        if self.read_permission not in list(READ_PERMISSIONS.keys()):
-            raise ValueError(_('Invalid Permission'))
 
         if not self.title:
             raise ValueError(_('Title must be set'))
@@ -38,7 +34,7 @@ class Post(BaseModel):
         ordering = ["-created_at"]
 
 class PostCategoryPermission(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='post_category_permissions')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='post_category_permission')
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
 

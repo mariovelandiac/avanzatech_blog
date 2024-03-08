@@ -43,15 +43,15 @@ class PostUnauthenticatedUserListViewTests(APITestCase):
         self.url = reverse('post-list-create')
         CategoryFactory.create_batch()
         PermissionFactory.create_batch()
-        self.access_control = DEFAULT_ACCESS_CONTROL
+        self.category_permission = DEFAULT_ACCESS_CONTROL
 
     
     def test_unauthenticated_user_only_can_see_public_posts_when_posts_have_public_read_permission(self):
         # Arrange
         amount_posts = 4
-        self.access_control["public"] = "read"
+        self.category_permission["public"] = "read"
         posts = PostFactory.create_batch(amount_posts)
-        post_category_permission = PostCategoryPermissionFactory.create_batch(posts, access_control=self.access_control)
+        post_category_permission = PostCategoryPermissionFactory.create_batch(posts, category_permission=self.category_permission)
         # Act
         response = self.client.get(self.url)
         # Assert
@@ -61,8 +61,19 @@ class PostUnauthenticatedUserListViewTests(APITestCase):
         self.assertEqual(amount_posts, count)
         self.assertEqual(len(results), amount_posts)
 
+
     def test_unauthenticated_user_receive_user_first_and_last_name_when_lists_public_posts(self):
-        pass
+        # Arrange
+        self.category_permission["public"] = "read"
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(results[0].get('user').get('first_name'), post.user.first_name)
+        self.assertEqual(results[0].get('user').get('last_name'), post.user.last_name)
 
         
 

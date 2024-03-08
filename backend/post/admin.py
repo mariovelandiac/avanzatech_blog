@@ -33,14 +33,13 @@ class PostAdmin(ModelAdmin):
     # read
     list_display = ('title','owner', 'excerpt','created_at','last_modified')
     search_fields = ('title', 'user')
-    list_filter = ('title', 'user', 'read_permission')
+    list_filter = ('title', 'user',)
     readonly_fields = ('created_at','last_modified')
     inlines = [PostCategoryPermissionInline]
     ## create or edit
     fieldsets = (
         ('Content', {'fields': ('title','content')}),
-        ('Owner', {'fields': ('user',)}),
-        ('Permission', {'fields': ('read_permission',)}),  
+        ('Owner', {'fields': ('user',)}), 
     )
     
     # Show owner instead of user

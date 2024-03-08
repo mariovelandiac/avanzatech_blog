@@ -18,7 +18,7 @@ def set_queryset_by_permissions(user, model_class, method, is_related=True):
         return queryset
 
     # Related models
-    field_name = "post_category_permissions"
+    field_name = "post_category_permission"
     if is_related:
         field_name = "post__" + field_name
         queryset = queryset.filter(is_active=True)
