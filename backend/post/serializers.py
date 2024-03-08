@@ -34,5 +34,12 @@ class PostRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         category_permission = validated_data.pop('post_category_permission', None)
         instance = super().update(instance, validated_data)
+        if category_permission:
+            existing_permissions = instance.post_category_permission.filter(post=instance)
+            for cp in category_permission:
+                category = cp['category']
+                permission = cp['permission']
+                if existing_permissions.filter(category=category).exists():
+                    existing_permissions.filter(category=category).update(permission=permission)
         return instance
 
