@@ -3,12 +3,11 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from django_filters import rest_framework as filters
 from like.models import Like
 from like.serializers import LikeListCreateSerializer, LikeDeleteSerializer
-from common.utils import set_queryset_by_permissions
 from common.paginator import TwentyResultsSetPagination
-from common.mixins import DestroyMixin, PerformCreateMixin
+from common.mixins import DestroyMixin, PerformCreateMixin, GetQuerysetByPermissionsMixin
 
 
-class ListCreateLikeView(PerformCreateMixin, ListCreateAPIView):
+class ListCreateLikeView(PerformCreateMixin, ListCreateAPIView, GetQuerysetByPermissionsMixin):
 
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = TwentyResultsSetPagination
@@ -16,12 +15,8 @@ class ListCreateLikeView(PerformCreateMixin, ListCreateAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('post', 'user')
     
-        
-    def get_queryset(self):
-        user = self.request.user   
-        method = self.request.method
-        queryset = set_queryset_by_permissions(user, Like, method, is_related=True)
-        return queryset
+    def get_queryset(self): 
+        return self.get_queryset_by_permissions(Like, is_post_related=True)
 
     def get_object(self):
         queryset = self.get_queryset()

@@ -13,7 +13,7 @@ from comment.tests.factories import CommentFactory
 from comment.models import Comment
 from category.tests.factories import CategoryFactory
 from permission.tests.factories import PermissionFactory
-from common.constants import EXCERPT_LENGTH, DEFAULT_ACCESS_CONTROL, CONTENT_MOCK, AccessCategory, AccessPermission
+from common.constants import EXCERPT_LENGTH, DEFAULT_ACCESS_CONTROL, CONTENT_MOCK, CATEGORIES, AccessCategory, AccessPermission
 from common.paginator import TenResultsSetPagination
 
 def create_default_category_permissions_handler(categories, permissions):
@@ -577,133 +577,328 @@ class PostUnauthenticatedUserDeleteViewTests(APITestCase):
 
 class PostAuthenticatedUserCreateViewTests(APITestCase):
     
-        def setUp(self):
-            self.team = TeamFactory()
-            self.user = CustomUserFactory(team=self.team)
-            self.client.force_authenticate(self.user)
-            self.url = reverse('post-list-create')
-            self.permissions = PermissionFactory.create_batch()
-            self.categories = CategoryFactory.create_batch()
-            self.category_permission = create_default_category_permissions_handler(self.categories, self.permissions)
-            self.data = {
-                "title": "test title",
-                "content": CONTENT_MOCK,
-                "category_permission": self.category_permission,
+    def setUp(self):
+        self.team = TeamFactory()
+        self.user = CustomUserFactory(team=self.team)
+        self.client.force_authenticate(self.user)
+        self.url = reverse('post-list-create')
+        self.permissions = PermissionFactory.create_batch()
+        self.categories = CategoryFactory.create_batch()
+        self.category_permission = create_default_category_permissions_handler(self.categories, self.permissions)
+        self.data = {
+            "title": "test title",
+            "content": CONTENT_MOCK,
+            "category_permission": self.category_permission,
+        }
+
+    def test_authenticated_user_can_create_a_post_and_201_is_returned(self):
+        # Arrange
+        current_posts = Post.objects.count()
+        # Act
+        response = self.client.post(self.url, self.data, format='json')
+        # Assert
+        post_category_permission = PostCategoryPermission.objects.filter(post=response.data.get('id'))
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Post.objects.count(), current_posts + 1)
+        self.assertEqual(post_category_permission.count(), len(self.category_permission))
+
+    def test_authenticated_user_can_create_a_post_and_the_user_id_is_set_automatically(self):
+        # Arrange
+        current_posts = Post.objects.count()
+        # Act
+        response = self.client.post(self.url, self.data, format='json')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Post.objects.count(), current_posts + 1)
+        self.assertEqual(response.data.get('user').get('id'), self.user.id)
+
+    def test_authenticated_user_can_create_a_post_and_the_excerpt_is_returned(self):
+        # Arrange
+        current_posts = Post.objects.count()
+        # Act
+        response = self.client.post(self.url, self.data, format='json')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Post.objects.count(), current_posts + 1)
+        self.assertIn('excerpt', response.data)
+
+    def test_authenticated_user_can_create_a_post_and_the_excerpt_is_returned_with_the_correct_length(self):
+        # Arrange
+        current_posts = Post.objects.count()
+        # Act
+        response = self.client.post(self.url, self.data, format='json')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Post.objects.count(), current_posts + 1)
+        self.assertIn('excerpt', response.data)
+        self.assertLessEqual(len(response.data.get('excerpt')), EXCERPT_LENGTH)
+        self.assertEqual(response.data.get('excerpt'), self.data.get('content')[:EXCERPT_LENGTH])
+
+    def test_authenticated_user_can_not_create_a_post_without_title_and_a_400_is_returned(self):
+        # Arrange
+        current_posts = Post.objects.count()
+        self.data.pop('title')
+        # Act
+        response = self.client.post(self.url, self.data, format='json')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Post.objects.count(), current_posts)
+
+    def test_authenticated_user_can_not_create_a_post_without_content_and_a_400_is_returned(self):
+        # Arrange
+        current_posts = Post.objects.count()
+        self.data.pop('content')
+        # Act
+        response = self.client.post(self.url, self.data, format='json')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Post.objects.count(), current_posts)
+
+    def test_authenticated_user_can_not_create_a_post_without_category_permission_and_a_400_is_returned(self):
+        # Arrange
+        current_posts = Post.objects.count()
+        self.data.pop('category_permission')
+        # Act
+        response = self.client.post(self.url, self.data, format='json')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Post.objects.count(), current_posts)
+
+    def test_authenticated_user_can_not_create_a_post_with_incomplete_category_permission_and_a_400_is_returned(self):
+        # Arrange
+        current_posts = Post.objects.count()
+        self.data['category_permission'] = [
+            {
+                "category": self.categories[0].id,
+                "permission": self.permissions[0].id
             }
+        ]
+        # Act
+        response = self.client.post(self.url, self.data, format='json')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Post.objects.count(), current_posts)
+
+    def test_authenticated_user_can_not_create_a_post_with_invalid_category_in_category_permission_and_400_is_returned(self):
+        # Arrange
+        current_posts = Post.objects.count()
+        self.data['category_permission'][0] = {
+                "category": self.categories[0].id + 200,
+                "permission": self.permissions[0].id
+        }
+        # Act
+        response = self.client.post(self.url, self.data, format='json')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Post.objects.count(), current_posts)
+
+    def test_authenticated_user_can_not_create_a_post_with_invalid_permission_in_category_permission_and_400_is_returned(self):
+        # Arrange
+        current_posts = Post.objects.count()
+        self.data['category_permission'][0] = {
+                "category": self.categories[0].id,
+                "permission": self.permissions[0].id + 200
+        }
+        # Act
+        response = self.client.post(self.url, self.data, format='json')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Post.objects.count(), current_posts)
+
+class PostAuthenticatedUserDeleteViewTests(APITestCase):
+    def setUp(self):
+        self.team = TeamFactory()
+        self.user = CustomUserFactory(team=self.team)
+        self.client.force_authenticate(self.user)
+        self.permissions = PermissionFactory.create_batch()
+        self.categories = CategoryFactory.create_batch()
+        self.factory_category_permission = DEFAULT_ACCESS_CONTROL
+        
+    def test_authenticated_user_can_delete_a_post_with_public_edit_permission_and_204_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.EDIT
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        current_posts = Post.objects.count()
+        expected_permissions = 0
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.delete(url, format='json')
+        # Assert
+        post_category_permission_db = PostCategoryPermission.objects.filter(post=post)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Post.objects.count(), current_posts - 1)
+        self.assertEqual(post_category_permission_db.count(), expected_permissions)
     
-        def test_authenticated_user_can_create_a_post_and_201_is_returned(self):
-            # Arrange
-            current_posts = Post.objects.count()
-            # Act
-            response = self.client.post(self.url, self.data, format='json')
-            # Assert
-            post_category_permission = PostCategoryPermission.objects.filter(post=response.data.get('id'))
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-            self.assertEqual(Post.objects.count(), current_posts + 1)
-            self.assertEqual(post_category_permission.count(), len(self.category_permission))
     
-        def test_authenticated_user_can_create_a_post_and_the_user_id_is_set_automatically(self):
-            # Arrange
-            current_posts = Post.objects.count()
-            # Act
-            response = self.client.post(self.url, self.data, format='json')
-            # Assert
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-            self.assertEqual(Post.objects.count(), current_posts + 1)
-            self.assertEqual(response.data.get('user').get('id'), self.user.id)
+    def test_authenticated_user_can_delete_a_post_with_authenticated_edit_permission_and_204_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.EDIT
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        expected_category_permission = 0
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.delete(url, format='json')
+        # Assert
+        post_category_permission_db = PostCategoryPermission.objects.filter(post=post)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Post.objects.count(), current_posts - 1)
+        self.assertEqual(post_category_permission_db.count(), expected_category_permission)
     
-        def test_authenticated_user_can_create_a_post_and_the_excerpt_is_returned(self):
-            # Arrange
-            current_posts = Post.objects.count()
-            # Act
-            response = self.client.post(self.url, self.data, format='json')
-            # Assert
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-            self.assertEqual(Post.objects.count(), current_posts + 1)
-            self.assertIn('excerpt', response.data)
+    def test_authenticated_user_can_not_delete_post_with_authenticated_read_permission_and_404_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.READ
+        post = PostFactory()
+        current_posts = Post.objects.count()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.delete(url, format='json')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Post.objects.count(), current_posts)
 
-        def test_authenticated_user_can_create_a_post_and_the_excerpt_is_returned_with_the_correct_length(self):
-            # Arrange
-            current_posts = Post.objects.count()
-            # Act
-            response = self.client.post(self.url, self.data, format='json')
-            # Assert
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-            self.assertEqual(Post.objects.count(), current_posts + 1)
-            self.assertIn('excerpt', response.data)
-            self.assertLessEqual(len(response.data.get('excerpt')), EXCERPT_LENGTH)
-            self.assertEqual(response.data.get('excerpt'), self.data.get('content')[:EXCERPT_LENGTH])
+    def test_authenticated_user_can_not_delete_post_with_any_authenticated_permission_at_all_and_404_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        post = PostFactory()
+        current_posts = Post.objects.count()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.delete(url, format='json')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Post.objects.count(), current_posts)
 
-        def test_authenticated_user_can_not_create_a_post_without_title_and_a_400_is_returned(self):
-            # Arrange
-            current_posts = Post.objects.count()
-            self.data.pop('title')
-            # Act
-            response = self.client.post(self.url, self.data, format='json')
-            # Assert
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(Post.objects.count(), current_posts)
+    def test_authenticated_user_can_delete_post_with_team_edit_permission_and_204_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.EDIT
+        post = PostFactory(user=self.user)
+        current_posts = Post.objects.count()
+        expected_permissions = 0
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        another_user = CustomUserFactory(team=self.team)
+        self.client.force_authenticate(another_user)
+        # Act
+        response = self.client.delete(url, format='json')
+        # Assert
+        post_category_permission_db = PostCategoryPermission.objects.filter(post=post)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Post.objects.count(), current_posts - 1)
+        self.assertEqual(post_category_permission_db.count(), expected_permissions)
 
-        def test_authenticated_user_can_not_create_a_post_without_content_and_a_400_is_returned(self):
-            # Arrange
-            current_posts = Post.objects.count()
-            self.data.pop('content')
-            # Act
-            response = self.client.post(self.url, self.data, format='json')
-            # Assert
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(Post.objects.count(), current_posts)
+    def test_authenticated_user_can_not_delete_post_with_team_read_permission_and_404_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.READ
+        post = PostFactory(user=self.user)
+        current_posts = Post.objects.count()
+        expected_permissions = len(CATEGORIES.keys())
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        another_user = CustomUserFactory(team=self.team)
+        self.client.force_authenticate(another_user)
+        # Act
+        response = self.client.delete(url, format='json')
+        # Assert
+        post_category_permission_db = PostCategoryPermission.objects.filter(post=post)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Post.objects.count(), current_posts)
+        self.assertEqual(post_category_permission_db.count(), expected_permissions)
 
-        def test_authenticated_user_can_not_create_a_post_without_category_permission_and_a_400_is_returned(self):
-            # Arrange
-            current_posts = Post.objects.count()
-            self.data.pop('category_permission')
-            # Act
-            response = self.client.post(self.url, self.data, format='json')
-            # Assert
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(Post.objects.count(), current_posts)
+    def test_authenticated_user_can_not_delete_post_with_team_no_permission_and_404_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.NO_PERMISSION
+        post = PostFactory(user=self.user)
+        current_posts = Post.objects.count()
+        expected_permissions = len(CATEGORIES.keys())
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        another_user = CustomUserFactory(team=self.team)
+        self.client.force_authenticate(another_user)
+        # Act
+        response = self.client.delete(url, format='json')
+        # Assert
+        post_category_permission_db = PostCategoryPermission.objects.filter(post=post)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Post.objects.count(), current_posts)
+        self.assertEqual(post_category_permission_db.count(), expected_permissions)
 
-        def test_authenticated_user_can_not_create_a_post_with_incomplete_category_permission_and_a_400_is_returned(self):
-            # Arrange
-            current_posts = Post.objects.count()
-            self.data['category_permission'] = [
-                {
-                    "category": self.categories[0].id,
-                    "permission": self.permissions[0].id
-                }
-            ]
-            # Act
-            response = self.client.post(self.url, self.data, format='json')
-            # Assert
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(Post.objects.count(), current_posts)
+    def test_authenticated_user_can_delete_a_post_with_author_edit_permission_and_204_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.EDIT
+        post = PostFactory(user=self.user)
+        current_posts = Post.objects.count()
+        expected_permissions = 0
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.delete(url, format='json')
+        # Assert
+        post_category_permission_db = PostCategoryPermission.objects.filter(post=post)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Post.objects.count(), current_posts - 1)
+        self.assertEqual(post_category_permission_db.count(), expected_permissions)
 
-        def test_authenticated_user_can_not_create_a_post_with_invalid_category_in_category_permission_and_400_is_returned(self):
-            # Arrange
-            current_posts = Post.objects.count()
-            self.data['category_permission'][0] = {
-                    "category": self.categories[0].id + 200,
-                    "permission": self.permissions[0].id
-            }
-            # Act
-            response = self.client.post(self.url, self.data, format='json')
-            # Assert
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(Post.objects.count(), current_posts)
+    def test_authenticated_user_can_not_delete_a_post_with_author_read_permission_and_404_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.READ
+        post = PostFactory(user=self.user)
+        current_posts = Post.objects.count()
+        expected_permissions = len(CATEGORIES.keys())
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.delete(url, format='json')
+        # Assert
+        post_category_permission_db = PostCategoryPermission.objects.filter(post=post)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Post.objects.count(), current_posts)
+        self.assertEqual(post_category_permission_db.count(), expected_permissions)
 
-        def test_authenticated_user_can_not_create_a_post_with_invalid_permission_in_category_permission_and_400_is_returned(self):
-            # Arrange
-            current_posts = Post.objects.count()
-            self.data['category_permission'][0] = {
-                    "category": self.categories[0].id,
-                    "permission": self.permissions[0].id + 200
-            }
-            # Act
-            response = self.client.post(self.url, self.data, format='json')
-            # Assert
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(Post.objects.count(), current_posts)
+    def test_authenticated_user_can_not_delete_a_post_with_author_no_permissions_and_404_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.NO_PERMISSION
+        post = PostFactory(user=self.user)
+        current_posts = Post.objects.count()
+        expected_permissions = len(CATEGORIES.keys())
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.delete(url, format='json')
+        # Assert
+        post_category_permission_db = PostCategoryPermission.objects.filter(post=post)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Post.objects.count(), current_posts)
+        self.assertEqual(post_category_permission_db.count(), expected_permissions) 
+
+    def test_authenticated_user_can_not_delete_a_post_that_does_not_exist_and_404_is_returned(self):
+        # Arrange
+        current_posts = Post.objects.count()
+        post_id = 100
+        url = reverse('post-retrieve-update-delete', args=[post_id])
+        # Act
+        response = self.client.delete(url, format='json')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(Post.objects.count(), current_posts)
+
+#   def test_logged_in_user_delete_a_post_and_likes_and_comments_are_also_destroyed(self):
+#         # Arrange
+#         LikeFactory.create_batch(2, post=self.post)
+#         CommentFactory.create_batch(2, post=self.post)
+#         url = reverse(self.url, kwargs={"pk": self.post.id})
+#         expected_count = 0
+#         # Act
+#         response = self.client.delete(url)
+#         # Assert
+#         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+#         self.assertEqual(Post.objects.count(), expected_count)
+#         self.assertEqual(Comment.objects.count(), expected_count)
+#         self.assertEqual(Like.objects.count(), expected_count)
+        
     
 # class PostUpdateViewTests(APITestCase):
 
@@ -1489,90 +1684,6 @@ class PostAuthenticatedUserCreateViewTests(APITestCase):
 #         self.assertEqual(response.data.get('content'), post.content)        
 #         self.assertEqual(response.data.get('excerpt'), post.excerpt)
 #         self.assertLessEqual(len(response.data.get('excerpt')), EXCERPT_LENGTH)
-
-# class PostDeleteViewTests(APITestCase):
-    
-#     def setUp(self):
-#         self.team = TeamFactory()
-#         self.user = CustomUserFactory(team=self.team)
-#         self.post = PostFactory(user=self.user, read_permission=ReadPermissions.PUBLIC)
-#         self.url = "post-retrieve-update-delete"
-#         self.client.force_authenticate(self.user)
-
-#     def test_unauthenticated_user_can_not_delete_posts(self):
-#         # Arrange
-#         self.client.logout()
-#         url = reverse(self.url, kwargs={"pk": self.post.id})
-#         expected_count = 1
-#         # Act
-#         response = self.client.delete(url)
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-#         self.assertEqual(Post.objects.count(), expected_count)
-
-#     def test_logged_in_user_can_not_delete_a_post_that_does_not_belong_to_themselves(self):
-#         # Arrange
-#         other_user = CustomUserFactory()
-#         self.client.force_authenticate(other_user)
-#         url = reverse(self.url, kwargs={"pk": self.post.id})
-#         expected_count = 1
-#         # Act
-#         response = self.client.delete(url)
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-#         self.assertEqual(Post.objects.count(), expected_count)
-
-#     def test_logged_in_user_can_delete_a_post_that_belong_to_themselves(self):
-#         # Arrange
-#         url = reverse(self.url, kwargs={"pk": self.post.id})
-#         expected_count = 0
-#         # Act
-#         response = self.client.delete(url)
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-#         self.assertEqual(Post.objects.count(), expected_count)
-
-#     def test_logged_in_user_delete_a_post_and_likes_and_comments_are_also_destroyed(self):
-#         # Arrange
-#         LikeFactory.create_batch(2, post=self.post)
-#         CommentFactory.create_batch(2, post=self.post)
-#         url = reverse(self.url, kwargs={"pk": self.post.id})
-#         expected_count = 0
-#         # Act
-#         response = self.client.delete(url)
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-#         self.assertEqual(Post.objects.count(), expected_count)
-#         self.assertEqual(Comment.objects.count(), expected_count)
-#         self.assertEqual(Like.objects.count(), expected_count)
-
-#     def test_admin_user_can_delete_any_post_regardless_of_permission(self):
-#         # Arrange
-#         admin_user = CustomUserFactory(is_staff=True)
-#         self.client.force_authenticate(admin_user)
-#         LikeFactory.create_batch(2, post=self.post)
-#         CommentFactory.create_batch(2, post=self.post)
-#         url = reverse(self.url, kwargs={"pk": self.post.id})
-#         expected_count = 0
-#         # Act
-#         response = self.client.delete(url)
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-#         self.assertEqual(Post.objects.count(), expected_count)
-#         self.assertEqual(Comment.objects.count(), expected_count)
-#         self.assertEqual(Like.objects.count(), expected_count)
-
-#     def test_logged_in_user_try_to_delete_a_non_existing_post_and_404_is_returned(self):
-#         # Arrange
-#         post = Post.objects.get(id=self.post.id)
-#         post.delete()
-#         url = reverse(self.url, kwargs={"pk": self.post.id})
-#         expected_count = 0
-#         # Act
-#         response = self.client.delete(url)
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-#         self.assertEqual(Post.objects.count(), expected_count)
 
 
 

@@ -3,12 +3,11 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from django_filters import rest_framework as filters
 from comment.serializers import CommentListCreateSerializer, CommentDeleteSerializer
 from comment.models import Comment
-from common.utils import set_queryset_by_permissions
-from common.mixins import DestroyMixin, PerformCreateMixin
+from common.mixins import DestroyMixin, PerformCreateMixin, GetQuerysetByPermissionsMixin
 from common.paginator import TenResultsSetPagination
 
 
-class ListCreateCommentView(PerformCreateMixin, ListCreateAPIView):
+class ListCreateCommentView(PerformCreateMixin, ListCreateAPIView, GetQuerysetByPermissionsMixin):
 
     permission_classes = [IsAuthenticatedOrReadOnly]
     serializer_class = CommentListCreateSerializer
@@ -16,11 +15,8 @@ class ListCreateCommentView(PerformCreateMixin, ListCreateAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('post', 'user')
 
-    def get_queryset(self):
-        user = self.request.user   
-        method = self.request.method
-        queryset = set_queryset_by_permissions(user, Comment, method, is_related=True)
-        return queryset
+    def get_queryset(self): 
+        return self.get_queryset_by_permissions(Comment, is_post_related=True)
 
 class DeleteCommentView(DestroyMixin, DestroyAPIView):
     

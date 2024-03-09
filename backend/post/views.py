@@ -7,11 +7,11 @@ from django.db.models import Q
 from post.models import Post
 from post.serializers import PostListCreateSerializer, PostRetrieveUpdateDestroySerializer
 from common.constants import ReadPermissions, DEFAULT_ACCESS_CONTROL
-from common.utils import set_queryset_by_permissions
+from common.mixins import GetQuerysetByPermissionsMixin
 from common.paginator import TenResultsSetPagination
 
 
-class ListCreatePostView(ListCreateAPIView):
+class ListCreatePostView(ListCreateAPIView, GetQuerysetByPermissionsMixin):
 
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = TenResultsSetPagination
@@ -22,21 +22,16 @@ class ListCreatePostView(ListCreateAPIView):
         serializer.save(user=self.request.user)
 
     def get_queryset(self): 
-        user = self.request.user   
-        queryset = set_queryset_by_permissions(user, Post, self.request.method, is_related=False)
-        return queryset
+        return self.get_queryset_by_permissions(Post, is_post_related=False)
         
 
-class RetrieveUpdateDeletePostView(RetrieveUpdateDestroyAPIView):
+class RetrieveUpdateDeletePostView(RetrieveUpdateDestroyAPIView, GetQuerysetByPermissionsMixin):
 
     permission_classes = [AllowAny]
     serializer_class = PostRetrieveUpdateDestroySerializer
             
-    def get_queryset(self):
-        user = self.request.user  
-        method = self.request.method
-        queryset = set_queryset_by_permissions(user, Post, method, is_related=False)
-        return queryset
+    def get_queryset(self): 
+        return self.get_queryset_by_permissions(Post, is_post_related=False)
 
 
 
