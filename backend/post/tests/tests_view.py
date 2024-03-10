@@ -13,7 +13,7 @@ from comment.tests.factories import CommentFactory
 from comment.models import Comment
 from category.tests.factories import CategoryFactory
 from permission.tests.factories import PermissionFactory
-from common.constants import EXCERPT_LENGTH, DEFAULT_ACCESS_CONTROL, CONTENT_MOCK, CATEGORIES, AccessCategory, AccessPermission
+from common.constants import EXCERPT_LENGTH, CONTENT_MOCK, CATEGORIES, AccessCategory, AccessPermission
 from common.paginator import TenResultsSetPagination
 
 def create_default_category_permissions_handler(categories, permissions):
@@ -34,10 +34,12 @@ class PostUnauthenticatedUserCreateViewTests(APITestCase):
         # Arrange
         current_posts = Post.objects.count()
         expected_response = "not_authenticated"
+        categories = CategoryFactory.create_batch()
+        permissions = PermissionFactory.create_batch()
         data = {
             "title": "test title",
             "content": "This is the content of the Post",
-            "access_control": DEFAULT_ACCESS_CONTROL,
+            "category_permission": create_default_category_permissions_handler(categories, permissions)
         }
         # Act
         url = reverse('post-list-create')
@@ -54,7 +56,12 @@ class PostUnauthenticatedUserListViewTests(APITestCase):
         self.url = reverse('post-list-create')
         CategoryFactory.create_batch()
         PermissionFactory.create_batch()
-        self.category_permission = DEFAULT_ACCESS_CONTROL
+        self.category_permission = {
+            AccessCategory.PUBLIC: AccessPermission.READ,
+            AccessCategory.AUTHENTICATED: AccessPermission.READ,
+            AccessCategory.TEAM: AccessPermission.EDIT,
+            AccessCategory.AUTHOR: AccessPermission.EDIT
+        }
 
     
     def test_unauthenticated_user_can_see_public_posts_when_posts_have_public_read_permission(self):
@@ -111,7 +118,12 @@ class PostUnauthenticatedUserRetrieveViewTests(APITestCase):
     def setUp(self):
         CategoryFactory.create_batch()
         PermissionFactory.create_batch()
-        self.category_permission = DEFAULT_ACCESS_CONTROL
+        self.category_permission = {
+            AccessCategory.PUBLIC: AccessPermission.READ,
+            AccessCategory.AUTHENTICATED: AccessPermission.READ,
+            AccessCategory.TEAM: AccessPermission.EDIT,
+            AccessCategory.AUTHOR: AccessPermission.EDIT
+        }
 
     def test_unauthenticated_user_receive_user_first_and_last_name_when_lists_public_posts(self):
         # Arrange
@@ -178,7 +190,12 @@ class PostUnauthenticatedUserRetrieveViewTests(APITestCase):
 class PostUnauthenticatedUserEditViewTests(APITestCase):
 
     def setUp(self):
-        self.factory_category_permission = DEFAULT_ACCESS_CONTROL
+        self.factory_category_permission = {
+            AccessCategory.PUBLIC: AccessPermission.READ,
+            AccessCategory.AUTHENTICATED: AccessPermission.READ,
+            AccessCategory.TEAM: AccessPermission.EDIT,
+            AccessCategory.AUTHOR: AccessPermission.EDIT
+        }
         self.categories = CategoryFactory.create_batch()
         self.permissions = PermissionFactory.create_batch()
         self.category_permissions = create_default_category_permissions_handler(self.categories, self.permissions)
@@ -527,7 +544,12 @@ class PostUnauthenticatedUserEditViewTests(APITestCase):
 class PostUnauthenticatedUserDeleteViewTests(APITestCase):
     
     def setUp(self):
-        self.factory_category_permission = DEFAULT_ACCESS_CONTROL
+        self.factory_category_permission = {
+            AccessCategory.PUBLIC: AccessPermission.READ,
+            AccessCategory.AUTHENTICATED: AccessPermission.READ,
+            AccessCategory.TEAM: AccessPermission.EDIT,
+            AccessCategory.AUTHOR: AccessPermission.EDIT
+        }
         self.categories = CategoryFactory.create_batch()
         self.permissions = PermissionFactory.create_batch()
 
@@ -712,7 +734,12 @@ class PostAuthenticatedUserDeleteViewTests(APITestCase):
         self.client.force_authenticate(self.user)
         self.permissions = PermissionFactory.create_batch()
         self.categories = CategoryFactory.create_batch()
-        self.factory_category_permission = DEFAULT_ACCESS_CONTROL
+        self.factory_category_permission = {
+            AccessCategory.PUBLIC: AccessPermission.READ,
+            AccessCategory.AUTHENTICATED: AccessPermission.READ,
+            AccessCategory.TEAM: AccessPermission.EDIT,
+            AccessCategory.AUTHOR: AccessPermission.EDIT
+        }
         
     def test_authenticated_user_can_delete_a_post_with_public_edit_permission_and_204_is_returned(self):
         # Arrange
@@ -737,6 +764,7 @@ class PostAuthenticatedUserDeleteViewTests(APITestCase):
         post = PostFactory()
         post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
         expected_category_permission = 0
+        current_posts = Post.objects.count()
         url = reverse('post-retrieve-update-delete', args=[post.id])
         # Act
         response = self.client.delete(url, format='json')
@@ -861,10 +889,11 @@ class PostAuthenticatedUserDeleteViewTests(APITestCase):
     def test_authenticated_user_can_not_delete_a_post_with_author_no_permissions_and_404_is_returned(self):
         # Arrange
         self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.NO_PERMISSION
         post = PostFactory(user=self.user)
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
         current_posts = Post.objects.count()
         expected_permissions = len(CATEGORIES.keys())
-        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
         url = reverse('post-retrieve-update-delete', args=[post.id])
         # Act
         response = self.client.delete(url, format='json')

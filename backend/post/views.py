@@ -31,7 +31,7 @@ class RetrieveUpdateDeletePostView(RetrieveUpdateDestroyAPIView, GetQuerysetByPe
     serializer_class = PostRetrieveUpdateDestroySerializer
             
     def get_queryset(self): 
-        return self.get_queryset_by_permissions(Post, is_post_related=False)
+        return self.get_queryset_by_permissions(Post)
 
 
 

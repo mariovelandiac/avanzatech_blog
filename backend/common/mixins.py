@@ -38,112 +38,102 @@ class DestroyMixin:
         return queryset.filter(user=self.request.user)
 
 class GetQuerysetByPermissionsMixin:
-
     '''
     This utility mixing allow to get a queryset based on the model, 
     the user and whether if the model is post related or not. 
     This handle function needs models that implements the attribute is_active as a boolean attribute
     '''
-    def get_queryset_by_permissions(self, model_class, is_post_related=True):
+    def get_queryset_by_permissions(self, model_class, is_post_related=False):
         self.queryset = model_class.objects.all()
         # User is Admin
         if self.request.user.is_staff:
             return self.queryset
 
         # Related models
-        self.user_field_name = "post__user" if is_post_related else "user"
-        self.team_field_name = "post__user__team" if is_post_related else "user__team"
-        self.search_field_name = "post_category_permission"
-        if is_post_related:
-            self.search_field_name = "post__" + self.search_field_name
-            self.queryset = self.queryset.filter(is_active=True)
+        self.__set_search_fields_by_model_relationship(is_post_related)
         
         # Anonymous user
         if isinstance(self.request.user, AnonymousUser):
-            return self._set_queryset_for_anonymous_user()
+            return self._get_queryset_for_anonymous_user()
 
         # Authenticated user
-        return self._set_queryset_for_authenticated_user()
+        return self._get_queryset_for_authenticated_user()
 
         
-    def _set_queryset_for_anonymous_user(self):
-        filter_conditions = {
-            f"{self.search_field_name}__category__name": AccessCategory.PUBLIC,
+    def _get_queryset_for_anonymous_user(self):
+        anonymous_conditions = {
+            f"{self.post_field_name}__category__name": AccessCategory.PUBLIC,
         }
-        # Read operations
+        # Set conditions by http method
+        self.__set_conditions_by_http_method(anonymous_conditions)
+
+        return self.queryset.filter(**anonymous_conditions)
+
+    def _get_queryset_for_authenticated_user(self):
+        # Public and Authenticated Posts
+        non_owner_different_team_queryset = self._get_queryset_for_non_owner_different_team_posts()
+        # Same Team Posts
+        non_owner_same_team_queryset = self._get_queryset_for_non_owner_same_team_posts()
+        # Owner Posts
+        owner_queryset = self._get_queryset_for_owner_post()
+        # Combine the querysets
+        self.queryset = (owner_queryset | non_owner_same_team_queryset | non_owner_different_team_queryset)
+        return self.queryset
+
+    def _get_queryset_for_non_owner_different_team_posts(self):
+        nodt_conditions = {
+        f"{self.post_field_name}__category__name__in": [AccessCategory.PUBLIC, AccessCategory.AUTHENTICATED]
+        }
+        # Set conditions by http method
+        self.__set_conditions_by_http_method(nodt_conditions)
+        # Filter by contidionts
+        nodt_queryset = self.queryset.filter(**nodt_conditions)
+        # Exclude the user and the team
+        nodt_queryset = nodt_queryset.exclude(**{
+            f"{self.user_field_name}": self.request.user,
+            f"{self.team_field_name}": self.request.user.team
+        })
+        return nodt_queryset
+    
+    def _get_queryset_for_non_owner_same_team_posts(self):
+        # Basic conditions
+        nost_conditions = {
+            f"{self.post_field_name}__category__name": AccessCategory.TEAM,
+            f"{self.team_field_name}": self.request.user.team
+        }
+        # Set conditions by HTTP Method
+        self.__set_conditions_by_http_method(nost_conditions)
+        # Filter by contidionts
+        nost_queryset = self.queryset.filter(**nost_conditions)
+        # Exclude the user
+        nost_queryset = nost_queryset.exclude(**{
+            f"{self.user_field_name}": self.request.user
+        })
+        return nost_queryset
+    
+    def _get_queryset_for_owner_post(self):
+        # Basic conditions
+        owner_conditions = {
+            f"{self.post_field_name}__category__name": AccessCategory.AUTHOR,
+            f"{self.user_field_name}": self.request.user
+        }
+        # Set conditions by HTTP Method
+        self.__set_conditions_by_http_method(owner_conditions)
+        # Filter by conditions
+        return self.queryset.filter(**owner_conditions)
+    
+    def __set_conditions_by_http_method(self, conditions):
         if self.request.method in SAFE_METHODS:
-            filter_conditions[f"{self.search_field_name}__permission__name__in"] = [AccessPermission.READ, AccessPermission.EDIT]
-        # Edit operations
+            conditions[f"{self.post_field_name}__permission__name__in"] = [AccessPermission.READ, AccessPermission.EDIT]
         else:
-            filter_conditions[f"{self.search_field_name}__permission__name"] = AccessPermission.EDIT
+            conditions[f"{self.post_field_name}__permission__name"] = AccessPermission.EDIT
 
-        return self.queryset.filter(**filter_conditions)
+    def __set_search_fields_by_model_relationship(self, is_post_related):
+        self.user_field_name = "post__user" if is_post_related else "user"
+        self.team_field_name = "post__user__team" if is_post_related else "user__team"
+        self.post_field_name = "post_category_permission"
+        if is_post_related:
+            self.post_field_name = "post__" + self.post_field_name
+            self.queryset = self.queryset.filter(is_active=True)
 
-    def _set_queryset_for_authenticated_user(self):
-        if self.request.method in SAFE_METHODS:
-            return self._set_queryset_for_authenticated_user_reading()
-        return self._set_queryset_for_authenticated_user_editing()
 
-    def _set_queryset_for_authenticated_user_reading(self):
-        # Public Posts
-        read_public_post = Q(**{
-            f"{self.search_field_name}__category__name": AccessCategory.PUBLIC,
-            f"{self.search_field_name}__permission__name__in": [AccessPermission.READ, AccessPermission.EDIT],
-        })
-        # Authenticated Posts
-        read_auth_post = Q(**{
-            f"{self.search_field_name}__category__name": AccessCategory.AUTHENTICATED,
-            f"{self.search_field_name}__permission__name__in": [AccessPermission.READ, AccessPermission.EDIT],
-        })
-        # Team Posts
-        read_team_post = Q(**{
-            f"{self.search_field_name}__category__name": AccessCategory.TEAM,
-            f"{self.search_field_name}__permission__name__in": [AccessPermission.READ, AccessPermission.EDIT],
-            f"{self.team_field_name}": self.request.user.team
-        })
-        # User Posts
-        read_author_post = Q(**{
-            f"{self.search_field_name}__category__name": AccessCategory.AUTHOR,
-            f"{self.search_field_name}__permission__name__in": [AccessPermission.READ, AccessPermission.EDIT],
-            f"{self.user_field_name}": self.request.user
-        })
-        # Exclude user conditions
-        exclude_user_conditions = (read_public_post | read_auth_post | read_team_post)
-        self.queryset.filter(exclude_user_conditions).exclude(**{f"{self.user_field_name}": self.request.user})
-
-        # Add user specific post to the queryset
-        self.queryset = (self.queryset | self.queryset.filter(read_author_post))
-        return self.queryset
-
-    def _set_queryset_for_authenticated_user_editing(self):
-        # Public Posts
-        edit_public_post = Q(**{
-            f"{self.search_field_name}__category__name": AccessCategory.PUBLIC,
-            f"{self.search_field_name}__permission__name": AccessPermission.EDIT,
-        })
-        # Authenticated Posts
-        edit_auth_post = Q(**{
-            f"{self.search_field_name}__category__name": AccessCategory.AUTHENTICATED,
-            f"{self.search_field_name}__permission__name": AccessPermission.EDIT,
-        })
-        # Team Posts
-        edit_team_post = Q(**{
-            f"{self.search_field_name}__category__name": AccessCategory.TEAM,
-            f"{self.search_field_name}__permission__name": AccessPermission.EDIT,
-            f"{self.team_field_name}": self.request.user.team
-        })
-        # User Posts
-        edit_author_post = Q(**{
-            f"{self.search_field_name}__category__name": AccessCategory.AUTHOR,
-            f"{self.search_field_name}__permission__name": AccessPermission.EDIT,
-            f"{self.user_field_name}": self.request.user
-        })
-        # Exclude user conditions
-        exclude_user_conditions = (edit_public_post | edit_auth_post | edit_team_post)
-        self.queryset.filter(exclude_user_conditions).exclude(**{f"{self.user_field_name}": self.request.user})
-        print("before adding user", self.queryset)
-        print("is this the problem?", self.queryset.filter(edit_author_post))
-        # Add user specific post to the queryset
-        self.queryset = (self.queryset | self.queryset.filter(edit_author_post))
-        print("after adding user", self.queryset)
-        return self.queryset
