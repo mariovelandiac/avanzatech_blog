@@ -596,7 +596,6 @@ class PostUnauthenticatedUserDeleteViewTests(APITestCase):
         self.assertEqual(Post.objects.count(), current_posts)
         
 
-
 class PostAuthenticatedUserCreateViewTests(APITestCase):
     
     def setUp(self):
@@ -726,6 +725,596 @@ class PostAuthenticatedUserCreateViewTests(APITestCase):
         # Assert
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Post.objects.count(), current_posts)
+
+class PostAuthenticatedUserListViewTests(APITestCase):
+    def setUp(self):
+        self.team = TeamFactory()
+        self.user = CustomUserFactory(team=self.team)
+        self.client.force_authenticate(self.user)
+        self.permissions = PermissionFactory.create_batch()
+        self.categories = CategoryFactory.create_batch()
+        self.factory_category_permission = {
+            AccessCategory.PUBLIC: AccessPermission.READ,
+            AccessCategory.AUTHENTICATED: AccessPermission.READ,
+            AccessCategory.TEAM: AccessPermission.EDIT,
+            AccessCategory.AUTHOR: AccessPermission.EDIT
+        }
+        self.url = reverse('post-list-create')
+
+    def test_authenticated_user_can_lists_public_or_authenticated_posts_with_read_permission_and_200_is_returned(self):
+        # Arrange
+        public_posts = 4
+        posts = PostFactory.create_batch(public_posts)
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, public_posts)
+        
+    def test_authenticated_user_can_not_list_public_and_authenticated_posts_with_no_permissions_and_200_is_returned(self):
+        # Arrange
+        public_posts = 4
+        posts = PostFactory.create_batch(public_posts)
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, 0)
+        self.assertEqual(len(results), 0)
+
+    def test_authenticated_user_can_list_authenticated_posts_without_public_permission_and_200_is_returned(self):
+        # Arrange
+        authenticated_posts = 4
+        posts = PostFactory.create_batch(authenticated_posts)
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.READ
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, authenticated_posts)
+        self.assertEqual(len(results), authenticated_posts)
+
+    def test_authenticated_user_can_not_list_authenticated_posts_with_no_permissions_and_200_is_returned(self):
+        # Arrange
+        authenticated_posts = 4
+        posts = PostFactory.create_batch(authenticated_posts)
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION    
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        expected_list_post = 0
+        # Act 
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_list_post)
+        self.assertEqual(len(results), expected_list_post)
+
+    def authenticated_user_can_list_posts_with_edit_permission_and_without_public_permission_and_200_is_returned(self):
+        # Arrange
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts)
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.EDIT
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, amount_posts)
+
+    def test_authenticated_user_can_list_posts_with_public_read_permission_but_without_authenticated_permission_and_200_is_returned(self):
+        # Arrange
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts)
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, amount_posts)
+
+    def test_authenticated_user_can_list_posts_with_public_edit_permission_but_without_authenticated_permission_and_200_is_returned(self):
+        # Arrange
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts)
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.EDIT
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, amount_posts)
+
+    def test_authenticated_user_can_list_posts_with_public_read_permission_but_without_team_permission_and_200_is_returned(self):
+        # Arrange
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts)
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, amount_posts)
+    
+    def test_authenticated_user_can_list_posts_with_public_edit_permission_but_without_team_permission_and_200_is_returned(self):
+        # Arrange
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts)
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.EDIT
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, amount_posts)
+
+    def test_authenticated_user_can_list_posts_with_authenticated_read_permission_but_without_team_permission_and_200_is_returned(self):
+        # Arrange
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts)
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.READ
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, amount_posts)
+    
+    def test_authenticated_user_can_list_posts_with_public_edit_permission_but_without_author_permission_and_200_is_returned(self):
+        # Arrange
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts)
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.EDIT
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, amount_posts)
+
+    def test_authenticated_user_can_list_posts_with_read_permission_from_same_team_and_200_is_returned(self):
+        # Arrange
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts, user=self.user)
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.READ
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, amount_posts)
+
+    def test_authenticated_user_can_list_posts_with_edit_permission_from_same_team_and_200_is_returned(self):
+        # Arrange
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts, user=self.user)
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.EDIT
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, amount_posts)
+
+    def test_another_authenticated_user_can_not_list_posts_with_team_read_permission_but_from_different_team(self):
+        # Arrange
+        another_user = CustomUserFactory()
+        self.client.force_authenticate(another_user)
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts, user=self.user)
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.READ
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, 0)
+
+    def test_authenticated_user_can_list_posts_created_by_them_with_author_read_permission(self):
+        # Arrange
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts, user=self.user)
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.READ
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, amount_posts)
+
+    def test_authenticated_user_can_list_posts_created_by_them_with_author_edit_permission(self):
+        # Arrange
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts, user=self.user)
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.EDIT
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, amount_posts)
+    
+    def test_authenticated_user_can_not_list_posts_from_another_author_with_just_author_read_permission_and_200_is_returned(self):
+        # Arrange
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts)
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.READ
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, 0)
+
+    def test_authenticated_user_can_not_list_posts_from_another_author_with_just_author_edit_permission_and_200_is_returned(self):
+        # Arrange
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts)
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.EDIT
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        results = response.data.get('results')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, 0)
+    
+    def test_authenticated_user_can_not_list_posts_with_no_permissions_and_200_is_returned(self):
+        # Arrange
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts)
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, 0)
+
+    def test_another_authenticated_user_can_list_posts_with_read_permission_from_the_same_team_and_200_is_returned(self):
+        # Arrange
+        another_user = CustomUserFactory(team=self.team)
+        self.client.force_authenticate(another_user)
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts, user=self.user)
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.READ
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, amount_posts)
+
+    def test_another_authenticated_user_can_list_posts_with_edit_permission_and_200_is_returned(self):
+        # Arrange
+        another_user = CustomUserFactory(team=self.team)
+        self.client.force_authenticate(another_user)
+        amount_posts = 4
+        posts = PostFactory.create_batch(amount_posts, user=self.user)
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.EDIT
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        count = response.data.get('count')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, amount_posts)
+
+
+class PostAuthenticatedUserRetrieveViewTests(APITestCase):
+    def setUp(self):
+        self.team = TeamFactory()
+        self.user = CustomUserFactory(team=self.team)
+        self.client.force_authenticate(self.user)
+        self.permissions = PermissionFactory.create_batch()
+        self.categories = CategoryFactory.create_batch()
+        self.factory_category_permission = {
+            AccessCategory.PUBLIC: AccessPermission.READ,
+            AccessCategory.AUTHENTICATED: AccessPermission.READ,
+            AccessCategory.TEAM: AccessPermission.EDIT,
+            AccessCategory.AUTHOR: AccessPermission.EDIT
+        }
+
+    def test_authenticated_user_can_retrieve_a_post_with_public_read_permission_and_200_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('id'), post.id)
+    
+    def test_authenticated_user_can_retrieve_a_post_with_public_edit_permission_and_200_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.EDIT
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('id'), post.id)
+
+    def test_authenticated_user_can_retrieve_a_post_with_authenticated_read_permission_and_200_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.READ
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('id'), post.id)
+
+    def test_authenticated_user_can_retrieve_a_post_with_authenticated_edit_permission_and_200_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.EDIT
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('id'), post.id)
+
+    def test_authenticated_user_can_retrieve_a_post_with_public_read_permission_but_without_authenitcated_permision_and_200_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('id'), post.id)
+    
+    def test_authenticated_user_can_retrieve_a_post_with_public_edit_permission_but_without_authenticated_permission_and_200_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.EDIT
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('id'), post.id)
+
+    def test_authenticated_user_can_retrieve_a_post_without_public_permission_but_with_authenticated_read_permission_and_200_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.READ
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('id'), post.id)
+
+    def test_authenticated_user_can_retrieve_a_post_without_public_permission_but_with_authenticated_edit_permission_and_200_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.EDIT
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('id'), post.id)
+
+    def test_authenticated_user_can_not_retrieve_a_post_without_any_public_and_authenticated_post_and_404_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        post = PostFactory()
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_another_authenticated_user_can_retrieve_post_from_the_same_team_with_read_permission_and_200_is_returned(self):
+        # Arrange
+        another_user = CustomUserFactory(team=self.team)
+        self.client.force_authenticate(another_user)
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.READ
+        post = PostFactory(user=self.user)
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('id'), post.id)
+
+    def test_another_authenticated_user_can_retrieve_post_from_the_same_team_with_edit_permission_and_200_is_returned(self):
+        # Arrange
+        another_user = CustomUserFactory(team=self.team)
+        self.client.force_authenticate(another_user)
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.EDIT
+        post = PostFactory(user=self.user)
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('id'), post.id)
+
+    def test_another_authenticated_user_can_not_retrieve_post_from_the_same_team_without_any_permission(self):
+        # Arrange
+        another_user = CustomUserFactory(team=self.team)
+        self.client.force_authenticate(another_user)
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.NO_PERMISSION
+        post = PostFactory(user=self.user)
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_authenticated_user_can_retrieve_a_post_created_by_themselves_with_read_permission_and_200_is_returned(self):
+        # Arrange
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.READ
+        post = PostFactory(user=self.user)
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('id'), post.id)
+
+        def test_authenticated_user_can_retrieve_a_post_created_by_themselves_with_edit_permission_and_200_is_returned(self):
+            # Arrange
+            self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.EDIT
+            post = PostFactory(user=self.user)
+            post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+            url = reverse('post-retrieve-update-delete', args=[post.id])
+            # Act
+            response = self.client.get(url)
+            # Assert
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(response.data.get('id'), post.id)
+
+        def test_authenticated_user_can_not_retrieve_a_post_created_by_themselves_without_any_permission_and_404_is_returned(self):
+            # Arrange
+            self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.NO_PERMISSION
+            post = PostFactory(user=self.user)
+            post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+            url = reverse('post-retrieve-update-delete', args=[post.id])
+            # Act
+            response = self.client.get(url)
+            # Assert
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        def test_another_user_can_not_retrieve_a_post_with_only_read_permission_by_its_author_and_404_is_returned(self):
+            # Arrange
+            another_user = CustomUserFactory(team=self.team)
+            self.client.force_authenticate(another_user)
+            self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+            self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+            self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.NO_PERMISSION
+            self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.READ
+            post = PostFactory(user=self.user)
+            post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+            url = reverse('post-retrieve-update-delete', args=[post.id])
+            # Act
+            response = self.client.get(url)
+            # Assert
+            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_another_user_can_not_retrieve_a_post_with_only_edit_permission_by_its_author_and_404_is_returned(self):
+        # Arrange
+        another_user = CustomUserFactory(team=self.team)
+        self.client.force_authenticate(another_user)
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.EDIT
+        post = PostFactory(user=self.user)
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_another_user_can_not_retrieve_a_post_with_no_permissions_by_its_author_and_404_is_returned(self):
+        # Arrange
+        another_user = CustomUserFactory(team=self.team)
+        self.client.force_authenticate(another_user)
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.NO_PERMISSION
+        post = PostFactory(user=self.user)
+        post_category_permission = PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+
+
 
 class PostAuthenticatedUserDeleteViewTests(APITestCase):
     def setUp(self):

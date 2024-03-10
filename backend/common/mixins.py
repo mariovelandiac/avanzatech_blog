@@ -138,7 +138,7 @@ class GetQuerysetByPermissionsMixin:
         owner_queryset = self._get_queryset_for_owner_post()
         # Combine the querysets
         self.queryset = (owner_queryset | non_owner_same_team_queryset | non_owner_different_team_queryset)
-        return self.queryset
+        return self.queryset.distinct()
 
     def _get_queryset_for_non_owner_different_team_posts(self):
         """
@@ -154,9 +154,12 @@ class GetQuerysetByPermissionsMixin:
         self.__set_conditions_by_http_method(nodt_conditions)
         # Filter by conditions
         nodt_queryset = self.queryset.filter(**nodt_conditions)
-        # Exclude the user and the team
+        # Exclude the user
         nodt_queryset = nodt_queryset.exclude(**{
-            f"{self.user_field_name}": self.request.user,
+            f"{self.user_field_name}": self.request.user
+        })
+        # Exclude the team
+        nodt_queryset = nodt_queryset.exclude(**{
             f"{self.team_field_name}": self.request.user.team
         })
         return nodt_queryset
