@@ -38,11 +38,16 @@ class PostListCreateSerializer(serializers.ModelSerializer):
         attrs = super().validate(attrs)
 
         # Custom validations
+        # Four categories are sended
         category_permission_data = attrs.get('post_category_permission')
         categories_amount = len(CATEGORIES.keys()) 
         if len(category_permission_data) < categories_amount:
             raise serializers.ValidationError(f"The {categories_amount} category permissions are required")
-
+            
+        # Every category is different from each other
+        category_ids = [cp['category'] for cp in category_permission_data]
+        if len(set(category_ids)) != len(category_ids):
+            raise serializers.ValidationError("Each category in post_category_permission must be different from each other")
         return attrs
 
 class PostRetrieveUpdateDestroySerializer(serializers.ModelSerializer):

@@ -1,7 +1,7 @@
 from django.test import TestCase
 from category.models import Category
 from category.tests.factories import CategoryFactory
-from common.constants import AvailableCategories
+from common.constants import AccessCategory
 
 
 # Create your tests here.
@@ -30,7 +30,7 @@ class CategoryModelTests(TestCase):
         # Assert
         # There are 4 categories in the database
         self.assertEqual(len(categories), 4)
-        self.assertEqual(categories[0].name, AvailableCategories.PUBLIC)
-        self.assertEqual(categories[1].name, AvailableCategories.AUTHENTICATED)
-        self.assertEqual(categories[2].name, AvailableCategories.TEAM)
-        self.assertEqual(categories[3].name, AvailableCategories.AUTHOR)
+        self.assertEqual(categories[0].name, AccessCategory.PUBLIC)
+        self.assertEqual(categories[1].name, AccessCategory.AUTHENTICATED)
+        self.assertEqual(categories[2].name, AccessCategory.TEAM)
+        self.assertEqual(categories[3].name, AccessCategory.AUTHOR)

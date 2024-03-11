@@ -712,6 +712,34 @@ class PostAuthenticatedUserCreateViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Post.objects.count(), current_posts)
 
+    def test_authenticated_user_can_not_create_post_with_repeated_categories_in_payload_and_400_is_returned(self):
+        # Arrange
+        current_posts = Post.objects.count()
+        self.data['category_permission'] = [
+            {
+                "category": self.categories[0].id,
+                "permission": self.permissions[0].id
+            },
+            {
+                "category": self.categories[0].id,
+                "permission": self.permissions[1].id
+            },
+            {
+                "category": self.categories[1].id,
+                "permission": self.permissions[1].id
+            },
+            {
+                "category": self.categories[1].id,
+                "permission": self.permissions[1].id
+            }
+        ]
+        # Act
+        response = self.client.post(self.url, self.data, format='json')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Post.objects.count(), current_posts)
+
+
 class PostAuthenticatedUserListViewTests(APITestCase):
     def setUp(self):
         self.team = TeamFactory()

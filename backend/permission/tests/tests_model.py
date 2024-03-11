@@ -1,7 +1,7 @@
 from django.test import TestCase
 from permission.models import Permission
 from permission.tests.factories import PermissionFactory
-from common.constants import AvailablePermissions
+from common.constants import AccessPermission
 
 # Create your tests here.
 class PermissionModelTests(TestCase):
@@ -28,7 +28,7 @@ class PermissionModelTests(TestCase):
         # Assert
         # There are 4 permissions in the database
         self.assertEqual(len(permissions), 3)
-        self.assertEqual(permissions[0].name, AvailablePermissions.READ)
-        self.assertEqual(permissions[1].name, AvailablePermissions.EDIT)
-        self.assertEqual(permissions[2].name, AvailablePermissions.NO_PERMISSION)
+        self.assertEqual(permissions[0].name, AccessPermission.READ)
+        self.assertEqual(permissions[1].name, AccessPermission.EDIT)
+        self.assertEqual(permissions[2].name, AccessPermission.NO_PERMISSION)
         
