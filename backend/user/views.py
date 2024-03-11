@@ -1,6 +1,9 @@
 # Create your views here.
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
+from rest_framework.generics import CreateAPIView
+from rest_framework.permissions import AllowAny
+from user.serializers import CustomUserCreateSerializer
 
 def login_view(request):
     if request.method == 'POST':
@@ -28,3 +31,13 @@ def success_page(request):
 
 def login_page(request):
     return redirect('login')
+
+class UserCreateView(CreateAPIView):
+    serializer_class = CustomUserCreateSerializer
+    permission_classes = (AllowAny,)
+
+    def perform_create(self, serializer):
+        user = serializer.save()
+        user.set_password(user.password)
+        user.save()
+        return user

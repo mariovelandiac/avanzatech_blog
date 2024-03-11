@@ -1,1 +1,1 @@
-DEFAULT_TEAM_NAME = 'default team'
+DEFAULT_TEAM_NAME = 'Default Team'

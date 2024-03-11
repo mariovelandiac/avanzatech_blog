@@ -4,12 +4,17 @@ from common.constants import STATUS
 from comment.tests.factories import CommentFactory
 from comment.models import Comment
 from post.models import Post
-from user.tests.factories import CustomUserFactory
 from post.tests.factories import PostFactory
+from user.tests.factories import CustomUserFactory
+from team.constants import DEFAULT_TEAM_NAME
+from team.tests.factories import TeamFactory
 
 # Create your tests here.
 class CommentModelTests(TestCase):
 
+    def setUp(self):
+        self.team = TeamFactory(name=DEFAULT_TEAM_NAME)
+    
     def test_create_a_comment_successfully_in_database(self):
         #Act
         comment = CommentFactory()

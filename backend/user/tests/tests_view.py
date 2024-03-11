@@ -3,9 +3,14 @@ from user.tests.factories import CustomUserFactory
 from rest_framework.reverse import reverse
 from rest_framework import status
 from django.contrib.sessions.backends.db import SessionStore
+from team.tests.factories import TeamFactory
+from team.constants import DEFAULT_TEAM_NAME
 
 class UserLogInViewTests(APITestCase):
 
+    def setUp(self):
+        self.team = TeamFactory(name=DEFAULT_TEAM_NAME)
+    
     def test_an_existing_user_is_authenticated_and_log_in_successfully(self):
         # Arrange
         raw_password = "test_password"
@@ -143,6 +148,7 @@ class UserLogInViewTests(APITestCase):
 class UserLogOutViewTests(APITestCase):
 
     def setUp(self):
+        self.team = TeamFactory(name=DEFAULT_TEAM_NAME)
         user_db = CustomUserFactory()
         self.client.force_login(user_db)
         self.user_id = self.client.session.get("_auth_user_id")

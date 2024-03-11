@@ -14,12 +14,15 @@ class CustomUserManager(BaseUserManager):
         if not password:
             raise ValueError(_('Password filed must be set'))
 
-        username = extra_fields.get('username')
-        if not username:
-            raise ValueError(_('Username is required'))
+        if not extra_fields.get('first_name'):
+            raise ValueError(_('First name must be set'))
+        
+        if not extra_fields.get('last_name'):
+            raise ValueError(_('Last name must be set'))
 
+        # Assign default team
         team = extra_fields.get('team')
-        if not team or not isinstance(team, Team):
+        if not team:
             team_instance = Team.objects.get(name=DEFAULT_TEAM_NAME)
             extra_fields['team'] = team_instance
 
@@ -50,13 +53,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_superuser
     last_login
     '''
-    username = models.CharField(_("username"), max_length=64, unique=True,
-        error_messages={
-            "unique": _("A user with that username already exists."),
-        },
-        null=False,
-        blank=False
-    ) 
     email = models.EmailField(_('email address'), unique=True)
     is_staff = models.BooleanField(_('staff status'), default=False)
     is_active = models.BooleanField(_('active'), default=True)
@@ -67,12 +63,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
     
     class Meta:
         verbose_name = 'User'
         verbose_name_plural = 'Users'
     
     def __str__(self):
-        return self.username
+        return f"{self.first_name} {self.last_name}"
 

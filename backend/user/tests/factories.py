@@ -5,7 +5,6 @@ from team.tests.factories import TeamFactory
 
 class CustomUserFactory(DjangoModelFactory):
     
-    username = Sequence(lambda n: f'username{n}')
     email = Sequence(lambda n: f'user{n}@example.com')
     password = Faker('password')
     team = SubFactory(TeamFactory)

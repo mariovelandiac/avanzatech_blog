@@ -44,7 +44,7 @@ class PostAdmin(ModelAdmin):
     
     # Show owner instead of user
     def owner(self, obj):
-        return obj.user.username    
+        return obj.user.email    
     
 
 # Register your models here.
