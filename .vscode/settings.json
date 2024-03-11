@@ -1,0 +1,14 @@
+{
+    "cSpell.words": [
+        "adminpassword",
+        "anotheruser",
+        "avanzatech",
+        "createsuperuser",
+        "filterset",
+        "makemigrations",
+        "psycopg",
+        "redgreenunittest",
+        "runserver",
+        "testemail"
+    ]
+}
