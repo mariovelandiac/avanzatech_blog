@@ -15,3 +15,9 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
             fields = ['id','first_name','last_name','email','password']
             read_only_fields = ('id',)
             extra_kwargs = {'password': {'write_only': True}}
+
+        def create(self, validated_data):
+            email = validated_data.pop('email') # Extract the email from the data
+            password = validated_data.pop('password')  # Extract the password from the data
+            user = CustomUser.objects.create_user(email, password, **validated_data)  # Create a user instance with the validated data
+            return user

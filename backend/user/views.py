@@ -35,9 +35,3 @@ def login_page(request):
 class UserCreateView(CreateAPIView):
     serializer_class = CustomUserCreateSerializer
     permission_classes = (AllowAny,)
-
-    def perform_create(self, serializer):
-        user = serializer.save()
-        user.set_password(user.password)
-        user.save()
-        return user
