@@ -1,8 +1,8 @@
 from rest_framework.generics import ListCreateAPIView, DestroyAPIView, get_object_or_404
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, SAFE_METHODS
 from django_filters import rest_framework as filters
 from like.models import Like
-from like.serializers import LikeListCreateSerializer, LikeDeleteSerializer
+from like.serializers import LikeCreateSerializer, LikeListSerializer, LikeDeleteSerializer
 from common.paginator import TwentyResultsSetPagination
 from common.mixins import DestroyMixin, PerformCreateMixin, GetQuerysetByPermissionsMixin
 
@@ -11,7 +11,6 @@ class ListCreateLikeView(PerformCreateMixin, ListCreateAPIView, GetQuerysetByPer
 
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = TwentyResultsSetPagination
-    serializer_class = LikeListCreateSerializer
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('post', 'user')
     
@@ -22,6 +21,11 @@ class ListCreateLikeView(PerformCreateMixin, ListCreateAPIView, GetQuerysetByPer
         queryset = self.get_queryset()
         obj = get_object_or_404(queryset)
         return obj
+
+    def get_serializer_class(self):
+        if self.request.method in SAFE_METHODS:
+            return LikeListSerializer
+        return LikeCreateSerializer
     
 
 class DeleteLikeView(DestroyMixin, DestroyAPIView):

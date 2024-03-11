@@ -3,7 +3,7 @@ from rest_framework.generics import get_object_or_404
 from django.db.models.query import QuerySet
 from django.db.models import Q
 from django.contrib.auth.models import AnonymousUser
-from common.validators import check_read_permissions
+from common.validators import check_permissions
 from common.constants import AccessCategory, AccessPermission
 
 class PerformCreateMixin:
@@ -26,7 +26,7 @@ class PerformCreateMixin:
         """
         user_request = self.request.user
         post = serializer.validated_data.get('post')
-        check_read_permissions(user_request, post)
+        check_permissions(user_request, post)
         serializer.save(user=user_request)
 
 class DestroyMixin:
@@ -93,12 +93,15 @@ class GetQuerysetByPermissionsMixin:
         Returns:
             The filtered queryset based on user permissions.
         """
+        # Set the queryset, the read_only status, and the relationship with post model
         self.queryset = model_class.objects.all()
+        self.read_only = self.request.method in SAFE_METHODS
+        self.is_post_related = is_post_related
         # User is Admin
         if self.request.user.is_staff:
             return self.queryset
 
-        # Related models
+        # Set search fields by model relationship
         self.__set_search_fields_by_model_relationship(is_post_related)
 
         # Anonymous user
@@ -213,7 +216,7 @@ class GetQuerysetByPermissionsMixin:
         Returns:
             None
         """
-        if self.request.method in SAFE_METHODS:
+        if self.read_only or self.is_post_related:
             conditions[f"{self.post_field_name}__permission__name__in"] = [AccessPermission.READ, AccessPermission.EDIT]
         else:
             conditions[f"{self.post_field_name}__permission__name"] = AccessPermission.EDIT

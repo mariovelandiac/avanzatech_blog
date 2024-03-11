@@ -1,14 +1,12 @@
 from django.forms.models import model_to_dict
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
+from user.serializers import CustomUserSerializer
 from like.models import Like
 from common.constants import Status
 from common.validators import validate_user
 
-
-
-class LikeListCreateSerializer(serializers.ModelSerializer):
-
+class LikeCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Like
         fields = ['id','user','post','is_active']
@@ -23,7 +21,7 @@ class LikeListCreateSerializer(serializers.ModelSerializer):
         user = data.get('user')
         if post is None or user is None:
             return super().run_validation(data)
-
+        
         # Check if 'is_active' is False in the database
         like_in_db = Like.objects.filter(post=data['post'], user=data['user']).first()
         is_active_in_database = like_in_db and not like_in_db.is_active
@@ -37,8 +35,12 @@ class LikeListCreateSerializer(serializers.ModelSerializer):
     
         return super().run_validation(data)
 
-
-
+class LikeListSerializer(serializers.ModelSerializer):
+    user = CustomUserSerializer(read_only=True)
+    class Meta:
+        model = Like
+        fields = ['id','user','post','is_active']
+        read_only_fields = ('id','user','post','is_active')
 
 
 class LikeDeleteSerializer(serializers.ModelSerializer):
