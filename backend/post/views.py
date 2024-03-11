@@ -6,7 +6,7 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from post.models import Post
 from post.serializers import PostListCreateSerializer, PostRetrieveUpdateDestroySerializer
-from common.constants import ReadPermissions, DEFAULT_ACCESS_CONTROL
+from common.constants import DEFAULT_ACCESS_CONTROL
 from common.mixins import GetQuerysetByPermissionsMixin
 from common.paginator import TenResultsSetPagination
 

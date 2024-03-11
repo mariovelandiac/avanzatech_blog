@@ -1,7 +1,7 @@
 from common.models import BaseModel
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from common.constants import READ_PERMISSIONS, EXCERPT_LENGTH
+from common.constants import EXCERPT_LENGTH
 from user.models import CustomUser
 from category.models import Category
 from permission.models import Permission
