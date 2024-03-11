@@ -515,496 +515,606 @@ class LikeCreateViewTests(APITestCase):
         self.assertEqual(Like.objects.count(), expected_likes_db)
         self.assertFalse(like_db.is_active)
 
-# class LikeListViewTests(APITestCase):
+class LikeListViewTests(APITestCase):
 
-#     def setUp(self):
-#         self.team = TeamFactory()
-#         self.user = CustomUserFactory(team=self.team)
-#         self.client.force_authenticate(self.user)
-#         self.url = reverse('like-list-create')
+    def setUp(self):
+        self.team = TeamFactory()
+        self.user = CustomUserFactory(team=self.team)
+        self.client.force_authenticate(self.user)
+        self.url = reverse('like-list-create')
+        self.factory_category_permission = {
+            AccessCategory.PUBLIC: AccessPermission.READ,
+            AccessCategory.AUTHENTICATED: AccessPermission.READ,
+            AccessCategory.TEAM: AccessPermission.EDIT,
+            AccessCategory.AUTHOR: AccessPermission.EDIT
+        }
+        CategoryFactory.create_batch()
+        PermissionFactory.create_batch()
 
-#     def test_unauthenticated_user_can_see_only_public_likes(self):
-#         # Arrange
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.PUBLIC)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHENTICATED)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.TEAM)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHOR)
-#         expected_count = 2
-#         self.client.logout()
-#         # Act
-#         response = self.client.get(self.url)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Response
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         for like in results:
-#             post_db = Post.objects.get(id=like['post'])
-#             self.assertEqual(post_db.read_permission, ReadPermissions.PUBLIC)
+    def test_unauthenticated_user_can_list_only_public_likes_and_200_is_returned(self):
+        # Arrange
+        public_post = PostFactory()
+        PostCategoryPermissionFactory.create(post=public_post, category_permission=self.factory_category_permission)
+        non_public_post = PostFactory()
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create(post=non_public_post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=public_post)
+        LikeFactory.create_batch(3, post=non_public_post)
+        expected_likes = 3
+        # Act
+        self.client.logout()
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
 
-#     def test_logged_in_user_can_list_likes_with_public_and_authenticated_associated_post(self):
-#         # Arrange
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.PUBLIC)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHENTICATED)
-#         expected_count = 4
-#         # Act
-#         response = self.client.get(self.url)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Response
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
+    def test_logged_in_user_can_list_likes_with_public_read_permission_and_not_authenticated_permission(self):
+        # Arrange
+        post = PostFactory()
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post)
+        expected_likes = 3
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
 
-#     def test_logged_in_user_only_can_see_likes_with_team_permission_by_the_same_team(self):
-#         # Arrange
-#         other_team = TeamFactory()
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.TEAM, user__team=self.team)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.TEAM, user__team=other_team)
-#         expected_count = 2
-#         # Act
-#         response = self.client.get(self.url)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Response
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         for like in results:
-#             user_db = CustomUser.objects.get(id=like['user'])
-#             self.assertEqual(user_db.team.id, self.team.id)
+    def test_logged_in_user_can_list_likes_with_public_edit_permission_and_not_authenticated_permission(self):
+        # Arrange
+        post = PostFactory()
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.EDIT
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post)
+        expected_likes = 3
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
 
-#     def test_logged_in_user_only_can_see_likes_with_author_permission_post_by_the_same_author(self):
-#         # Arrange
-#         other_user = CustomUserFactory()
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHOR, user=self.user)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHOR, user=other_user)
-#         expected_count = 2
-#         # Act
-#         response = self.client.get(self.url)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Response
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         for like in results:
-#             user_db = CustomUser.objects.get(id=like['user'])
-#             self.assertEqual(user_db.id, self.user.id)
+    def test_logged_in_user_can_list_likes_with_non_public_permission_but_with_authenticated_read_permission(self):
+        # Arrange
+        post = PostFactory()
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.READ
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post)
+        expected_likes = 3
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
 
-#     def test_logged_in_user_can_list_likes_with_team_permission_post_but_not_author_by_the_same_user(self):
-#         # Arrange
-#         other_user = CustomUserFactory(team=self.team)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.TEAM, user=other_user)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHOR, user=other_user)
-#         expected_count = 2
-#         # Act
-#         response = self.client.get(self.url)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Response
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         for like in results:
-#             post_db = Post.objects.get(id=like['post'])
-#             self.assertEqual(post_db.read_permission, ReadPermissions.TEAM)
+    def test_logged_in_user_can_list_likes_with_non_public_permission_but_with_authenticated_edit_permission(self):
+        # Arrange
+        post = PostFactory()
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.EDIT
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post)
+        expected_likes = 3
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
 
-#     def test_logged_in_user_can_list_public_authenticated_team_and_self_likes(self):
-#         # Arrange
-#         other_user = CustomUserFactory(team=self.team)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.PUBLIC)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHENTICATED)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.TEAM, user=other_user)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHOR, user=self.user)
-#         expected_count = 8
-#         # Act
-#         response = self.client.get(self.url)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
+    def test_logged_in_user_can_not_list_likes_with_any_public_and_authenticated_permission(self):
+        # Arrange
+        post = PostFactory()
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post)
+        expected_likes = 0
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
 
-#     def test_logged_in_user_can_list_team_and_self_likes(self):
-#         # Arrange
-#         other_user = CustomUserFactory(team=self.team)
-#         LikeFactory.create_batch(1, post__read_permission=ReadPermissions.TEAM, user=self.user)
-#         LikeFactory.create_batch(1, post__read_permission=ReadPermissions.TEAM, user=other_user)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHOR, user=self.user)
-#         expected_count = 4
-#         # Act
-#         response = self.client.get(self.url)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
+    def test_logged_in_user_can_list_likes_with_mixed_public_and_authenticated_permissions(self):
+        # Arrange
+        post_1 = PostFactory()
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.READ
+        PostCategoryPermissionFactory.create(post=post_1, category_permission=self.factory_category_permission)
+        post_2 = PostFactory()
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create(post=post_2, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post_1)
+        LikeFactory.create_batch(3, post=post_2)
+        expected_likes = 6
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
 
-#     def test_user_without_any_like_available_to_see_will_receive_empty_list(self):
-#         # Arrange
-#         user = CustomUserFactory()
-#         self.client.force_authenticate(user)
-#         LikeFactory.create_batch(10, post__read_permission=ReadPermissions.AUTHOR, user=self.user)
-#         expected_count = 0
-#         #  Act
-#         response = self.client.get(self.url)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
+    def test_same_team_user_can_list_likes_from_the_same_team_posts_with_team_read_permission(self):
+        # Arrange
+        another_user = CustomUserFactory(team=self.team)
+        post = PostFactory(user=another_user)
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.READ
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post)
+        expected_likes = 3
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
 
-#     def test_admin_user_can_list_every_like_regardless_of_the_posts_permissions(self):
-#         admin_user = CustomUserFactory(is_staff=True)
-#         self.client.force_authenticate(admin_user)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.PUBLIC)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHENTICATED)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.TEAM)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHOR)
-#         expected_count = 8
-#         #  Act
-#         response = self.client.get(self.url)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
+    def test_same_team_user_can_list_likes_from_the_same_team_with_team_edit_permission(self):
+        # Arrange
+        another_user = CustomUserFactory(team=self.team)
+        post = PostFactory(user=another_user)
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.EDIT
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post)
+        expected_likes = 3
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
 
-#     def test_admin_user_can_list_self_likes(self):
-#         admin_user = CustomUserFactory(is_staff=True)
-#         self.client.force_authenticate(admin_user)
-#         LikeFactory.create_batch(3, user=admin_user)
-#         expected_count = 3
-#         #  Act
-#         response = self.client.get(self.url)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         for like in results:
-#             self.assertEqual(admin_user.id, like['user'])
+    def test_same_team_user_can_list_likes_from_the_same_team_and_from_the_authenticated_posts(self):
+        # Arrange
+        another_user = CustomUserFactory(team=self.team)
+        post_1 = PostFactory(user=another_user)
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.READ
+        PostCategoryPermissionFactory.create(post=post_1, category_permission=self.factory_category_permission)
+        post_2 = PostFactory()
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.READ
+        PostCategoryPermissionFactory.create(post=post_2, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post_1)
+        LikeFactory.create_batch(3, post=post_2)
+        expected_likes = 6
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
 
-#     def test_unauthenticated_user_can_filter_public_likes_by_user_id(self):
-#         # Arrange
-#         self.client.logout()
-#         other_user = CustomUserFactory()
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.PUBLIC, user=self.user)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.PUBLIC, user=other_user)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHENTICATED, user=self.user)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHENTICATED, user=other_user)
-#         query_params = {
-#             'user': self.user.id,
-#         }
-#         expected_count = 3
-#         # Act
-#         response = self.client.get(self.url, data=query_params)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         for like in results:
-#             post_db = Post.objects.get(id=like['post'])
-#             userd_db = CustomUser.objects.get(id=like['user'])
-#             self.assertEqual(post_db.read_permission, ReadPermissions.PUBLIC)
-#             self.assertEqual(userd_db.id, self.user.id)
+    def test_same_team_user_can_list_likes_from_the_same_team_and_from_themselves_posts(self):
+        # Arrange
+        another_user = CustomUserFactory(team=self.team)
+        post_1 = PostFactory(user=another_user)
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.READ
+        PostCategoryPermissionFactory.create(post=post_1, category_permission=self.factory_category_permission)
+        post_2 = PostFactory(user=self.user)
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.READ
+        PostCategoryPermissionFactory.create(post=post_2, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post_1)
+        LikeFactory.create_batch(3, post=post_2)
+        expected_likes = 6
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
 
-#     def test_unauthenticated_user_can_filter_public_likes_by_post_id(self):
-#         # Arrange
-#         self.client.logout()
-#         post_public = PostFactory(read_permission=ReadPermissions.PUBLIC)
-#         LikeFactory.create_batch(3, post=post_public)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.PUBLIC)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHENTICATED)
+    def test_same_team_user_can_not_lists_likes_from_the_same_team_if_they_do_not_have_view_access(self):
+        # Arrange
+        another_user = CustomUserFactory(team=self.team)
+        post = PostFactory(user=another_user)
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        post_with_authenticated_access = PostFactory()
+        PostCategoryPermissionFactory.create(post=post_with_authenticated_access, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post)
+        LikeFactory.create_batch(3, post=post_with_authenticated_access)
+        expected_likes = 3
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
+    
+    def test_logged_in_user_can_list_likes_from_public_authenticated_same_team_and_from_themselves_posts(self):
+        # Arrange
+        another_user = CustomUserFactory(team=self.team)
+        post_1 = PostFactory(user=another_user)
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.READ
+        PostCategoryPermissionFactory.create(post=post_1, category_permission=self.factory_category_permission)
+        post_2 = PostFactory(user=self.user)
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.READ
+        PostCategoryPermissionFactory.create(post=post_2, category_permission=self.factory_category_permission)
+        post_3 = PostFactory()
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.READ
+        PostCategoryPermissionFactory.create(post=post_3, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post_1)
+        LikeFactory.create_batch(3, post=post_2)
+        LikeFactory.create_batch(3, post=post_3)
+        expected_likes = 9
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
 
-#         query_params = {
-#             'post': post_public.id,
-#         }
-#         expected_count = 3
-#         # Act
-#         response = self.client.get(self.url, data=query_params)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         for like in results:
-#             post_db = Post.objects.get(id=like['post'])
-#             self.assertEqual(post_db.read_permission, ReadPermissions.PUBLIC)
+    def test_post_owner_with_read_permission_can_list_likes_from_themselves_and_200_is_returned(self):
+        # Arrange
+        post = PostFactory(user=self.user)
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.READ
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post)
+        expected_likes = 3
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
 
-#     def test_unauthenticated_user_can_filter_public_likes_by_user_id_and_post_id(self):
-#         # Arrange
-#         self.client.logout()
-#         other_user = CustomUserFactory()
-#         post_public = PostFactory(read_permission=ReadPermissions.PUBLIC)
-#         like = LikeFactory(post=post_public, user=self.user)
-#         LikeFactory.create_batch(3, post=post_public) 
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.PUBLIC, user=self.user)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHENTICATED, user=self.user)
-#         query_params = {
-#             'user': self.user.id,
-#             'post': post_public.id
-#         }
-#         expected_count = 1
-#         # Act
-#         response = self.client.get(self.url, data=query_params)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         self.assertEqual(len(results), 1)
-#         self.assertEqual(results[0]['user'], self.user.id)
-#         self.assertEqual(results[0]['post'], post_public.id)
-#         post_db = Post.objects.get(id=results[0]['post'])
-#         self.assertEqual(post_db.read_permission, ReadPermissions.PUBLIC)
+    def test_post_owner_with_edit_permission_can_list_likes_from_themselves_and_200_is_returned(self):
+        # Arrange
+        post = PostFactory(user=self.user)
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.EDIT
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post)
+        expected_likes = 3
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
 
-#     def test_logged_in_user_can_filter_public_and_authenticated_likes_by_user_id(self):
-#         # Arrange
-#         other_user = CustomUserFactory()
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.PUBLIC, user=self.user)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.PUBLIC, user=other_user)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHENTICATED, user=self.user)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHENTICATED, user=other_user)
-#         query_params = {
-#             'user': self.user.id,
-#         }
-#         expected_count = 6
-#         # Act
-#         response = self.client.get(self.url, data=query_params)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         for like in results:
-#             user_db = CustomUser.objects.get(id=like['user'])
-#             self.assertEqual(user_db.id, self.user.id)
+    def test_post_owner_without_permission_can_not_list_likes_from_themselves_and_200_is_returned(self):
+        # Arrange
+        post = PostFactory(user=self.user)
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post)
+        expected_likes = 0
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
 
-#     def test_logged_in_user_can_filter_public_and_authenticated_likes_by_post_id(self):
-#         # Arrange
-#         other_user = CustomUserFactory()
-#         post_auth = PostFactory(read_permission=ReadPermissions.AUTHENTICATED)
-#         LikeFactory.create_batch(3, post=post_auth)
-#         LikeFactory.create_batch(3)
+    def test_user_without_any_like_available_to_see_will_receive_empty_list(self):
+        # Arrange
+        user = CustomUserFactory()
+        self.client.force_authenticate(user)
+        post = PostFactory()
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(10, post=post)
+        expected_count = 0
+        #  Act
+        response = self.client.get(self.url)
+        count = response.data.get('count')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
 
-#         query_params = {
-#             'post': post_auth.id,
-#         }
-#         expected_count = 3
-#         # Act
-#         response = self.client.get(self.url, data=query_params)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         for like in results:
-#             self.assertEqual(like['post'], post_auth.id)
+    def test_admin_user_can_list_every_like_regardless_of_the_posts_permissions(self):
+        # Arrange
+        admin_user = CustomUserFactory(is_staff=True)
+        self.client.force_authenticate(admin_user)
+        post = PostFactory()
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.READ
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(5, post=post)
+        expected_likes = 5
+        # Act
+        response = self.client.get(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), expected_likes)
 
-#     def test_logged_in_user_can_filter_public_likes_by_user_id_and_post_id(self):
-#         # Arrange
-#         other_user = CustomUserFactory()
-#         post_public = PostFactory(read_permission=ReadPermissions.AUTHENTICATED)
-#         like = LikeFactory(post=post_public, user=self.user)
-#         LikeFactory.create_batch(3, post=post_public) 
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.PUBLIC, user=self.user)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHENTICATED, user=self.user)
-#         query_params = {
-#             'user': self.user.id,
-#             'post': post_public.id
-#         }
-#         expected_count = 1
-#         # Act
-#         response = self.client.get(self.url, data=query_params)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         self.assertEqual(len(results), 1)
-#         self.assertEqual(results[0]['user'], self.user.id)
-#         self.assertEqual(results[0]['post'], post_public.id)
+    def test_admin_user_can_list_self_likes(self):
+        admin_user = CustomUserFactory(is_staff=True)
+        self.client.force_authenticate(admin_user)
+        post_1 = PostFactory(user=admin_user)
+        PostCategoryPermissionFactory.create(post=post_1, category_permission=self.factory_category_permission)
+        post_2 = PostFactory(user=admin_user)
+        PostCategoryPermissionFactory.create(post=post_2, category_permission=self.factory_category_permission)
+        LikeFactory(post=post_1, user=admin_user)
+        LikeFactory(post=post_2, user=admin_user)
+        expected_count = 2
+        #  Act
+        response = self.client.get(self.url)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        for like in results:
+            self.assertEqual(admin_user.id, like.get('user').get('id'))
 
-#     def test_logged_in_user_can_filter_likes_by_user_id(self):
-#         # Arrange
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.PUBLIC, user=self.user) 
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.TEAM, user=self.user) 
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHENTICATED, user=self.user) 
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHOR, user=self.user) 
-#         LikeFactory.create_batch(7)
-#         query_params = {
-#             'user': self.user.id,
-#         }
-#         expected_count = 10
-#         # Act
-#         response = self.client.get(self.url, data=query_params)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         for like in results:
-#             self.assertEqual(like['user'], self.user.id)
+    def test_listing_likes_returns_the_entire_user_and_the_team_name_of_each_user(self):
+        # Arrange
+        post = PostFactory()
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        like = LikeFactory(post=post)
+        expected_count = 1
+        # Act
+        response = self.client.get(self.url)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        self.assertEqual(results[0]['user']['id'], like.user.id)
+        self.assertEqual(results[0]['user']['first_name'], like.user.first_name)
+        self.assertEqual(results[0]['user']['last_name'], like.user.last_name)
+        self.assertEqual(results[0]['user']['team']['name'], like.user.team.name)
+    
+    def test_unauthenticated_user_can_filter_public_likes_by_user_id(self):
+        # Arrange
+        self.client.logout()
+        other_user = CustomUserFactory()
+        post_1 = PostFactory()
+        PostCategoryPermissionFactory.create(post=post_1, category_permission=self.factory_category_permission)
+        post_2 = PostFactory()
+        PostCategoryPermissionFactory.create(post=post_2, category_permission=self.factory_category_permission)
+        LikeFactory(post=post_1, user=self.user)
+        LikeFactory(post=post_1, user=other_user)
+        LikeFactory(post=post_2, user=self.user)
+        LikeFactory(post=post_2, user=other_user)
+        query_params = {
+            'user': self.user.id,
+        }
+        expected_count = 2
+        # Act
+        response = self.client.get(self.url, data=query_params)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        for like in results:
+            user_db = CustomUser.objects.get(id=like['user']['id'])
+            self.assertEqual(user_db.id, self.user.id)
 
-#     def test_logged_in_user_can_filter_likes_by_post_id_with_team_permission_post(self):
-#         # Arrange
-#         post = PostFactory(read_permission=ReadPermissions.TEAM, user__team=self.team)
-#         LikeFactory.create_batch(3, post=post, user__team=self.team) 
-#         LikeFactory.create_batch(3)
-#         query_params = {
-#             'post': post.id,
-#         }
-#         expected_count = 3
-#         # Act
-#         response = self.client.get(self.url, data=query_params)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         for like in results:
-#             post_db = Post.objects.get(id=like['post'])
-#             self.assertEqual(post_db.read_permission, ReadPermissions.TEAM)
+    def test_unauthenticated_user_can_filter_public_likes_by_post_id(self):
+        # Arrange
+        self.client.logout()
+        post_public = PostFactory()
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        PostCategoryPermissionFactory.create(post=post_public, category_permission=self.factory_category_permission)
+        post_private = PostFactory()
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory.create(post=post_private, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post_public)
+        LikeFactory.create_batch(3, post=post_private)
+        query_params = {
+            'post': post_public.id,
+        }
+        expected_count = 3
+        # Act
+        response = self.client.get(self.url, data=query_params)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
 
-#     def test_logged_in_user_can_filter_likes_by_post_id_with_author_permission_post(self):
-#         # Arrange
-#         post = PostFactory(read_permission=ReadPermissions.AUTHOR, user=self.user)
-#         LikeFactory(post=post, user=self.user) 
-#         LikeFactory.create_batch(3)
-#         query_params = {
-#             'post': post.id,
-#         }
-#         expected_count = 1
-#         # Act
-#         response = self.client.get(self.url, data=query_params)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         self.assertEqual(len(results), 1)
-#         self.assertEqual(results[0]['user'], self.user.id)
-#         self.assertEqual(results[0]['post'], post.id)
+    def test_unauthenticated_user_can_filter_public_likes_by_user_id_and_post_id(self):
+        # Arrange
+        self.client.logout()
+        other_user = CustomUserFactory()
+        post_public = PostFactory()
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
+        PostCategoryPermissionFactory.create(post=post_public, category_permission=self.factory_category_permission)
+        post_2 = PostFactory()
+        PostCategoryPermissionFactory.create(post=post_2, category_permission=self.factory_category_permission)
+        like = LikeFactory(post=post_public, user=self.user)
+        LikeFactory.create_batch(3, post=post_2) 
+        LikeFactory.create_batch(3, post=post_public) 
+        query_params = {
+            'user': self.user.id,
+            'post': post_public.id
+        }
+        expected_count = 1
+        # Act
+        response = self.client.get(self.url, data=query_params)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['user']['id'], self.user.id)
+        self.assertEqual(results[0]['post'], post_public.id)
 
-#     def test_admin_user_can_filter_likes_by_user_id_regardless_of_permission(self):
-#         # Arrange
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.PUBLIC, user=self.user) 
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.TEAM, user=self.user) 
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHENTICATED, user=self.user) 
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHOR, user=self.user) 
-#         LikeFactory.create_batch(3)
-#         query_params = {
-#             'user': self.user.id,
-#         }
-#         admin_user=CustomUserFactory(is_staff=True)
-#         self.client.force_authenticate(admin_user)
-#         expected_count = 10
-#         # Act
-#         response = self.client.get(self.url, data=query_params)
-#         count = response.data.get('count')
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
+    def test_logged_in_user_can_filter_public_and_authenticated_likes_by_user_id(self):
+        # Arrange
+        other_user = CustomUserFactory()
+        post_1 = PostFactory()
+        PostCategoryPermissionFactory.create(post=post_1, category_permission=self.factory_category_permission)
+        post_2 = PostFactory()
+        PostCategoryPermissionFactory.create(post=post_2, category_permission=self.factory_category_permission)
+        LikeFactory(post=post_1, user=self.user)
+        LikeFactory(post=post_1, user=other_user)
+        LikeFactory(post=post_2, user=self.user)
+        LikeFactory(post=post_2, user=other_user)
+        query_params = {
+            'user': self.user.id,
+        }
+        expected_count = 2
+        # Act
+        response = self.client.get(self.url, data=query_params)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        for like in results:
+            user_db = CustomUser.objects.get(id=like.get('user').get('id'))
+            self.assertEqual(user_db.id, self.user.id)
 
-#     def test_unauthenticated_user_only_can_list_active_public_post_likes(self):
-#         # Arrange
-#         self.client.logout()
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.PUBLIC, is_active=True)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.PUBLIC, is_active=False)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHENTICATED, is_active=True)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHENTICATED, is_active=False)
-#         expected_count = 3
-#         # Act
-#         response = self.client.get(self.url)
-#         count = response.data.get('count')    
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         for like in results:
-#             post_db = Post.objects.get(id=like['post'])
-#             self.assertIs(like['is_active'], True)
-#             self.assertEqual(post_db.read_permission, ReadPermissions.PUBLIC)
+    def test_logged_in_user_can_filter_public_and_authenticated_likes_by_post_id(self):
+        # Arrange
+        other_user = CustomUserFactory()
+        post_1 = PostFactory()
+        PostCategoryPermissionFactory.create(post=post_1, category_permission=self.factory_category_permission)
+        post_2 = PostFactory()
+        PostCategoryPermissionFactory.create(post=post_2, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post_1)
+        LikeFactory.create_batch(3, post=post_2)
+        query_params = {
+            'post': post_1.id,
+        }
+        expected_count = 3
+        # Act
+        response = self.client.get(self.url, data=query_params)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        for like in results:
+            self.assertEqual(like['post'], post_1.id)
 
-#     def test_logged_in_user_only_can_list_active_public_and_authenticated_post_likes(self):
-#         # Arrange
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.PUBLIC, is_active=True)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.PUBLIC, is_active=False)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHENTICATED, is_active=True)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHENTICATED, is_active=False)
-#         expected_count = 6
-#         # Act
-#         response = self.client.get(self.url)
-#         count = response.data.get('count')    
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         for like in results:
-#             self.assertIs(like['is_active'], True)
+    def test_logged_in_user_can_filter_public_likes_by_user_id_and_post_id(self):
+        # Arrange
+        other_user = CustomUserFactory()
+        post = PostFactory()
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        like = LikeFactory(post=post, user=self.user)
+        LikeFactory.create_batch(3, post=post)
+        query_params = {
+            'user': self.user.id,
+            'post': post.id
+        }
+        expected_count = 1
+        # Act
+        response = self.client.get(self.url, data=query_params)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['user']['id'], self.user.id)
+        self.assertEqual(results[0]['post'], post.id)
 
-#     def test_logged_in_user_can_only_list_active_same_team_likes(self):
-#         # Arrange
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.TEAM, is_active=True, user=self.user, post__user__team=self.team)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.TEAM, is_active=True, user__team=self.team, post__user__team=self.team)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.TEAM, is_active=False, user=self.user, post__user__team=self.team)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.TEAM, is_active=True)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.TEAM, is_active=False)
-#         expected_count = 6
-#         # Act
-#         response = self.client.get(self.url)
-#         count = response.data.get('count')    
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
+    def test_same_team_user_can_filter_likes_from_posts_id_and_will_see_likes_from_same_team_users_and_others_users_with_post_access(self):
+        # Arrange
+        another_user = CustomUserFactory(team=self.team)
+        post = PostFactory(user=another_user)
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.READ
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post, user__team=self.team)
+        LikeFactory.create_batch(3, post=post)
+        query_params = {
+            'post': post.id,
+        }
+        expected_count = 6
+        # Act
+        response = self.client.get(self.url, data=query_params)
+        count = response.data.get('count')
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
 
-#         for like in results:
-#             post_db = Post.objects.get(id=like['post'])
-#             self.assertIs(like['is_active'], True)
-#             self.assertEqual(post_db.read_permission, ReadPermissions.TEAM)
-#             self.assertEqual(post_db.user.team.id, self.team.id)
 
-#     def test_logged_in_user_can_only_list_active_author_team(self):
-#         # Arrange
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHOR, is_active=True, user=self.user, post__user=self.user)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHOR, is_active=False, user=self.user, post__user=self.user)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHOR, is_active=True)
-#         LikeFactory.create_batch(3, post__read_permission=ReadPermissions.AUTHOR, is_active=False)
-#         expected_count = 3
-#         # Act
-#         response = self.client.get(self.url)
-#         count = response.data.get('count')    
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
-#         for like in results:
-#             post_db = Post.objects.get(id=like['post'])
-#             self.assertIs(like['is_active'], True)
-#             self.assertEqual(post_db.read_permission, ReadPermissions.AUTHOR)
-#             self.assertEqual(post_db.user.id, self.user.id)
+    def test_unauthenticated_user_only_can_list_active_public_post_likes(self):
+        # Arrange
+        self.client.logout()
+        post = PostFactory()
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post, is_active=True)
+        LikeFactory.create_batch(3, post=post, is_active=False)
+        expected_count = 3
+        # Act
+        response = self.client.get(self.url)
+        count = response.data.get('count')    
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        for like in results:
+            self.assertTrue(like['is_active'])
 
-#     def test_admin_user_can_list_active_and_inactive_likes(self):
-#         # Arrange
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.PUBLIC, is_active=True)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.PUBLIC, is_active=False)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHENTICATED, is_active=True)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHENTICATED, is_active=False)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.TEAM, is_active=True)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.TEAM, is_active=False)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHOR, is_active=False)
-#         LikeFactory.create_batch(2, post__read_permission=ReadPermissions.AUTHOR, is_active=False)
-#         expected_count = 16
-#         admin_user = CustomUserFactory(is_staff=True)
-#         self.client.force_authenticate(admin_user)
-#         # Act
-#         response = self.client.get(self.url)
-#         count = response.data.get('count')    
-#         results = response.data.get('results')
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(count, expected_count)
+
+    def test_logged_in_user_only_can_list_active_public_and_authenticated_post_likes(self):
+        # Arrange
+        post = PostFactory()
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post, is_active=True)
+        LikeFactory.create_batch(3, post=post, is_active=False)
+        expected_count = 3
+        # Act
+        response = self.client.get(self.url)
+        count = response.data.get('count')    
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        for like in results:
+            self.assertTrue(like['is_active'])
+
+    def test_logged_in_user_can_only_list_active_same_team_likes(self):
+        # Arrange
+        another_user = CustomUserFactory(team=self.team)
+        post = PostFactory(user=another_user)
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.READ
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post, is_active=True, user__team=self.team)
+        LikeFactory.create_batch(3, post=post, is_active=False, user__team=self.team)
+        expected_count = 3
+        # Act
+        response = self.client.get(self.url)
+        count = response.data.get('count')    
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        for like in results:
+            post_db = Post.objects.get(id=like['post'])
+            self.assertIs(like['is_active'], True)
+            self.assertEqual(post_db.user.team.id, self.team.id)
+
+    def test_owner_of_a_post_user_can_only_list_active_author_likes(self):
+        # Arrange
+        post_1 = PostFactory(user=self.user)
+        PostCategoryPermissionFactory.create(post=post_1, category_permission=self.factory_category_permission)
+        post_2 = PostFactory(user=self.user)
+        PostCategoryPermissionFactory.create(post=post_2, category_permission=self.factory_category_permission)
+        LikeFactory(user=self.user, post=post_1, is_active=True)
+        LikeFactory(user=self.user, post=post_2, is_active=False)
+        expected_count = 1
+        # Act
+        response = self.client.get(self.url)
+        count = response.data.get('count')    
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
+        self.assertEqual(results[0]['user']['id'], self.user.id)
+
+    def test_admin_user_can_list_active_and_inactive_likes(self):
+        # Arrange
+        post = PostFactory()
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        LikeFactory.create_batch(3, post=post, is_active=True)
+        LikeFactory.create_batch(3, post=post, is_active=False)
+        expected_count = 6
+        admin_user = CustomUserFactory(is_staff=True)
+        self.client.force_authenticate(admin_user)
+        # Act
+        response = self.client.get(self.url)
+        count = response.data.get('count')    
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, expected_count)
 
 
 # class LikeDeleteViewTests(APITestCase):

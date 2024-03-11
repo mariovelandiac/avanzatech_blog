@@ -122,7 +122,7 @@ class GetQuerysetByPermissionsMixin:
             f"{self.post_field_name}__category__name": AccessCategory.PUBLIC,
         }
         # Set conditions by http method
-        self.__set_conditions_by_http_method(anonymous_conditions)
+        self.__set_conditions_by_http_method_and_post_relationship(anonymous_conditions)
 
         return self.queryset.filter(**anonymous_conditions)
 
@@ -154,7 +154,7 @@ class GetQuerysetByPermissionsMixin:
             f"{self.post_field_name}__category__name__in": [AccessCategory.PUBLIC, AccessCategory.AUTHENTICATED]
         }
         # Set conditions by http method
-        self.__set_conditions_by_http_method(nodt_conditions)
+        self.__set_conditions_by_http_method_and_post_relationship(nodt_conditions)
         # Filter by conditions
         nodt_queryset = self.queryset.filter(**nodt_conditions)
         # Exclude the user
@@ -180,7 +180,7 @@ class GetQuerysetByPermissionsMixin:
             f"{self.team_field_name}": self.request.user.team
         }
         # Set conditions by HTTP Method
-        self.__set_conditions_by_http_method(nost_conditions)
+        self.__set_conditions_by_http_method_and_post_relationship(nost_conditions)
         # Filter by conditions
         nost_queryset = self.queryset.filter(**nost_conditions)
         # Exclude the user
@@ -202,13 +202,13 @@ class GetQuerysetByPermissionsMixin:
             f"{self.user_field_name}": self.request.user
         }
         # Set conditions by HTTP Method
-        self.__set_conditions_by_http_method(owner_conditions)
+        self.__set_conditions_by_http_method_and_post_relationship(owner_conditions)
         # Filter by conditions
         return self.queryset.filter(**owner_conditions)
 
-    def __set_conditions_by_http_method(self, conditions):
+    def __set_conditions_by_http_method_and_post_relationship(self, conditions):
         """
-        Set the conditions based on the HTTP method.
+        Set the conditions based on the HTTP method and the relationship with post model.
 
         Args:
             conditions: The conditions dictionary to be updated.
