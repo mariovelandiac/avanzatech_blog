@@ -2005,4 +2005,108 @@ class PostAuthenticatedUserUpdateViewTests(APITestCase):
         self.assertEqual(post_permissions.permission.name, AccessPermission.EDIT)
         self.assertEqual(post_permission_amount, len(CATEGORIES.keys()))
         
+class PostAdminUserViewTests(APITestCase):
+    def setUp(self):
+        self.team = TeamFactory()
+        self.user = CustomUserFactory(team=self.team, is_staff=True)
+        self.client.force_authenticate(self.user)
+        self.permissions = PermissionFactory.create_batch()
+        self.categories = CategoryFactory.create_batch()
+        self.factory_category_permission = {
+            AccessCategory.PUBLIC: AccessPermission.READ,
+            AccessCategory.AUTHENTICATED: AccessPermission.READ,
+            AccessCategory.TEAM: AccessPermission.EDIT,
+            AccessCategory.AUTHOR: AccessPermission.EDIT
+        }
 
+    def test_admin_user_can_list_all_posts_regardless_of_permissions(self):
+        # Arrange
+        posts = PostFactory.create_batch(5)
+        PostCategoryPermissionFactory.create_batch(posts, category_permission=self.factory_category_permission)
+        posts_restricted = PostFactory.create_batch(3)
+        restricted_post_permissions = {
+            AccessCategory.PUBLIC: AccessPermission.NO_PERMISSION,
+            AccessCategory.AUTHENTICATED: AccessPermission.NO_PERMISSION,
+            AccessCategory.TEAM: AccessPermission.NO_PERMISSION,
+            AccessCategory.AUTHOR: AccessPermission.NO_PERMISSION
+        }
+        PostCategoryPermissionFactory.create_batch(posts_restricted, category_permission=restricted_post_permissions)
+        url = reverse('post-list-create')
+        # Act
+        response = self.client.get(url, format='json')
+        count = response.data.get('count')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(count, 8)
+
+    def test_admin_user_can_retrieve_any_post_regardless_of_permissions(self):
+        # Arrange
+        post = PostFactory()
+        PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # Act
+        response = self.client.get(url, format='json')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('id'), post.id)
+    
+    def test_admin_user_can_update_a_post_with_permission_as_no_permission_and_200_is_returned(self):
+        # Arrange
+        post = PostFactory()
+        self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHENTICATED] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.TEAM] = AccessPermission.NO_PERMISSION
+        self.factory_category_permission[AccessCategory.AUTHOR] = AccessPermission.NO_PERMISSION
+        PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # The sending category_permission is the same from category_permissin in the db
+        category_permission = create_custom_category_permissions_handler(self.categories, self.permissions, self.factory_category_permission)
+        data = {
+            'title': 'New title',
+            'content': 'New Content',
+            'category_permission': category_permission
+        }
+        # Act
+        response = self.client.put(url, data, format='json')
+        post_db = Post.objects.get(id=post.id)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('title'), data['title'])
+        self.assertEqual(response.data.get('content'), data['content'])
+        self.assertEqual(post_db.title, data['title'])
+        self.assertEqual(post_db.content, data['content'])
+    
+    def test_admin_user_can_update_with_put_a_post_regardless_of_permissions_and_200_is_returned(self):
+        # Arrange
+        post = PostFactory()
+        PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        # The sending category_permission is the same from category_permissin in the db
+        category_permission = create_custom_category_permissions_handler(self.categories, self.permissions, self.factory_category_permission)
+        data = {
+            'title': 'New title',
+            'content': 'New Content',
+            'category_permission': category_permission
+        }
+        # Act
+        response = self.client.put(url, data, format='json')
+        post_db = Post.objects.get(id=post.id)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('title'), data['title'])
+        self.assertEqual(response.data.get('content'), data['content'])
+        self.assertEqual(post_db.title, data['title'])
+        self.assertEqual(post_db.content, data['content'])
+
+
+    def test_admin_user_can_delete_any_post_regardless_of_permissions(self):
+        # Arrange
+        post = PostFactory()
+        PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
+        url = reverse('post-retrieve-update-delete', args=[post.id])
+        current_posts = Post.objects.count()
+        # Act
+        response = self.client.delete(url, format='json')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Post.objects.count(), current_posts - 1)
