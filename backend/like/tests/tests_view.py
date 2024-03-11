@@ -1117,103 +1117,108 @@ class LikeListViewTests(APITestCase):
         self.assertEqual(count, expected_count)
 
 
-# class LikeDeleteViewTests(APITestCase):
+class LikeDeleteViewTests(APITestCase):
 
-#     def setUp(self):
-#         self.team = TeamFactory()
-#         self.user = CustomUserFactory(team=self.team)
-#         self.post = PostFactory(user=self.user, read_permission=ReadPermissions.PUBLIC)
-#         self.like = LikeFactory(user=self.user, post=self.post)
-#         self.client.force_authenticate(self.user)
-#         self.url = 'like-delete'
-
-
-#     def test_unauthenticated_user_can_not_delete_a_active_public_like(self):
-#         # Assert
-#         self.client.logout()
-#         url = reverse(self.url, kwargs={"user": self.user.id, "post": self.post.id})
-#         # Act
-#         response = self.client.delete(url)
-#         # Assert
-#         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-#     def test_a_logged_in_user_can_delete_a_like_created_by_themselves(self):
-#         # Arrange
-#         url = reverse(self.url, kwargs={"user": self.user.id, "post": self.post.id})
-#         expected_count = 1
-#         # Act
-#         response = self.client.delete(url)
-#         # Assert
-#         like_db_count = Like.objects.count()
-#         like_db = Like.objects.filter(id=self.like.id)
-#         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-#         self.assertNotEqual(len(like_db), 0)
-#         self.assertEqual(like_db_count, expected_count)
-#         self.assertFalse(like_db[0].is_active)
+    def setUp(self):
+        self.permissions = PermissionFactory.create_batch()
+        self.categories = CategoryFactory.create_batch()
+        self.team = TeamFactory()
+        self.user = CustomUserFactory()
+        self.post = PostFactory()
+        self.factory_category_permission = {
+            AccessCategory.PUBLIC: AccessPermission.READ,
+            AccessCategory.AUTHENTICATED: AccessPermission.READ,
+            AccessCategory.TEAM: AccessPermission.READ,
+            AccessCategory.AUTHOR: AccessPermission.READ
+        }
+        self.category_permission = PostCategoryPermissionFactory.create(post=self.post, category_permission=self.factory_category_permission)
+        self.like = LikeFactory(user=self.user, post=self.post)
+        self.client.force_authenticate(self.user)
+        self.url = reverse('like-delete', kwargs={"user": self.user.id, "post": self.post.id})
 
 
-#     def test_logged_in_user_can_not_delete_like_created_by_other_user(self):
-#         # Arrange
-#         other_user = CustomUserFactory()
-#         self.client.force_authenticate(other_user)
-#         url = reverse(self.url, kwargs={"user": self.user.id, "post": self.post.id})
-#         expected_count = 1
-#         # Act
-#         response = self.client.delete(url)
-#         # Assert
-#         like_db_count = Like.objects.count()
-#         like_db = Like.objects.filter(id=self.like.id)
-#         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-#         self.assertNotEqual(len(like_db), 0)
-#         self.assertEqual(like_db_count, expected_count)
-#         self.assertTrue(like_db[0].is_active)
+    def test_unauthenticated_user_can_not_soft_delete_a_active_public_like(self):
+        # Assert
+        self.client.logout()
+        # Act
+        response = self.client.delete(self.url)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_a_logged_in_user_can_soft_delete_a_like_created_by_themselves(self):
+        # Arrange
+        expected_count = 1
+        # Act
+        response = self.client.delete(self.url)
+        # Assert
+        like_db_count = Like.objects.count()
+        like_db = Like.objects.filter(id=self.like.id)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertNotEqual(len(like_db), 0)
+        self.assertEqual(like_db_count, expected_count)
+        self.assertFalse(like_db[0].is_active)
 
 
-#     def test_admin_user_can_update_any_like_regardless_of_permissions(self):
-#         # Arrange
-#         admin_user = CustomUserFactory(is_staff=True)
-#         self.client.force_authenticate(admin_user)
-#         url = reverse(self.url, kwargs={"user": self.user.id, "post": self.post.id})
-#         expected_count = 1
-#         # Act
-#         response = self.client.delete(url)
-#         # Assert
-#         like_db_count = Like.objects.count()
-#         like_db = Like.objects.filter(id=self.like.id)
-#         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-#         self.assertNotEqual(len(like_db), 0)
-#         self.assertEqual(like_db_count, expected_count)
-#         self.assertFalse(like_db[0].is_active)
+    def test_logged_in_user_can_not_soft_delete_like_created_by_other_user(self):
+        # Arrange
+        other_user = CustomUserFactory()
+        self.client.force_authenticate(other_user)
+        expected_count = 1
+        # Act
+        response = self.client.delete(self.url)
+        # Assert
+        like_db_count = Like.objects.count()
+        like_db = Like.objects.filter(id=self.like.id)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertNotEqual(len(like_db), 0)
+        self.assertEqual(like_db_count, expected_count)
+        self.assertTrue(like_db[0].is_active)
 
-#     def test_logged_in_user_can_not_delete_like_with_invalid_lookup_fields_post_invalid(self):
-#         # Arrange
-#         url = reverse(self.url, kwargs={"user": self.user.id, "post": (self.post.id + 1)}) # This post does not exists
-#         expected_count = 1
-#         like_db = Like.objects.filter(user=self.user.id, post=self.post.id+1)
-#         # Act
-#         response = self.client.delete(url)
-#         # Assert
-#         like_db_count = Like.objects.count()
-#         like_db = Like.objects.filter(id=self.like.id)
-#         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-#         self.assertNotEqual(len(like_db), 0)
-#         self.assertEqual(like_db_count, expected_count)
-#         self.assertTrue(like_db[0].is_active)
 
-#     def test_logged_in_user_can_not_delete_like_with_invalid_lookup_fields_user_invalid(self):
-#         # Arrange
-#         url = reverse(self.url, kwargs={"user": self.user.id + 1, "post": (self.post.id)}) # This post does not exists
-#         expected_count = 1
-#         like_db = Like.objects.filter(user=self.user.id, post=self.post.id+1)
-#         # Act
-#         response = self.client.delete(url)
-#         # Assert
-#         like_db_count = Like.objects.count()
-#         like_db = Like.objects.filter(id=self.like.id)
-#         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-#         self.assertNotEqual(len(like_db), 0)
-#         self.assertEqual(like_db_count, expected_count)
-#         self.assertTrue(like_db[0].is_active)
+    def test_admin_user_can_soft_delete_any_like_regardless_of_permissions(self):
+        # Arrange
+        admin_user = CustomUserFactory(is_staff=True)
+        self.client.force_authenticate(admin_user)
+        expected_count = 1
+        # Act
+        response = self.client.delete(self.url)
+        # Assert
+        like_db_count = Like.objects.count()
+        like_db = Like.objects.filter(id=self.like.id)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertNotEqual(len(like_db), 0)
+        self.assertEqual(like_db_count, expected_count)
+        self.assertFalse(like_db[0].is_active)
+
+    def test_logged_in_user_can_not_soft_delete_like_with_invalid_lookup_fields_post_invalid(self):
+        # Arrange
+        url = reverse('like-delete', kwargs={"user": self.user.id, "post": (self.post.id + 1)}) # This post does not exists
+        expected_count = 1
+        like_db = Like.objects.filter(user=self.user.id, post=self.post.id+1)
+        # Act
+        response = self.client.delete(url)
+        # Assert
+        like_db_count = Like.objects.count()
+        like_db = Like.objects.filter(id=self.like.id)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertNotEqual(len(like_db), 0)
+        self.assertEqual(like_db_count, expected_count)
+        self.assertTrue(like_db[0].is_active)
+
+    def test_logged_in_user_can_not_soft_delete_like_with_invalid_lookup_fields_user_invalid(self):
+        # Arrange
+        url = reverse('like-delete', kwargs={"user": self.user.id + 1, "post": self.post.id}) # This user does not exists
+        expected_count = 1
+        like_db = Like.objects.filter(user=self.user.id, post=self.post.id+1)
+        # Act
+        response = self.client.delete(url)
+        # Assert
+        like_db_count = Like.objects.count()
+        like_db = Like.objects.filter(id=self.like.id)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertNotEqual(len(like_db), 0)
+        self.assertEqual(like_db_count, expected_count)
+        self.assertTrue(like_db[0].is_active)
 
 
 
