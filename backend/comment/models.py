@@ -29,4 +29,4 @@ class Comment(BaseModel):
         return f"Comment {self.id} by {self.user.username}"
 
     class Meta:
-        ordering = ["-created_at"]
+        ordering = ["created_at"]
