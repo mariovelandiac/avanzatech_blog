@@ -7,6 +7,8 @@ import { SignUpService } from '../../services/sign-up.service';
 import { formSignUp, requestSignUp, responseSignUp } from '../../models/interfaces/sign-up.interface';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ApiErrorDisplayComponent } from '../api-error-display/api-error-display.component';
+import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-sign-up-form',
@@ -22,7 +24,9 @@ export class SignUpFormComponent implements OnInit {
 
   constructor(
     private formBuilder: FormBuilder,
-    private signUpService: SignUpService
+    private signUpService: SignUpService,
+    private authService: AuthService,
+    private router: Router
     ) {}
 
   ngOnInit() {
@@ -35,13 +39,16 @@ export class SignUpFormComponent implements OnInit {
         Validators.pattern(this.strongPasswordRegex)]],
       confirmPassword: ['', Validators.required],
     }, { validators: this.checkPasswords });
+
+    this.signUpForm.valueChanges.subscribe(() => this.errorMessage = '');
   }
 
   onSubmit() {
     const data = this.toSnakeCase(this.signUpForm.value)
     this.signUpService.signUp(data).subscribe({
       next: (response: responseSignUp) => {
-        console.log(response);
+        this.authService.setJustSignedUp(true);
+        this.router.navigate(['/login']);
       },
       error: (error: HttpErrorResponse) => {
         this.errorMessage = error.message;
@@ -59,8 +66,7 @@ export class SignUpFormComponent implements OnInit {
     return {
       first_name: data.firstName,
       last_name: data.lastName,
-      email: data.email,
-      password: data.password
+      ...data
     }
   }
 
