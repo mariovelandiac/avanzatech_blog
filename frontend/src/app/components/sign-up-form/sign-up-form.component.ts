@@ -3,18 +3,27 @@ import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators, ValidationErrors } from '@angular/forms';
 import { RequiredFieldComponent } from '../required-field/required-field.component';
 import { AuthLinkComponent } from '../auth-link/auth-link.component';
+import { SignUpService } from '../../services/sign-up.service';
+import { formSignUp, requestSignUp, responseSignUp } from '../../models/interfaces/sign-up.interface';
+import { HttpErrorResponse } from '@angular/common/http';
+import { ApiErrorDisplayComponent } from '../api-error-display/api-error-display.component';
 
 @Component({
   selector: 'app-sign-up-form',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, RequiredFieldComponent, AuthLinkComponent],
+  imports: [ReactiveFormsModule, CommonModule, RequiredFieldComponent, AuthLinkComponent, ApiErrorDisplayComponent],
   templateUrl: './sign-up-form.component.html',
   styleUrl: './sign-up-form.component.sass'
 })
 export class SignUpFormComponent implements OnInit {
   signUpForm!: FormGroup;
   private strongPasswordRegex: RegExp = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\.@$!%*?&])[A-Za-z\d\.@$!%*?&]{8,}$/;
-  constructor(private formBuilder: FormBuilder) {}
+  errorMessage!: string;
+
+  constructor(
+    private formBuilder: FormBuilder,
+    private signUpService: SignUpService
+    ) {}
 
   ngOnInit() {
     this.signUpForm = this.formBuilder.group({
@@ -29,13 +38,30 @@ export class SignUpFormComponent implements OnInit {
   }
 
   onSubmit() {
-    console.log(this.signUpForm.value);
+    const data = this.toSnakeCase(this.signUpForm.value)
+    this.signUpService.signUp(data).subscribe({
+      next: (response: responseSignUp) => {
+        console.log(response);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.errorMessage = error.message;
+      }
+    });
   }
 
   checkPasswords(group: AbstractControl): ValidationErrors | null {
     const password = group.get('password')?.value;
     const confirmPassword = group.get('confirmPassword')?.value;
     return password === confirmPassword ? null : { notSame: true };
+  }
+
+  private toSnakeCase(data: formSignUp): requestSignUp {
+    return {
+      first_name: data.firstName,
+      last_name: data.lastName,
+      email: data.email,
+      password: data.password
+    }
   }
 
   get firstNameControl() {

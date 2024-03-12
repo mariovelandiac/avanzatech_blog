@@ -35,5 +35,6 @@
       <button>Cancel</button>
     </div>
   </form>
+  <app-api-error-display *ngIf="errorMessage" [errorMessage]="errorMessage"/>
   <app-auth-link text="Have an account?" link="/login" action="Log in"/>
 </div>

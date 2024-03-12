@@ -3,6 +3,7 @@
         "adminpassword",
         "anotheruser",
         "avanzatech",
+        "corsheaders",
         "createsuperuser",
         "filterset",
         "makemigrations",
