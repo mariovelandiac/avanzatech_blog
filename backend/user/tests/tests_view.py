@@ -298,3 +298,12 @@ class UserSignUpViewTests(APITestCase):
         # Assert
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(CustomUser.objects.count(), 0)
+
+    def test_unauthenticated_user_can_not_sign_up_with_an_email_that_already_exists_and_400_is_returned(self):
+        # Arrange
+        user_db = CustomUserFactory(email=self.user_data['email'])
+        # Act
+        response = self.client.post(self.url, self.user_data)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(CustomUser.objects.count(), 1)
