@@ -1,0 +1,39 @@
+<div class="form-container">
+  <form [formGroup]="signUpForm" (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <label for="firstName">First name<app-required-field *ngIf="firstNameControl?.invalid"/></label>
+      <input type="text" formControlName="firstName" placeholder="First name" id="firstName">
+    </div>
+    <div class="form-group">
+      <label for="lastName">Last name<app-required-field *ngIf="lastNameControl?.invalid"/></label>
+      <input type="text" formControlName="lastName" placeholder="Last name" id="lasName">
+    </div>
+    <div class="form-group">
+      <label for="email">Email<app-required-field *ngIf="emailControl?.invalid"/></label>
+      <input type="email" formControlName="email" placeholder="your@email.com" id="email">
+    </div>
+    <div class="form-group">
+      <label for="password">Password<app-required-field *ngIf="passwordControl?.invalid"/></label>
+      <input type="password" formControlName="password"placeholder="******" >
+      <div class="password-required" *ngIf="passwordControl?.dirty">
+        <span *ngIf="!hasUppercase">At least one uppercase letter.</span>
+        <span *ngIf="!hasLowercase">At least one lowercase letter.</span>
+        <span *ngIf="!hasDigit">At least one digit.</span>
+        <span *ngIf="!hasSpecialCharacter">At least one special character.</span>
+        <span *ngIf="!hasMinLength">At least 8 characters long.</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="confirmPassword">Confirm your password<app-required-field *ngIf="confirmPasswordControl?.invalid"/></label>
+      <input type="password" formControlName="confirmPassword" placeholder="******" id="confirmPassword">
+      <div class="password-required" *ngIf="confirmPasswordControl?.dirty">
+        <span  *ngIf="signUpForm.errors?.['notSame']">Passwords don't match</span>
+      </div>
+    </div>
+    <div class="two-option-buttons">
+      <button type="submit" [disabled]="!signUpForm.valid">Sign Up</button>
+      <button>Cancel</button>
+    </div>
+  </form>
+  <app-auth-link text="Have an account?" link="/login" action="Log in"/>
+</div>

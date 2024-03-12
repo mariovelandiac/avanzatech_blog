@@ -1,1 +1,34 @@
-/* You can add global styles to this file, and also import other style files */
+.two-option-buttons
+  display: flex
+  justify-content: space-around  // To evenly distribute buttons
+
+
+.two-option-buttons button
+  padding: 10px 20px  // Adjust padding as needed
+  border: none
+  border-radius: 5px   // Add rounded corners
+  cursor: pointer
+
+.two-option-buttons button[type="submit"]:disabled
+  background-color: #ccc  // Change background color for disabled submit button
+  color: #888             // Change text color for disabled submit button
+  cursor: not-allowed     // Change cursor style for disabled submit button
+
+.two-option-buttons button[type="submit"]
+  background-color: #007bff  // Change background color for submit button
+  color: #fff                 // Change text color for submit button
+
+.two-option-buttons button[type="submit"]:hover
+  background-color: #0056b3  // Darker background color on hover
+
+.two-option-buttons button:not([type="submit"])
+  background-color: #f8f9fa  // Background color for cancel button
+  color: #000                 // Text color for cancel button
+
+.two-option-buttons button:not([type="submit"]):hover
+  background-color: #e2e6ea  // Darker background color on hover
+
+.form-required
+  color: #dc3545  // Change color of required field indicator
+
+
