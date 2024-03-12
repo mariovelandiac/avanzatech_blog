@@ -9,14 +9,14 @@ import { requestSignUp, responseSignUp } from '../models/interfaces/sign-up.inte
 })
 export class SignUpService {
   private signUpEndpoint = `${environment.api}/user/sign-up/`
-  constructor(private service: HttpClient) {}
+  constructor(private httpService: HttpClient) {}
 
   signUp(data: requestSignUp): Observable<responseSignUp> {
     // http headers
     const headers = new HttpHeaders({
       'Content-Type': 'application/json'
     })
-    return this.service.post<responseSignUp>(this.signUpEndpoint, data, { headers: headers })
+    return this.httpService.post<responseSignUp>(this.signUpEndpoint, data, { headers: headers })
     .pipe(catchError(this.handleError));
   }
 

@@ -62,11 +62,12 @@ export class SignUpFormComponent implements OnInit {
     return password === confirmPassword ? null : { notSame: true };
   }
 
-  private toSnakeCase(data: formSignUp): requestSignUp {
+  toSnakeCase(data: formSignUp): requestSignUp {
     return {
       first_name: data.firstName,
       last_name: data.lastName,
-      ...data
+      email: data.email,
+      password: data.password
     }
   }
 
