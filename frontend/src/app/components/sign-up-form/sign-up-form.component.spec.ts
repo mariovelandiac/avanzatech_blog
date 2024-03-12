@@ -5,21 +5,24 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { SignUpService } from '../../services/sign-up.service';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
-import { formSignUp, requestSignUp, responseSignUp } from '../../models/interfaces/sign-up.interface';
+import {
+  formSignUp,
+  requestSignUp,
+  responseSignUp,
+} from '../../models/interfaces/sign-up.interface';
 import { of, throwError } from 'rxjs';
-
 
 const successfulResponseMock = {
   id: 1,
   first_name: 'John',
   last_name: 'Doe',
-  email: 'john.doe@example.com'
-}
+  email: 'john.doe@example.com',
+};
 class SignUpServiceStub {
   public error = false;
   signUp(data: requestSignUp) {
     if (this.error) {
-      return throwError(() => new Error('Sign up failed'))
+      return throwError(() => new Error('Sign up failed'));
     }
     return of(successfulResponseMock);
   }
@@ -33,24 +36,28 @@ describe('SignUpFormComponent', () => {
   let router: Router;
 
   beforeEach(async () => {
-     await TestBed.configureTestingModule({
-       imports: [ReactiveFormsModule],
-       providers: [
-         { provide: SignUpService, useClass: SignUpServiceStub },
-         { provide: AuthService, useValue: jasmine.createSpyObj('AuthService', ['setJustSignedUp']) },
-         { provide: Router, useValue: jasmine.createSpyObj('Router', ['navigate']) }
-       ]
-     }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [ReactiveFormsModule],
+      providers: [
+        { provide: SignUpService, useClass: SignUpServiceStub },
+        {
+          provide: AuthService,
+          useValue: jasmine.createSpyObj('AuthService', ['setJustSignedUp']),
+        },
+        {
+          provide: Router,
+          useValue: jasmine.createSpyObj('Router', ['navigate']),
+        },
+      ],
+    }).compileComponents();
 
-     fixture = TestBed.createComponent(SignUpFormComponent);
-     component = fixture.componentInstance;
-     signUpService = TestBed.inject(SignUpService);
-     authService = TestBed.inject(AuthService);
-     router = TestBed.inject(Router);
-     fixture.detectChanges();
+    fixture = TestBed.createComponent(SignUpFormComponent);
+    component = fixture.componentInstance;
+    signUpService = TestBed.inject(SignUpService);
+    authService = TestBed.inject(AuthService);
+    router = TestBed.inject(Router);
+    fixture.detectChanges();
   });
-
-
 
   it('should create the component', () => {
     // Arrange & Act & Assert
@@ -60,122 +67,190 @@ describe('SignUpFormComponent', () => {
   it('should create the form', () => {
     // Arrange & Act & Assert
     expect(component.signUpForm).toBeTruthy();
-  })
+  });
 
-  it('should mark firstName as invalid if empty value', () => {
-    // Arrange
-    const firstNameControl = component.firstNameControl;
-    // Act & Assert
-    expect(firstNameControl?.hasError('required')).toBeTruthy();
-  })
+  describe('Form Validation', () => {
+    it('should mark firstName as invalid if empty value', () => {
+      // Arrange
+      const firstNameControl = component.firstNameControl;
+      // Act & Assert
+      expect(firstNameControl?.hasError('required')).toBeTruthy();
+    });
 
-  it('should mark lastName as invalid if empty value', () => {
-    // Arrange
-    const lastNameControl = component.lastNameControl;
-    // Act & Assert
-    expect(lastNameControl?.hasError('required')).toBeTruthy();
-  })
+    it('should mark lastName as invalid if empty value', () => {
+      // Arrange
+      const lastNameControl = component.lastNameControl;
+      // Act & Assert
+      expect(lastNameControl?.hasError('required')).toBeTruthy();
+    });
 
-  it('should mark email as invalid if empty value', () => {
-    // Arrange
-    const emailControl = component.emailControl;
-    // Act & Assert
-    expect(emailControl?.hasError('required')).toBeTruthy();
-  })
+    it('should mark email as invalid if empty value', () => {
+      // Arrange
+      const emailControl = component.emailControl;
+      // Act & Assert
+      expect(emailControl?.hasError('required')).toBeTruthy();
+    });
 
-  it('should mark the email as invalid if it is not an email', () => {
-    // Arrange
-    const emailControl = component.emailControl;
-    emailControl?.setValue('test');
-    // Act & Assert
-    expect(emailControl?.hasError('email')).toBeTruthy();
-  })
+    it('should mark the email as invalid if it is not an email', () => {
+      // Arrange
+      const emailControl = component.emailControl;
+      emailControl?.setValue('test');
+      // Act & Assert
+      expect(emailControl?.hasError('email')).toBeTruthy();
+    });
 
-  it('should mark password as invalid if empty value', () => {
-    // Arrange
-    const passwordControl = component.passwordControl;
-    // Act & Assert
-    expect(passwordControl?.hasError('required')).toBeTruthy();
-  })
+    it('should mark password as invalid if empty value', () => {
+      // Arrange
+      const passwordControl = component.passwordControl;
+      // Act & Assert
+      expect(passwordControl?.hasError('required')).toBeTruthy();
+    });
 
-  it('should mark password as invalid if it does not match the regex', () => {
-    // Arrange
-    const passwordControl = component.passwordControl;
-    passwordControl?.setValue('test');
-    // Act & Assert
-    expect(passwordControl?.hasError('pattern')).toBeTruthy();
-  })
+    it('should mark password as invalid if it does not match the regex', () => {
+      // Arrange
+      const passwordControl = component.passwordControl;
+      passwordControl?.setValue('test');
+      // Act & Assert
+      expect(passwordControl?.hasError('pattern')).toBeTruthy();
+    });
 
-  it('should mark confirmPassword as invalid if empty value', () => {
-    // Arrange
-    const confirmPasswordControl = component.signUpForm.get('confirmPassword');
-    // Act & Assert
-    expect(confirmPasswordControl?.hasError('required')).toBeTruthy();
-  })
+    it('should mark confirmPassword as invalid if empty value', () => {
+      // Arrange
+      const confirmPasswordControl =
+        component.signUpForm.get('confirmPassword');
+      // Act & Assert
+      expect(confirmPasswordControl?.hasError('required')).toBeTruthy();
+    });
 
-  it('should mark confirmPassword as invalid if it does not match the password', () => {
-    // Arrange
-    const confirmPasswordControl = component.signUpForm.get('confirmPassword');
-    const passwordControl = component.signUpForm.get('password');
-    passwordControl?.setValue('not test');
-    confirmPasswordControl?.setValue('test');
-    // Act
-    const result = component.checkPasswords(component.signUpForm)
-    // Assert
-    expect(result).toEqual({ notSame: true });
-    expect(result).not.toBeNull();
-  })
-
-  it('should convert object keys firstName and lastName to snake case', () => {
-    // Arrange
-    const input: formSignUp = {
-      firstName: 'John',
-      lastName: 'Doe',
-      email: 'john.doe@example.com',
-      password: 'testPassword',
-      confirmPassword: 'testPassword'
-    };
-    // Act
-    const result = component.toSnakeCase(input);
-    // Assert
-    expect(result).toEqual({
-      first_name: 'John',
-      last_name: 'Doe',
-      email: 'john.doe@example.com',
-      password: 'testPassword',
+    it('should mark confirmPassword as invalid if it does not match the password', () => {
+      // Arrange
+      const confirmPasswordControl =
+        component.signUpForm.get('confirmPassword');
+      const passwordControl = component.signUpForm.get('password');
+      passwordControl?.setValue('not test');
+      confirmPasswordControl?.setValue('test');
+      // Act
+      const result = component.checkPasswords(component.signUpForm);
+      // Assert
+      expect(result).toEqual({ notSame: true });
+      expect(result).not.toBeNull();
     });
   });
 
-  it('should handle successful sign up', () => {
-    // Arrange
-    const requestSignUpMock = {
-      first_name: 'John',
-      last_name: 'Doe',
-      email: 'john.doe@example.com',
-      password: 'testPassword',
-    };
-    spyOn(signUpService, 'signUp').and.returnValue(of(successfulResponseMock));
+  describe('Form Submission', () => {
+    it('should convert object keys firstName and lastName to snake case', () => {
+      // Arrange
+      const input: formSignUp = {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        password: 'testPassword',
+        confirmPassword: 'testPassword',
+      };
+      // Act
+      const result = component.toSnakeCase(input);
+      // Assert
+      expect(result).toEqual({
+        first_name: 'John',
+        last_name: 'Doe',
+        email: 'john.doe@example.com',
+        password: 'testPassword',
+      });
+    });
 
-    // Act
-    component.onSubmit();
+    it('should handle successful sign up', () => {
+      // Arrange
+      const requestSignUpMock = {
+        first_name: 'John',
+        last_name: 'Doe',
+        email: 'john.doe@example.com',
+        password: 'testPassword',
+      };
+      spyOn(signUpService, 'signUp').and.returnValue(
+        of(successfulResponseMock)
+      );
 
-    // Assert
-    expect(signUpService.signUp).toHaveBeenCalled();
-    expect(authService.setJustSignedUp).toHaveBeenCalledWith(true);
-    expect(router.navigate).toHaveBeenCalledWith(['/login']);
+      // Act
+      component.onSubmit();
+
+      // Assert
+      expect(signUpService.signUp).toHaveBeenCalled();
+      expect(authService.setJustSignedUp).toHaveBeenCalledWith(true);
+      expect(router.navigate).toHaveBeenCalledWith(['/login']);
+    });
+
+    it('should handle sign up error', () => {
+      // Arrange
+      const error = new Error('Sign up failed');
+      spyOn(signUpService, 'signUp').and.returnValue(throwError(() => error));
+
+      // Act
+      component.onSubmit();
+
+      // Assert
+      expect(signUpService.signUp).toHaveBeenCalled();
+      expect(component.errorMessage).toEqual('Sign up failed');
+    });
+
+    it('should clear errorMessage on form value change', () => {
+      // Arrange
+      component.errorMessage = 'Error message';
+
+      // Act
+      const email = component.signUpForm.get('email');
+      email!.setValue('test@example.com');
+      fixture.detectChanges();
+
+      // Assert
+      expect(component.errorMessage).toBe('');
    });
 
-  it('should handle sign up error', () => {
-    // Arrange
-    const error = new Error('Sign up failed');
-    spyOn(signUpService, 'signUp').and.returnValue(throwError(() => error));
+  });
+  describe('Getters test', () => {
 
-    // Act
-    component.onSubmit();
+    it('should return the firstName control', () => {
+      // Arrange
+      const expectedControl = component.signUpForm.get('firstName');
+      // Act
+      const firstNameControl = component.firstNameControl;
+      // Assert
+      expect(firstNameControl).toBe(expectedControl);
+    });
 
-    // Assert
-    expect(signUpService.signUp).toHaveBeenCalled();
-    expect(component.errorMessage).toEqual('Sign up failed');
+    it('should return the lastName control', () => {
+      // Arrange
+      const expectedControl = component.signUpForm.get('lastName');
+      // Act
+      const lastNameControl = component.lastNameControl;
+      // Assert
+      expect(lastNameControl).toBe(expectedControl);
+    });
+
+    it('should return the email control', () => {
+      // Arrange
+      const expectedControl = component.signUpForm.get('email');
+      // Act
+      const emailControl = component.emailControl;
+      // Assert
+      expect(emailControl).toBe(expectedControl);
+    });
+
+    it('should return the password control', () => {
+      // Arrange
+      const expectedControl = component.signUpForm.get('password');
+      // Act
+      const passwordControl = component.passwordControl;
+      // Assert
+      expect(passwordControl).toBe(expectedControl);
+    });
+
+    it('should return the confirmPassword control', () => {
+      // Arrange
+      const expectedControl = component.signUpForm.get('confirmPassword');
+      // Act
+      const confirmPasswordControl = component.confirmPasswordControl;
+      // Assert
+      expect(confirmPasswordControl).toBe(expectedControl);
+    });
   })
-
 });

@@ -20,7 +20,7 @@ import { AuthService } from '../../services/auth.service';
 export class SignUpFormComponent implements OnInit {
   signUpForm!: FormGroup;
   private strongPasswordRegex: RegExp = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\.@$!%*?&])[A-Za-z\d\.@$!%*?&]{8,}$/;
-  errorMessage!: string;
+  errorMessage: string = '';
 
   constructor(
     private formBuilder: FormBuilder,
