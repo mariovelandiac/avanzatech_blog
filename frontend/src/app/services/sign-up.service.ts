@@ -20,17 +20,17 @@ export class SignUpService {
     .pipe(catchError(this.handleError));
   }
 
-  private handleError(error: HttpErrorResponse) {
+  handleError(error: HttpErrorResponse) {
     let errorMessage = '';
     if (error.status == 400) {
       if (error.error.first_name)
-        errorMessage += "First name " + error.error.first_name[0];
+        errorMessage += "First name " + error.error.first_name[0] + ". ";
       if (error.error.last_name)
-        errorMessage += "Last name " + error.error.last_name[0];
+        errorMessage += "Last name " + error.error.last_name[0]+ ". ";
       if  (error.error.email)
-        errorMessage += error.error.email[0];
+        errorMessage += error.error.email[0]+ ". ";
       if (error.error.password)
-        errorMessage += "Password " + error.error.password[0];
+        errorMessage += "Password " + error.error.password[0]+ ". ";
     }
     if (error.status == 500 || error.status == 0) {
       errorMessage = "An unexpected error occurred. Please try again later"

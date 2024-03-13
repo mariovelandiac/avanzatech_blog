@@ -5,26 +5,17 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { SignUpService } from '../../services/sign-up.service';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
-import {
-  formSignUp,
-  requestSignUp,
-  responseSignUp,
-} from '../../models/interfaces/sign-up.interface';
+import { formSignUp, requestSignUp,} from '../../models/interfaces/sign-up.interface';
 import { of, throwError } from 'rxjs';
+import { mockFormSignUp, mockSingUpSuccessResponse } from '../../test-utils/sign-up.mock';
 
-const successfulResponseMock = {
-  id: 1,
-  first_name: 'John',
-  last_name: 'Doe',
-  email: 'john.doe@example.com',
-};
 class SignUpServiceStub {
   public error = false;
   signUp(data: requestSignUp) {
     if (this.error) {
       return throwError(() => new Error('Sign up failed'));
     }
-    return of(successfulResponseMock);
+    return of(mockSingUpSuccessResponse);
   }
 }
 
@@ -140,13 +131,7 @@ describe('SignUpFormComponent', () => {
   describe('Form Submission', () => {
     it('should convert object keys firstName and lastName to snake case', () => {
       // Arrange
-      const input: formSignUp = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        password: 'testPassword',
-        confirmPassword: 'testPassword',
-      };
+      const input: formSignUp = mockFormSignUp
       // Act
       const result = component.toSnakeCase(input);
       // Assert
@@ -167,7 +152,7 @@ describe('SignUpFormComponent', () => {
         password: 'testPassword',
       };
       spyOn(signUpService, 'signUp').and.returnValue(
-        of(successfulResponseMock)
+        of(mockSingUpSuccessResponse)
       );
 
       // Act

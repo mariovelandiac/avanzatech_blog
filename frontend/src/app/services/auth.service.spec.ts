@@ -13,4 +13,17 @@ describe('AuthService', () => {
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
+
+
+  it('should set justSignedUp flag', () => {
+    // Arrange
+    const value = true;
+    // Act
+    service.setJustSignedUp(value);
+    // Assert
+    service.justSignedUp$.subscribe((result) => {
+      expect(result).toEqual(value);
+    });
+  });
+
 });
