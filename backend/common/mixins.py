@@ -121,7 +121,7 @@ class GetQuerysetByPermissionsMixin:
         anonymous_conditions = {
             f"{self.post_field_name}__category__name": AccessCategory.PUBLIC,
         }
-        # Set conditions by http method
+        # Set conditions by http method and post relationship
         self.__set_conditions_by_http_method_and_post_relationship(anonymous_conditions)
 
         return self.queryset.filter(**anonymous_conditions)
@@ -153,7 +153,7 @@ class GetQuerysetByPermissionsMixin:
         nodt_conditions = {
             f"{self.post_field_name}__category__name__in": [AccessCategory.PUBLIC, AccessCategory.AUTHENTICATED]
         }
-        # Set conditions by http method
+        # Set conditions by http method and post relationship
         self.__set_conditions_by_http_method_and_post_relationship(nodt_conditions)
         # Filter by conditions
         nodt_queryset = self.queryset.filter(**nodt_conditions)
@@ -179,7 +179,7 @@ class GetQuerysetByPermissionsMixin:
             f"{self.post_field_name}__category__name": AccessCategory.TEAM,
             f"{self.team_field_name}": self.request.user.team
         }
-        # Set conditions by HTTP Method
+        # Set conditions by HTTP Method and post relationship
         self.__set_conditions_by_http_method_and_post_relationship(nost_conditions)
         # Filter by conditions
         nost_queryset = self.queryset.filter(**nost_conditions)
@@ -201,7 +201,7 @@ class GetQuerysetByPermissionsMixin:
             f"{self.post_field_name}__category__name": AccessCategory.AUTHOR,
             f"{self.user_field_name}": self.request.user
         }
-        # Set conditions by HTTP Method
+        # Set conditions by HTTP Method and post relationship
         self.__set_conditions_by_http_method_and_post_relationship(owner_conditions)
         # Filter by conditions
         return self.queryset.filter(**owner_conditions)
