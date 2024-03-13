@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
 import { formSignUp, requestSignUp,} from '../../models/interfaces/sign-up.interface';
 import { of, throwError } from 'rxjs';
 import { mockFormSignUp, mockSingUpSuccessResponse } from '../../test-utils/sign-up.mock';
+import { UserStateService } from '../../services/user-state.service';
 
 class SignUpServiceStub {
   public error = false;
@@ -24,6 +25,7 @@ describe('SignUpFormComponent', () => {
   let fixture: ComponentFixture<SignUpFormComponent>;
   let signUpService: SignUpService;
   let authService: AuthService;
+  let userService: UserStateService;
   let router: Router;
 
   beforeEach(async () => {
@@ -36,6 +38,13 @@ describe('SignUpFormComponent', () => {
           useValue: jasmine.createSpyObj('AuthService', ['setJustSignedUp']),
         },
         {
+          provide: UserStateService,
+          useValue: jasmine.createSpyObj('UserStateService', [
+            'setFirstName',
+            'setLastName',
+          ]),
+        },
+        {
           provide: Router,
           useValue: jasmine.createSpyObj('Router', ['navigate']),
         },
@@ -46,6 +55,7 @@ describe('SignUpFormComponent', () => {
     component = fixture.componentInstance;
     signUpService = TestBed.inject(SignUpService);
     authService = TestBed.inject(AuthService);
+    userService = TestBed.inject(UserStateService);
     router = TestBed.inject(Router);
     fixture.detectChanges();
   });
@@ -161,6 +171,8 @@ describe('SignUpFormComponent', () => {
       // Assert
       expect(signUpService.signUp).toHaveBeenCalled();
       expect(authService.setJustSignedUp).toHaveBeenCalledWith(true);
+      expect(userService.setFirstName).toHaveBeenCalledWith('John');
+      expect(userService.setLastName).toHaveBeenCalledWith('Doe');
       expect(router.navigate).toHaveBeenCalledWith(['/login']);
     });
 

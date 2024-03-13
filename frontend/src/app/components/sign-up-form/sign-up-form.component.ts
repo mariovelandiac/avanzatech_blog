@@ -9,6 +9,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ApiErrorDisplayComponent } from '../api-error-display/api-error-display.component';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { UserStateService } from '../../services/user-state.service';
 
 @Component({
   selector: 'app-sign-up-form',
@@ -26,6 +27,7 @@ export class SignUpFormComponent implements OnInit {
     private formBuilder: FormBuilder,
     private signUpService: SignUpService,
     private authService: AuthService,
+    private userService: UserStateService,
     private router: Router
     ) {}
 
@@ -48,6 +50,8 @@ export class SignUpFormComponent implements OnInit {
     this.signUpService.signUp(data).subscribe({
       next: (response: responseSignUp) => {
         this.authService.setJustSignedUp(true);
+        this.userService.setFirstName(response.first_name);
+        this.userService.setLastName(response.last_name);
         this.router.navigate(['/login']);
       },
       error: (error: HttpErrorResponse) => {

@@ -14,16 +14,21 @@ describe('AuthService', () => {
     expect(service).toBeTruthy();
   });
 
-
   it('should set justSignedUp flag', () => {
     // Arrange
     const value = true;
     // Act
     service.setJustSignedUp(value);
     // Assert
-    service.justSignedUp$.subscribe((result) => {
-      expect(result).toEqual(value);
-    });
+    expect(service.getJustSignedUp()).toEqual(value);
   });
 
+  it('should get justSignedUp flag', () => {
+    // Arrange
+    const value = true;
+    // Act
+    service.setJustSignedUp(value);
+    // Assert
+    expect(service.getJustSignedUp()).toEqual(value);
+  });
 });
