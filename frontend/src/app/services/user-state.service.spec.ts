@@ -14,41 +14,15 @@ describe('UserStateService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should set first name', () => {
+  it('should set userJustSignedUp', () => {
     // Arrange
-    const firstName = 'John';
+    const user = {
+      firstName: 'test',
+      lastName: 'test',
+    };
     // Act
-    service.setFirstName(firstName);
+    service.setUserJustSignUp(user);
     // Assert
-    expect(service.getFirstName()).toBe(firstName);
-  });
-
-  it('should set last name', () => {
-    // Arrange
-    const lastName = 'Doe';
-    // Act
-    service.setLastName(lastName);
-    // Assert
-    expect(service.getLastName()).toBe(lastName);
-  });
-
-  it('should get first name', () => {
-    // Arrange
-    const firstName = 'John';
-    service.setFirstName(firstName);
-    // Act
-    const result = service.getFirstName();
-    // Assert
-    expect(result).toBe(firstName);
-  });
-
-  it('should get last name', () => {
-    // Arrange
-    const lastName = 'Doe';
-    service.setLastName(lastName);
-    // Act
-    const result = service.getLastName();
-    // Assert
-    expect(result).toBe(lastName);
+    expect(service.getUserJustSignUp()).toEqual(user);
   });
 });

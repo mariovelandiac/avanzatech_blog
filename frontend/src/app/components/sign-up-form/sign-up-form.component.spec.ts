@@ -40,8 +40,7 @@ describe('SignUpFormComponent', () => {
         {
           provide: UserStateService,
           useValue: jasmine.createSpyObj('UserStateService', [
-            'setFirstName',
-            'setLastName',
+            'setUserJustSignUp',
           ]),
         },
         {
@@ -171,8 +170,11 @@ describe('SignUpFormComponent', () => {
       // Assert
       expect(signUpService.signUp).toHaveBeenCalled();
       expect(authService.setJustSignedUp).toHaveBeenCalledWith(true);
-      expect(userService.setFirstName).toHaveBeenCalledWith('John');
-      expect(userService.setLastName).toHaveBeenCalledWith('Doe');
+      expect(userService.setUserJustSignUp).toHaveBeenCalledWith(
+        {
+          firstName: requestSignUpMock.first_name,
+          lastName: requestSignUpMock.last_name,
+        });
       expect(router.navigate).toHaveBeenCalledWith(['/login']);
     });
 

@@ -1,1 +1,6 @@
-<p>login works!</p>
+<div>
+  <div class="green-sign" *ngIf="justSignUp">
+    <p>Welcome! {{user?.firstName}} {{user?.lastName}}</p>
+  </div>
+  <app-login-form/>
+</div>

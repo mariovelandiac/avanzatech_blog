@@ -1,32 +1,22 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { UserJustSignUp } from '../models/interfaces/user.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserStateService {
 
-  private firstName: BehaviorSubject<string> = new BehaviorSubject<string>('');
-  private lastName: BehaviorSubject<string> = new BehaviorSubject<string>('');
-  firstName$ = this.firstName.asObservable();
-  lastName$ = this.lastName.asObservable();
+  private userJustSignedUp!: UserJustSignUp;
 
   constructor() { }
 
-  setFirstName(value: string) {
-    this.firstName.next(value);
+  setUserJustSignUp(user: UserJustSignUp) {
+    this.userJustSignedUp = user;
   }
 
-  getFirstName() {
-    return this.firstName.getValue();
-  }
-
-  setLastName(value: string) {
-    this.lastName.next(value);
-  }
-
-  getLastName() {
-    return this.lastName.getValue();
+  getUserJustSignUp() {
+    return this.userJustSignedUp;
   }
 
 }

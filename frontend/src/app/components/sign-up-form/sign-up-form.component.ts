@@ -49,9 +49,14 @@ export class SignUpFormComponent implements OnInit {
     const data = this.toSnakeCase(this.signUpForm.value)
     this.signUpService.signUp(data).subscribe({
       next: (response: responseSignUp) => {
+        // update user just signed up state
         this.authService.setJustSignedUp(true);
-        this.userService.setFirstName(response.first_name);
-        this.userService.setLastName(response.last_name);
+        // set name for welcome greeting in login page
+        this.userService.setUserJustSignUp({
+          firstName: response.first_name,
+          lastName: response.last_name,
+        })
+        // redirect to login page
         this.router.navigate(['/login']);
       },
       error: (error: HttpErrorResponse) => {
