@@ -21,4 +21,11 @@ describe('SignUpComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should set the title', () => {
+    // Arrange
+    const title = 'Sign Up';
+    // Act & Assert
+    expect(document.title).toBe(title)
+  });
 });

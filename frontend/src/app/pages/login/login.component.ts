@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { LogInFormComponent } from '../../components/login-form/login-form.component';
 import { UserStateService } from '../../services/user-state.service';
-import { AuthService } from '../../services/auth.service';
 import { UserJustSignUp } from '../../models/interfaces/user.interface';
 import { CommonModule } from '@angular/common';
+import { SignUpService } from '../../services/sign-up.service';
+import { Title } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-login',
@@ -18,11 +19,13 @@ export class LoginComponent implements OnInit {
 
   constructor(
     private userState: UserStateService,
-    private authService: AuthService
+    private signUpService: SignUpService,
+    private title: Title
   ) {}
 
   ngOnInit() {
-    this.justSignUp = this.authService.getJustSignedUp();
+    this.title.setTitle('Log In');
+    this.justSignUp = this.signUpService.getJustSignedUp();
     if (this.justSignUp)
       this.user = this.userState.getUserJustSignUp();
 }
