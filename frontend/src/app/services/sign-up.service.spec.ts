@@ -38,7 +38,7 @@ describe('SignUpService', () => {
     })
     // The following `expectOne()` will match the request's URL.
     const req = httpMock.expectOne(`${environment.api}/user/sign-up/`);
-      // Assert that the request is a POST.
+    // Assert that the request is a POST.
     expect(req.request.method).toBe('POST');
     // Respond with mock data, causing Observable to resolve.
     // Subscribe callback asserts that correct data was returned.

@@ -9,7 +9,7 @@ import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http
   providedIn: 'root'
 })
 export class AuthService {
-  private justSignedUp: boolean = false;
+
   private loginEndpoint = `${environment.api}/user/login/`;
   private isAuthenticated = new BehaviorSubject<boolean>(false);
   isAuthenticated$ = this.isAuthenticated.asObservable();
@@ -26,8 +26,7 @@ export class AuthService {
       'Content-Type': 'application/json',
     });
     return this.httpService.post<UserDTO>(this.loginEndpoint, user, {
-      headers: headers,
-      withCredentials: true
+      headers: headers
     })
       .pipe(
         catchError(this.handleError)
@@ -56,12 +55,8 @@ export class AuthService {
     return throwError(() => new Error(errorMessage));
   }
 
-  setJustSignedUp(value: boolean) {
-    this.justSignedUp = value;
-  }
-
-  getJustSignedUp() {
-    return this.justSignedUp;
+  setAuthentication(isAuthenticated: boolean) {
+    this.isAuthenticated.next(isAuthenticated);
   }
 
 }

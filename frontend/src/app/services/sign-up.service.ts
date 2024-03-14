@@ -8,6 +8,7 @@ import { requestSignUp, responseSignUp } from '../models/interfaces/sign-up.inte
   providedIn: 'root'
 })
 export class SignUpService {
+  private justSignedUp: boolean = false;
   private signUpEndpoint = `${environment.api}/user/sign-up/`
   constructor(private httpService: HttpClient) {}
 
@@ -37,4 +38,13 @@ export class SignUpService {
     }
     return throwError(() => new Error(errorMessage));
   }
+
+  setJustSignedUp(value: boolean) {
+    this.justSignedUp = value;
+  }
+
+  getJustSignedUp() {
+    return this.justSignedUp;
+  }
+
 }
