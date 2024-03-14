@@ -114,20 +114,6 @@ class UserLoginViewTests(APITestCase):
         # Act
         response = self.client.post(url, credentials)
         # Assert
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_a_logged_in_request_with_invalid_credentials_returns_403(self):
-        # Arrange
-        raw_password = self.raw_password
-        user_db = CustomUserFactory(password=raw_password)
-        credentials = {
-            "email": user_db.email,
-            "password": self.raw_password + "invalid_password"
-        }
-        url = reverse('login')
-        # Act
-        response = self.client.post(url, credentials)
-        # Assert
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
@@ -183,6 +169,7 @@ class UserLoginViewTests(APITestCase):
         # Act
         response_1 = self.client.post(url, credentials)
         sessionid_1 = response_1.cookies.get('sessionid')
+        self.client.force_login(user_db)
         response_2 = self.client.post(url, credentials)
         sessionid_2  = response_2.cookies.get('sessionid')
         # Assert

@@ -36,11 +36,6 @@ class CustomUserLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('An email address is required to log in.')
         if password is None:
             raise serializers.ValidationError('A password is required to log in.')
-        if not self.valid_password(password):
-            raise serializers.ValidationError('Password must be at least 8 characters long and contain at least one number and one letter lowercase and one letter uppercase.')
         if not CustomUser.objects.filter(email=email).exists():
             raise serializers.ValidationError('A user with this email was not found.')
         return data
-
-    def valid_password(self, password):
-        return len(password) >= 8 and any(char.isdigit() for char in password) and any(char.islower() for char in password) and any(char.isupper() for char in password)
