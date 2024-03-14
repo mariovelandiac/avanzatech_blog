@@ -8,9 +8,7 @@ import { formSignUp, requestSignUp, responseSignUp } from '../../models/interfac
 import { HttpErrorResponse } from '@angular/common/http';
 import { ApiErrorDisplayComponent } from '../api-error-display/api-error-display.component';
 import { Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
 import { UserStateService } from '../../services/user-state.service';
-import { Title } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-sign-up-form',
@@ -27,14 +25,11 @@ export class SignUpFormComponent implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private signUpService: SignUpService,
-    private authService: AuthService,
     private userService: UserStateService,
     private router: Router,
-    private title: Title
     ) {}
 
   ngOnInit() {
-    this.title.setTitle('Sign Up');
     this.signUpForm = this.formBuilder.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
@@ -53,7 +48,7 @@ export class SignUpFormComponent implements OnInit {
     this.signUpService.signUp(data).subscribe({
       next: (response: responseSignUp) => {
         // update user just signed up state
-        this.authService.setJustSignedUp(true);
+        this.signUpService.setJustSignedUp(true);
         // set name for welcome greeting in login page
         this.userService.setUserJustSignUp({
           firstName: response.first_name,

@@ -4,13 +4,13 @@ import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { RequiredFieldComponent } from '../required-field/required-field.component';
-import { Title } from '@angular/platform-browser';
 import { AuthLinkComponent } from '../auth-link/auth-link.component';
 import { ApiErrorDisplayComponent } from '../api-error-display/api-error-display.component';
 import { UserDTO } from '../../models/interfaces/user.interface';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { IconDefinition, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
+import { UserStateService } from '../../services/user-state.service';
 @Component({
   selector: 'app-login-form',
   standalone: true,
@@ -27,12 +27,11 @@ export class LogInFormComponent implements OnInit {
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
-    private title: Title,
     private authService: AuthService,
+    private userService: UserStateService
   ) {}
 
   ngOnInit() {
-    this.title.setTitle('Log In');
     this.logInForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required]
@@ -44,6 +43,9 @@ export class LogInFormComponent implements OnInit {
     this.errorMessage = '';
     this.authService.logIn(this.logInForm.value).subscribe({
       next: (response: UserDTO) => {
+        this.userService.clearUserJustSignUp();
+        this.userService.setUser(response);
+        this.authService.setAuthentication(true);
         this.router.navigate(['/home']);
       },
       error: (error: HttpErrorResponse) => {

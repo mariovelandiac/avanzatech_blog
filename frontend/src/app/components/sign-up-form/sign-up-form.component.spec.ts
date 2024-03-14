@@ -3,14 +3,13 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SignUpFormComponent } from './sign-up-form.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { SignUpService } from '../../services/sign-up.service';
-import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { formSignUp, requestSignUp,} from '../../models/interfaces/sign-up.interface';
 import { of, throwError } from 'rxjs';
 import { mockFormSignUp, mockSingUpSuccessResponse } from '../../test-utils/sign-up.mock';
 import { UserStateService } from '../../services/user-state.service';
 
-class SignUpServiceStub {
+export class SignUpServiceStub {
   public error = false;
   signUp(data: requestSignUp) {
     if (this.error) {
@@ -18,13 +17,15 @@ class SignUpServiceStub {
     }
     return of(mockSingUpSuccessResponse);
   }
+  setJustSignedUp(value: boolean) {
+    return;
+  }
 }
 
 describe('SignUpFormComponent', () => {
   let component: SignUpFormComponent;
   let fixture: ComponentFixture<SignUpFormComponent>;
   let signUpService: SignUpService;
-  let authService: AuthService;
   let userService: UserStateService;
   let router: Router;
 
@@ -33,10 +34,6 @@ describe('SignUpFormComponent', () => {
       imports: [ReactiveFormsModule],
       providers: [
         { provide: SignUpService, useClass: SignUpServiceStub },
-        {
-          provide: AuthService,
-          useValue: jasmine.createSpyObj('AuthService', ['setJustSignedUp']),
-        },
         {
           provide: UserStateService,
           useValue: jasmine.createSpyObj('UserStateService', [
@@ -53,7 +50,6 @@ describe('SignUpFormComponent', () => {
     fixture = TestBed.createComponent(SignUpFormComponent);
     component = fixture.componentInstance;
     signUpService = TestBed.inject(SignUpService);
-    authService = TestBed.inject(AuthService);
     userService = TestBed.inject(UserStateService);
     router = TestBed.inject(Router);
     fixture.detectChanges();
@@ -164,12 +160,14 @@ describe('SignUpFormComponent', () => {
         of(mockSingUpSuccessResponse)
       );
 
+      spyOn(signUpService, 'setJustSignedUp');
+
       // Act
       component.onSubmit();
 
       // Assert
       expect(signUpService.signUp).toHaveBeenCalled();
-      expect(authService.setJustSignedUp).toHaveBeenCalledWith(true);
+      expect(signUpService.setJustSignedUp).toHaveBeenCalledWith(true);
       expect(userService.setUserJustSignUp).toHaveBeenCalledWith(
         {
           firstName: requestSignUpMock.first_name,
