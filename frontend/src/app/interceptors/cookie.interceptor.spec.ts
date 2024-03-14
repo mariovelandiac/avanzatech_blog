@@ -1,11 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpInterceptor } from '@angular/common/http';
 
-import { cookieInterceptor } from './cookie.interceptor';
+import { CsrfCookieInterceptor } from './cookie.interceptor';
 
 describe('cookieInterceptor', () => {
-  const interceptor: HttpInterceptorFn = (req, next) => 
-    TestBed.runInInjectionContext(() => cookieInterceptor(req, next));
+  const interceptor: HttpInterceptor = new CsrfCookieInterceptor();
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
