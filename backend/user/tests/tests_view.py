@@ -7,38 +7,68 @@ from user.models import CustomUser
 from team.tests.factories import TeamFactory
 from team.constants import DEFAULT_TEAM_NAME
 
-class UserLogInViewTests(APITestCase):
+class UserLoginViewTests(APITestCase):
 
     def setUp(self):
         self.team = TeamFactory(name=DEFAULT_TEAM_NAME)
+        self.raw_password = "TestPassword&123"
     
-    def test_an_existing_user_is_authenticated_and_log_in_successfully(self):
+    def test_an_existing_user_is_logged_in_successfully(self):
         # Arrange
-        raw_password = "test_password"
-        user_db = CustomUserFactory(password=raw_password)
+        user_db = CustomUserFactory(password=self.raw_password)
         credentials = {
-            "username": user_db.email,
-            "password": raw_password
+            "email": user_db.email,
+            "password": self.raw_password
         }
         url = reverse('login')  
         # Act
         response = self.client.post(url, credentials)
         user_id_in_request = self.client.session.get('_auth_user_id')
         # Assert
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(user_id_in_request)
         self.assertEqual(user_db.id, int(user_id_in_request))
         self.assertIsNotNone(response.cookies)
-        self.assertIsNotNone(response.cookies['sessionid'])
-        self.assertIsNotNone(response.cookies['csrftoken'])
         self.assertIsInstance(self.client.session, SessionStore)
-        self.assertRedirects(response, reverse('success_page'))
 
-    def test_an_non_existing_user_can_not_log_in(self):
+    def test_an_existing_user_is_logged_in_successfully_and_session_id_is_returned(self):
         # Arrange
-        raw_password = "test_password"
-        user = CustomUserFactory.build()
+        user_db = CustomUserFactory(password=self.raw_password)
         credentials = {
-            "username": user.email,
+            "email": user_db.email,
+            "password": self.raw_password
+        }
+        url = reverse('login')  
+        # Act
+        response = self.client.post(url, credentials)
+        session_id = response.cookies.get('sessionid')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(session_id)
+        self.assertIsNotNone(session_id.value)
+
+    def test_an_existing_user_is_logged_in_successfully_and_csrf_token_is_returned(self):
+        # Arrange
+        user_db = CustomUserFactory(password=self.raw_password)
+        credentials = {
+            "email": user_db.email,
+            "password": self.raw_password
+        }
+        url = reverse('login')  
+        # Act
+        response = self.client.post(url, credentials)
+        csrf = response.cookies.get('csrftoken')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(csrf)
+        self.assertIsNotNone(csrf.value)
+
+    def test_an_non_existing_user_can_not_log_in_and_400_is_returned(self):
+        # Arrange
+        raw_password = self.raw_password
+        email = "test@test.com"
+        credentials = {
+            "email": email,
             "password": raw_password
         }
         url = reverse('login')
@@ -46,35 +76,82 @@ class UserLogInViewTests(APITestCase):
         response = self.client.post(url, credentials)
         user_id_in_request = self.client.session.get('_auth_user_id')
         # Assert
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIsNone(user_id_in_request)
 
+    def test_a_logged_in_request_with_out_email_returns_400(self):
+        # Arrange
+        raw_password = self.raw_password
+        credentials = {
+            "password": raw_password
+        }
+        url = reverse('login')
+        # Act
+        response = self.client.post(url, credentials)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_get_request_returns_status_code_200_if_user_is_unauthenticated(self):
+    def test_a_logged_in_request_without_password_returns_400(self):
+        # Arrange
+        credentials = {
+            "email": "test@email.com"
+        }
+        url = reverse('login')
+        # Act
+        response = self.client.post(url, credentials)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_a_logged_in_request_without_valid_password_returns_400(self):
+        # Arrange
+        raw_password = self.raw_password
+        user_db = CustomUserFactory(password=raw_password)
+        credentials = {
+            "email": user_db.email,
+            "password": "invalid_password"
+        }
+        url = reverse('login')
+        # Act
+        response = self.client.post(url, credentials)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_a_logged_in_request_with_invalid_credentials_returns_403(self):
+        # Arrange
+        raw_password = self.raw_password
+        user_db = CustomUserFactory(password=raw_password)
+        credentials = {
+            "email": user_db.email,
+            "password": self.raw_password + "invalid_password"
+        }
+        url = reverse('login')
+        # Act
+        response = self.client.post(url, credentials)
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+    def test_get_request_returns_status_code_405(self):
         # Arrange
         url = reverse('login')
         # Act
         response = self.client.get(url)
-        csrf = response.cookies.get('csrftoken')
         # Assert
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsNotNone(csrf)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def test_put_request_returns_status_code_200_if_user_is_unauthenticated(self):
+    def test_put_request_returns_status_code_405(self):
         # Arrange
         url = reverse('login')
         data = {
-            "username": "user@username.com",
+            "email": "user@username.com",
             "password": "raw_password"
         }
         # Act
         response = self.client.put(url, data)
-        csrf = response.cookies.get('csrftoken')
         # Assert
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsNotNone(csrf)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def test_patch_request_returns_status_code_200_if_user_is_unauthenticated(self):
+    def test_patch_request_returns_status_code_405(self):
         # Arrange
         url = reverse('login')
         data = {
@@ -82,54 +159,52 @@ class UserLogInViewTests(APITestCase):
         }
         # Act
         response = self.client.patch(url, data)
-        csrf = response.cookies.get('csrftoken')
         # Assert
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsNotNone(csrf)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    def test_delete_request_returns_status_code_200_if_user_is_unauthenticated(self):
+    def test_delete_request_returns_status_code_405(self):
         # Arrange
         url = reverse('login')
         # Act
         response = self.client.delete(url)
-        csrf = response.cookies.get('csrftoken')
         # Assert
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsNotNone(csrf)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
     def test_a_logged_in_user_can_log_in_again_and_its_session_id_is_the_same(self):
         # Arrange
-        raw_password = "test_password"
+        raw_password = self.raw_password
         user_db = CustomUserFactory(password=raw_password)
         credentials = {
-            "username": user_db.email,
+            "email": user_db.email,
             "password": raw_password
         }
         url = reverse('login')
         # Act
         response_1 = self.client.post(url, credentials)
-        sessionid_1 = response_1.cookies.get('sessionid').value
+        sessionid_1 = response_1.cookies.get('sessionid')
         response_2 = self.client.post(url, credentials)
-        sessionid_2  = response_2.cookies.get('sessionid').value
+        sessionid_2  = response_2.cookies.get('sessionid')
         # Assert
-        self.assertEqual(sessionid_1, sessionid_2)
         self.assertIsNotNone(sessionid_1)
         self.assertIsNotNone(sessionid_2)
-        self.assertEqual(response_1.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response_2.status_code, status.HTTP_302_FOUND)
+        self.assertIsNotNone(sessionid_1.value)
+        self.assertIsNotNone(sessionid_2.value)
+        self.assertEqual(sessionid_1.value, sessionid_2.value)
+        self.assertEqual(response_1.status_code, status.HTTP_200_OK)
+        self.assertEqual(response_2.status_code, status.HTTP_200_OK)
         
     def test_a_logged_in_user_try_to_login_with_other_valid_credentials_and_session_id_is_updated(self):
         # Arrange
-        raw_password = "test_password"
+        raw_password = self.raw_password
         user_db_1 = CustomUserFactory(password=raw_password)
         credentials_1 = {
-            "username": user_db_1.email,
+            "email": user_db_1.email,
             "password": raw_password
         }
         user_db_2 = CustomUserFactory(password=raw_password)
         credentials_2 = {
-            "username": user_db_2.email,
+            "email": user_db_2.email,
             "password": raw_password
         }
         url = reverse('login')
@@ -142,8 +217,26 @@ class UserLogInViewTests(APITestCase):
         self.assertNotEqual(sessionid_1, sessionid_2)
         self.assertIsNotNone(sessionid_1)
         self.assertIsNotNone(sessionid_2)
-        self.assertEqual(response_1.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(response_2.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response_1.status_code, status.HTTP_200_OK)
+        self.assertEqual(response_2.status_code, status.HTTP_200_OK)
+
+    def test_a_logged_in_request_is_carried_out_successfully_and_the_user_is_returned(self):
+        # Arrange
+        raw_password = self.raw_password
+        user_db = CustomUserFactory(password=raw_password)
+        credentials = {
+            "email": user_db.email,
+            "password": raw_password
+        }
+        url = reverse('login')
+        # Act
+        response = self.client.post(url, credentials)
+        user_id = response.data.get('id')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(user_db.email, response.data.get('email'))
+        self.assertEqual(user_db.first_name, response.data.get('first_name'))
+        self.assertEqual(user_db.last_name, response.data.get('last_name'))
 
 
 class UserLogOutViewTests(APITestCase):
@@ -307,3 +400,12 @@ class UserSignUpViewTests(APITestCase):
         # Assert
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(CustomUser.objects.count(), 1)
+
+    def test_user_password_is_not_raw_password(self):
+        # Arrange
+        # Act
+        response = self.client.post(self.url, self.user_data)
+        user_id = response.data.get('id')
+        user_db = CustomUser.objects.get(id=user_id)
+        # Assert
+        self.assertNotEqual(user_db.password, self.user_data['password'])

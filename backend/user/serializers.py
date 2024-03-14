@@ -21,3 +21,26 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
             password = validated_data.pop('password')  # Extract the password from the data
             user = CustomUser.objects.create_user(email, password, **validated_data)  # Create a user instance with the validated data
             return user
+
+class CustomUserLoginSerializer(serializers.Serializer):
+
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+    first_name = serializers.CharField(read_only=True, source='user.first_name')
+    last_name = serializers.CharField(read_only=True, source='user.last_name')
+
+    def validate(self, data):
+        email = data.get('email')
+        password = data.get('password')
+        if email is None:
+            raise serializers.ValidationError('An email address is required to log in.')
+        if password is None:
+            raise serializers.ValidationError('A password is required to log in.')
+        if not self.valid_password(password):
+            raise serializers.ValidationError('Password must be at least 8 characters long and contain at least one number and one letter lowercase and one letter uppercase.')
+        if not CustomUser.objects.filter(email=email).exists():
+            raise serializers.ValidationError('A user with this email was not found.')
+        return data
+
+    def valid_password(self, password):
+        return len(password) >= 8 and any(char.isdigit() for char in password) and any(char.islower() for char in password) and any(char.isupper() for char in password)
