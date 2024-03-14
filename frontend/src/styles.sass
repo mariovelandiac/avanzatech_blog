@@ -2,7 +2,6 @@
   display: flex
   justify-content: space-around  // To evenly distribute buttons
 
-
 .two-option-buttons button
   padding: 10px 20px  // Adjust padding as needed
   border: none
@@ -30,5 +29,47 @@
 
 .form-required
   color: #dc3545  // Change color of required field indicator
+
+.lisu-form-group
+    margin-bottom: 20px  // Adjust as needed for spacing between fields
+    width: 100%  // Adjust as needed for field width
+    label
+        display: block  // Ensure labels are displayed as block elements
+        margin-bottom: 5px  // Adjust as needed for spacing between label and input
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea
+        width: 100%  // Make inputs fill the entire width of the container
+        padding: 10px  // Adjust as needed for input padding
+        border: 1px solid #ccc  // Example border style
+        border-radius: 5px  // Example border radius
+        box-sizing: border-box  // Ensure padding and border are included in width
+
+.lisu-form-container
+  margin: 0 auto  // Center the form container
+  width: 20%   // Adjust as needed for form width
+  position: absolute
+  top: 50%
+  left: 50%
+  transform: translate(-50%, -50%)
+  border: 1px solid black
+  padding: 2rem
+  border-radius: 5px
+
+.password-required span
+  display: block
+  color: #808080
+  font-style: italic
+
+.lisu-h1
+  position: absolute
+  top: -4rem
+  left: 50%
+  transform: translateX(-50%)
+  width: 100%
+  font-size: 1.8rem
+
 
 

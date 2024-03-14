@@ -1,3 +1,19 @@
 <div>
-  <p>login form will be here</p>
+  <h1 class="lisu-h1">User Login</h1>
+  <form [formGroup]="logInForm" (ngSubmit)="onSubmit()">
+    <div class="lisu-form-group">
+      <label for="email">Email</label>
+      <input type="email" formControlName="email" placeholder="your@email.com" id="email">
+    </div>
+    <div class="lisu-form-group">
+      <label for="password">Password</label>
+      <input type="password" formControlName="password"placeholder="********" id="password">
+    </div>
+    <div class="two-option-buttons">
+      <button type="submit" [disabled]="!logInForm.valid">Login</button>
+      <button type="button" (click)="onCancel()">Cancel</button>
+    </div>
+  </form>
+  <app-api-error-display *ngIf="errorMessage" [errorMessage]="errorMessage"/>
+  <app-auth-link text="Don't have an acount?" link="/signup" action="Register"/>
 </div>

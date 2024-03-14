@@ -10,6 +10,7 @@ import { ApiErrorDisplayComponent } from '../api-error-display/api-error-display
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { UserStateService } from '../../services/user-state.service';
+import { Title } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-sign-up-form',
@@ -28,10 +29,12 @@ export class SignUpFormComponent implements OnInit {
     private signUpService: SignUpService,
     private authService: AuthService,
     private userService: UserStateService,
-    private router: Router
+    private router: Router,
+    private title: Title
     ) {}
 
   ngOnInit() {
+    this.title.setTitle('Sign Up');
     this.signUpForm = this.formBuilder.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
@@ -63,6 +66,10 @@ export class SignUpFormComponent implements OnInit {
         this.errorMessage = error.message;
       }
     });
+  }
+
+  onCancel() {
+    this.signUpForm.reset();
   }
 
   checkPasswords(group: AbstractControl): ValidationErrors | null {
