@@ -7,7 +7,12 @@
     </div>
     <div class="lisu-form-group">
       <label for="password">Password</label>
-      <input type="password" formControlName="password"placeholder="********" id="password">
+      <div class="password-input-container">
+        <input [type]="passwordInput" formControlName="password"placeholder="********" id="password">
+        <button class="toggle-password-button" type="button" (click)="togglePasswordVisibility()">
+          <fa-icon [icon]="passwordIcon" class="password-icon"></fa-icon>
+        </button>
+      </div>
     </div>
     <div class="two-option-buttons">
       <button type="submit" [disabled]="!logInForm.valid">Login</button>
@@ -15,5 +20,5 @@
     </div>
   </form>
   <app-api-error-display *ngIf="errorMessage" [errorMessage]="errorMessage"/>
-  <app-auth-link text="Don't have an acount?" link="/signup" action="Register"/>
+  <app-auth-link text="Don't have an account?" link="/signup" action="Register"/>
 </div>

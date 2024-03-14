@@ -9,16 +9,20 @@ import { AuthLinkComponent } from '../auth-link/auth-link.component';
 import { ApiErrorDisplayComponent } from '../api-error-display/api-error-display.component';
 import { UserDTO } from '../../models/interfaces/user.interface';
 import { HttpErrorResponse } from '@angular/common/http';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { IconDefinition, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 @Component({
   selector: 'app-login-form',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, RequiredFieldComponent, AuthLinkComponent, ApiErrorDisplayComponent],
+  imports: [ReactiveFormsModule, CommonModule, RequiredFieldComponent, AuthLinkComponent, ApiErrorDisplayComponent, FontAwesomeModule],
   templateUrl: './login-form.component.html',
   styleUrl: './login-form.component.sass'
 })
 export class LogInFormComponent implements OnInit {
   logInForm!: FormGroup;
   errorMessage: string = '';
+  hidePassword: boolean = true;
+  passwordIcon: IconDefinition = faEye;
 
   constructor(
     private router: Router,
@@ -33,12 +37,14 @@ export class LogInFormComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required]
     });
+    this.logInForm.valueChanges.subscribe(() => this.errorMessage = '');
   }
 
   onSubmit() {
+    this.errorMessage = '';
     this.authService.logIn(this.logInForm.value).subscribe({
       next: (response: UserDTO) => {
-        console.log("Response", response);
+        this.router.navigate(['/home']);
       },
       error: (error: HttpErrorResponse) => {
         this.errorMessage = error.message;
@@ -50,12 +56,21 @@ export class LogInFormComponent implements OnInit {
     this.logInForm.reset();
   }
 
+  togglePasswordVisibility() {
+    this.hidePassword = !this.hidePassword;
+    this.passwordIcon = this.hidePassword ? faEye : faEyeSlash;
+  }
+
   get emailControl() {
     return this.logInForm.get('email');
   }
 
   get passwordControl() {
     return this.logInForm.get('password');
+  }
+
+  get passwordInput() {
+    return this.hidePassword ? 'password' : 'text';
   }
 
 }
