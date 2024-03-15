@@ -6,9 +6,8 @@ export const mockLoginUser: UserLogIn = {
 }
 
 export const mockLoginSuccessfulResponse: UserDTO = {
-  id: 1,
-  firstName: 'Test',
-  lastName: 'Test',
+  first_name: 'Test',
+  last_name: 'Test',
   email: mockLoginUser.email
 }
 

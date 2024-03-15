@@ -8,7 +8,11 @@ export interface UserLogIn {
   password: string;
 }
 export interface UserDTO {
-  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+}
+export interface User {
   firstName: string;
   lastName: string;
   email: string;
