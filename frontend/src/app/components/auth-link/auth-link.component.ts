@@ -1,9 +1,10 @@
 import { Component, Input } from '@angular/core';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-auth-link',
   standalone: true,
-  imports: [],
+  imports: [RouterModule],
   templateUrl: './auth-link.component.html',
   styleUrl: './auth-link.component.sass'
 })

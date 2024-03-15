@@ -1,0 +1,20 @@
+<nav>
+  <div class="logo-container">
+    <a routerLink="/home">
+      <img src="../../../assets/Logo_Horizontal_Navbar_Without_Text.png" alt="">
+    </a>
+    <div>
+      <h1 class="main-title-bold">Avanza</h1>
+      <h1 class="main-title">Tech</h1>
+      <h1 class="main-title-bold">Blog</h1>
+    </div>
+  </div>
+  <div class="user-info">
+    <h1 class="welcome-message" *ngIf="isAuthenticated">Welcome, {{ firstName }}</h1>
+    <div *ngIf="!isAuthenticated">
+      <a routerLink="/login">Login</a>
+      <!-- Pipe or something similar -->
+      <a routerLink="/signup">Register</a>
+    </div>
+  </div>
+</nav>
