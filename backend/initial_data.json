@@ -59,7 +59,7 @@
         "model": "team.team",
         "pk": 1,
         "fields": {
-            "name": "default team"
+            "name": "Default Team"
         }
     }
 ]
