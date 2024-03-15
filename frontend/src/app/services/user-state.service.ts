@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
-import { UserDTO, UserJustSignUp } from '../models/interfaces/user.interface';
+import { User, UserDTO, UserJustSignUp } from '../models/interfaces/user.interface';
 import { SignUpService } from './sign-up.service';
 
 @Injectable({
@@ -8,17 +7,21 @@ import { SignUpService } from './sign-up.service';
 })
 export class UserStateService {
   private userJustSignedUp!: UserJustSignUp;
-  private user!: UserDTO;
+  private user!: User;
 
-  constructor(
-    private signUpService: SignUpService
-  ) {}
+  constructor(private signUpService: SignUpService) {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser)
 
-  setUser(user: UserDTO) {
-    this.user = user;
+      this.user = JSON.parse(storedUser);
   }
 
-  getUser() {
+  setUser(user: UserDTO) {
+    this.user = this.toCamelCase(user);
+    localStorage.setItem('user', JSON.stringify(this.user));
+  }
+
+  getUser(): User {
     return this.user;
   }
 
@@ -35,6 +38,14 @@ export class UserStateService {
     this.userJustSignedUp = {
       firstName: '',
       lastName: '',
+    };
+  }
+
+  private toCamelCase(user: UserDTO): User {
+    return {
+      firstName: user.first_name,
+      lastName: user.last_name,
+      email: user.email
     };
   }
 

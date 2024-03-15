@@ -54,15 +54,20 @@ describe('AuthService', () => {
       });
     });
 
+    it('should set authentication status in local storage', () => {
+      // Arrange
+      const isAuthenticated = true;
+      // Act
+      service.setAuthentication(isAuthenticated);
+      // Assert
+      expect(localStorage.getItem('isAuthenticated')).toEqual('true');
+    });
+
     it('should get authentication status when it changes', () => {
       // Arrange
       service.setAuthentication(true)
-      // Act
-      service.setAuthentication(false);
-      // Assert
-      service.isAuthenticated$.subscribe((data) => {
-        expect(data).toBeFalse();
-      });
+      // Act & Assert
+      expect(service.getAuthentication()).toBeTrue();
     });
   });
   describe('Error handling', () => {

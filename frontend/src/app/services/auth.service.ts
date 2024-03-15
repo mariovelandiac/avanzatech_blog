@@ -14,10 +14,12 @@ export class AuthService {
   private isAuthenticated = new BehaviorSubject<boolean>(false);
   isAuthenticated$ = this.isAuthenticated.asObservable();
 
-  constructor(
-    private userState: UserStateService,
-    private httpService: HttpClient
-    ) {}
+  constructor(private httpService: HttpClient) {
+      // Initialize the authentication status
+      const storedAuth = localStorage.getItem('isAuthenticated');
+      if (storedAuth)
+        this.isAuthenticated.next(JSON.parse(storedAuth));
+    }
 
 
   logIn(user: UserLogIn): Observable<UserDTO> {
@@ -57,6 +59,11 @@ export class AuthService {
 
   setAuthentication(isAuthenticated: boolean) {
     this.isAuthenticated.next(isAuthenticated);
+    localStorage.setItem('isAuthenticated', JSON.stringify(isAuthenticated));
+  }
+
+  getAuthentication(): boolean {
+    return this.isAuthenticated.getValue();
   }
 
 }

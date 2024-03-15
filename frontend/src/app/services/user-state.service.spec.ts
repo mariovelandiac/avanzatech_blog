@@ -3,6 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { UserStateService } from './user-state.service';
 import { SignUpService } from './sign-up.service';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { mockLoginSuccessfulResponse } from '../test-utils/login.mock';
+import { User } from '../models/interfaces/user.interface';
 
 describe('UserStateService', () => {
   let service: UserStateService;
@@ -53,18 +55,19 @@ describe('UserStateService', () => {
     expect(signUpService.setJustSignedUp).toHaveBeenCalledWith(false);
   });
 
-  it('should set user as UserDTO', () => {
+  it('should set user as User', () => {
     // Arrange
-    const user = {
-      id: 1,
-      email: 'test@test.com',
-      firstName: 'test',
-      lastName: 'test',
-    };
+    const userDTO = mockLoginSuccessfulResponse;
+    const user: User = {
+      firstName: userDTO.first_name,
+      lastName: userDTO.last_name,
+      email: userDTO.email
+    }
     // Act
-    service.setUser(user);
+    service.setUser(userDTO);
     // Assert
     expect(service.getUser()).toEqual(user);
+    expect(localStorage.getItem('user')).toEqual(JSON.stringify(user));
   });
 
 });
