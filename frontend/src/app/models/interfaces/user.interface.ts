@@ -1,7 +1,9 @@
-export interface UserJustSignUp {
+export interface BaseUser {
   firstName: string;
   lastName: string;
 }
+
+export interface UserJustSignUp extends BaseUser {}
 
 export interface UserLogIn {
   email: string;
@@ -12,8 +14,16 @@ export interface UserDTO {
   last_name: string;
   email: string;
 }
-export interface User {
-  firstName: string;
-  lastName: string;
+export interface User extends BaseUser {
   email: string;
+}
+
+export interface UserPostDTO {
+  id: string;
+  first_name: string;
+  last_name: string;
+  team: {
+    id: string;
+    name: string;
+  };
 }
