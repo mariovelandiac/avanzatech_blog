@@ -14,7 +14,7 @@ export class CommentService {
     private httpService: HttpClient
   ) { }
 
-  getCommentsByPost(postId: string): Observable<CommentListDTO> {
+  getCommentsByPost(postId: number): Observable<CommentListDTO> {
     return this.httpService.get<CommentListDTO>(`${this.commentEndpoint}?page_size=${this.pageSize}&post=${postId}`)
   }
 }

@@ -20,3 +20,8 @@ export interface LikesByPost {
 export interface LikedByUser {
   liked: boolean
 }
+
+export interface LikeCreateDTO {
+  user: number,
+  post: number
+}

@@ -7,7 +7,8 @@
     </div>
     <div class="interaction-bar-container">
       <li *ngIf="isAuthenticated">
-        <app-like-action [isLiked]="post.likedByAuthenticatedUser"></app-like-action>
+        <app-like-action (likeClicked)="handleLikeAction($event, post.id)"
+        [isLiked]="post.likedByAuthenticatedUser"></app-like-action>
       </li>
       <li *ngIf="isAuthenticated">
         <app-comment-action></app-comment-action>

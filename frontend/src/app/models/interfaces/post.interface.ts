@@ -3,7 +3,7 @@ import { LikeListDTO } from "./like.interface";
 import { BaseUser, UserDTO } from "./user.interface";
 
 export interface Post {
-  id: string;
+  id: number;
   title: string;
   excerpt: string;
   createdAt: string;
@@ -21,7 +21,7 @@ interface category_permission {
 }
 
 export interface PostDTO {
-  id: string;
+  id: number;
   title: string;
   category_permission: category_permission[];
   user: UserDTO;
@@ -30,7 +30,7 @@ export interface PostDTO {
 }
 
 export interface PostListDTO {
-  count: string;
+  count: number;
   next: string;
   previous: string;
   results: PostDTO[];

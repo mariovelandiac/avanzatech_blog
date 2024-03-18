@@ -33,7 +33,7 @@ export class PostContentComponent {
     return `${this.post.user.firstName} ${this.post.user.lastName}`;
   }
 
-  get id(): string {
+  get id(): number {
     return this.post.id;
   }
 

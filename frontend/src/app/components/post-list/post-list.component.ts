@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { PostContentComponent } from '../post-content/post-content.component';
 import { Post } from '../../models/interfaces/post.interface';
 import { PostService } from '../../services/post.service';
@@ -33,6 +33,7 @@ export class PostListComponent implements OnInit {
     private userService: UserStateService
   ) {}
 
+
   ngOnInit() {
     this.authService.isAuthenticated$.subscribe(isAuthenticated => {
       this.isAuthenticated = isAuthenticated;
@@ -40,10 +41,34 @@ export class PostListComponent implements OnInit {
     this.postService.list().subscribe(posts => {
       this.posts = posts;
       this.getLikedByUser();
+      // To do: set permissions
       this.setPermissions();
       this.getLikes();
       this.getComments();
     });
+  }
+
+  handleLikeAction(isLiked: boolean, postId: number): void {
+    const currentPostIndex = this.posts.findIndex(post => post.id === postId);
+    isLiked ? this.handleDeleteLike(currentPostIndex) : this.handleCreateLike(currentPostIndex);
+  }
+
+  handleDeleteLike(currentPostIndex: number): void {
+    const currentPost = this.posts[currentPostIndex];
+    const userId = this.userService.getUser().id;
+    this.likeService.deleteLike(currentPost.id, userId).subscribe(() => {});
+    currentPost.likes!.count--;
+    currentPost.likedByAuthenticatedUser = false;
+    this.posts[currentPostIndex] = { ...currentPost };
+  }
+
+  handleCreateLike(currentPostIndex: number): void {
+    const currentPost = this.posts[currentPostIndex];
+    const userId = this.userService.getUser().id;
+    this.likeService.createLike(currentPost.id, userId).subscribe(() => {});
+    currentPost.likes!.count++;
+    currentPost.likedByAuthenticatedUser = true;
+    this.posts[currentPostIndex] = { ...currentPost };
   }
 
   getLikedByUser(): void {
@@ -59,10 +84,10 @@ export class PostListComponent implements OnInit {
   }
 
   setPermissions(): void {
-    for (let post of this.posts) {
-      console.log(post.category_permission);
-      console.log(this.userService.getUser().teamId);
-    }
+    // for (let post of this.posts) {
+    //   console.log(post.category_permission);
+    //   console.log(this.userService.getUser().teamId);
+    // }
   }
 
   getLikes(): void {
