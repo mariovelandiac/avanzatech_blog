@@ -13,15 +13,18 @@ export interface UserLoginDTO {
   user_id: number;
   first_name: string;
   last_name: string;
-  email: string;
-  team_id: string;
+  team_id: number;
+  is_admin: boolean;
 }
 export interface User extends BaseUser {
   id: number;
-  email: string;
-  teamId: Team["id"];
+  teamId: number;
+  isAdmin: boolean;
 }
-
+export interface UserRelated extends BaseUser{
+  id: number;
+  team: Team;
+}
 export interface UserDTO {
   id: number;
   first_name: string;
@@ -29,7 +32,13 @@ export interface UserDTO {
   team: Team;
 }
 
-interface Team {
-  id: string;
+export interface UserLikedBy {
+  id: number;
+  firstName: string;
+  lastName: string;
+}
+
+export interface Team {
+  id: number;
   name: string;
 }

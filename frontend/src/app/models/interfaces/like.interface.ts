@@ -1,7 +1,7 @@
-import { BaseUser, UserDTO } from "./user.interface";
+import {UserDTO, UserLikedBy} from "./user.interface";
 
 export interface LikeDTO {
-  id: string,
+  id: number,
   user: UserDTO,
   post: string,
   is_active: boolean
@@ -13,8 +13,10 @@ export interface LikeListDTO {
   previous: string,
   results: LikeDTO[]
 }
-export interface LikesByPost {
-  likedBy: BaseUser[]
+
+export interface LikeList {
+  count: number,
+  likedBy: UserLikedBy[]
 }
 
 export interface LikedByUser {

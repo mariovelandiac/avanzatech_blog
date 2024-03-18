@@ -1,23 +1,23 @@
 import { CommentListDTO } from "./comment.interface";
-import { LikeListDTO } from "./like.interface";
-import { BaseUser, UserDTO } from "./user.interface";
+import { LikeList, LikeListDTO } from "./like.interface";
+import { BaseUser, Team, UserDTO, UserRelated } from "./user.interface";
 
 export interface Post {
   id: number;
   title: string;
   excerpt: string;
   createdAt: string;
-  teamName: string;
-  user: BaseUser;
+  user: UserRelated;
   category_permission: category_permission[];
-  likes?: LikeListDTO
-  comments?: CommentListDTO
-  likedByAuthenticatedUser?: boolean
+  canEdit: boolean;
+  likes?: LikeList;
+  comments?: CommentListDTO;
+  likedByAuthenticatedUser?: boolean;
 }
 
 interface category_permission {
-  category: string;
-  permission: string;
+  category: number;
+  permission: number;
 }
 
 export interface PostDTO {
