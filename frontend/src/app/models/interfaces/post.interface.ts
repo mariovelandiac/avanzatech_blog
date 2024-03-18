@@ -12,6 +12,7 @@ export interface Post {
   category_permission: category_permission[];
   likes?: LikeListDTO
   comments?: CommentListDTO
+  likedByAuthenticatedUser?: boolean
 }
 
 interface category_permission {

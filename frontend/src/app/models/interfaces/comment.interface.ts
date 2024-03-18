@@ -10,7 +10,7 @@ export interface CommentDTO {
 }
 
 export interface CommentListDTO {
-  count: string,
+  count: number,
   next: string,
   previous: string,
   results: CommentDTO[]

@@ -8,11 +8,15 @@ export interface LikeDTO {
 }
 
 export interface LikeListDTO {
-  count: string,
+  count: number,
   next: string,
   previous: string,
   results: LikeDTO[]
 }
 export interface LikesByPost {
   likedBy: BaseUser[]
+}
+
+export interface LikedByUser {
+  liked: boolean
 }
