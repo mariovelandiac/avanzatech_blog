@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { RequiredFieldComponent } from '../required-field/required-field.component';
 import { AuthLinkComponent } from '../auth-link/auth-link.component';
 import { ApiErrorDisplayComponent } from '../api-error-display/api-error-display.component';
-import { UserDTO } from '../../models/interfaces/user.interface';
+import { UserLoginDTO } from '../../models/interfaces/user.interface';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { IconDefinition, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
@@ -42,7 +42,7 @@ export class LogInFormComponent implements OnInit {
   onSubmit() {
     this.errorMessage = '';
     this.authService.logIn(this.logInForm.value).subscribe({
-      next: (response: UserDTO) => {
+      next: (response: UserLoginDTO) => {
         this.userService.clearUserJustSignUp();
         this.userService.setUser(response);
         this.authService.setAuthentication(true);
