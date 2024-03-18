@@ -9,12 +9,13 @@ import { Post, PostDTO, PostListDTO } from '../models/interfaces/post.interface'
 })
 export class PostService {
   private postEndpoint = `${environment.api}/blog/`
+  private pageSize = 10;
   constructor(
     private httpService: HttpClient
   ) {}
 
   list(): Observable<Post[]> {
-    return this.httpService.get<PostListDTO>(`${this.postEndpoint}?page_size=10`)
+    return this.httpService.get<PostListDTO>(`${this.postEndpoint}?page_size=${this.pageSize}`)
     .pipe(map((response) => {
       return response.results.map(this.transformPost);
     }))

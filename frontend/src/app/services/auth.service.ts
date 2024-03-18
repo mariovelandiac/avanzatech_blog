@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, catchError, throwError } from 'rxjs';
-import { UserStateService } from './user-state.service';
-import { UserDTO, UserLogIn } from '../models/interfaces/user.interface';
+import { BehaviorSubject, Observable, catchError, tap, throwError } from 'rxjs';
+import { UserLoginDTO, UserLogIn } from '../models/interfaces/user.interface';
 import { environment } from '../../environments/environment.development';
-import { AnyCatcher } from 'rxjs/internal/AnyCatcher';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 @Injectable({
   providedIn: 'root'
@@ -21,13 +19,12 @@ export class AuthService {
         this.isAuthenticated.next(JSON.parse(storedAuth));
     }
 
-
-  logIn(user: UserLogIn): Observable<UserDTO> {
+  logIn(user: UserLogIn): Observable<UserLoginDTO> {
     // setting http headers
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
     });
-    return this.httpService.post<UserDTO>(this.loginEndpoint, user, {
+    return this.httpService.post<UserLoginDTO>(this.loginEndpoint, user, {
       headers: headers
     })
       .pipe(

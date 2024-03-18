@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { User, UserDTO, UserJustSignUp } from '../models/interfaces/user.interface';
+import { User, UserLoginDTO, UserJustSignUp } from '../models/interfaces/user.interface';
 import { SignUpService } from './sign-up.service';
 
 @Injectable({
@@ -16,7 +16,7 @@ export class UserStateService {
       this.user = JSON.parse(storedUser);
   }
 
-  setUser(user: UserDTO) {
+  setUser(user: UserLoginDTO) {
     this.user = this.toCamelCase(user);
     localStorage.setItem('user', JSON.stringify(this.user));
   }
@@ -41,7 +41,7 @@ export class UserStateService {
     };
   }
 
-  private toCamelCase(user: UserDTO): User {
+  private toCamelCase(user: UserLoginDTO): User {
     return {
       firstName: user.first_name,
       lastName: user.last_name,
