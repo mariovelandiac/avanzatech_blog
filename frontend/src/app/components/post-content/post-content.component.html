@@ -1,22 +1,14 @@
-<div class="post-content-container">
-  <div class="post-title-container">
-    <div>
-      <h1>{{title}}</h1>
-    </div>
-    <ul>
-      <li class="user-team-container">{{ team }}</li>
-      <li>{{ user }}</li>
-      <li>{{ createdAt }}</li>
-    </ul>
+<div class="post-title-container">
+  <div>
+    <h1 class="phtitle-h1">{{title}}</h1>
   </div>
-  <p class="post-content">{{ excerpt }}...
-      <a routerLink="'/post'+id">Show more</a>
-  </p>
-  <div class="post-actions-container">
-    <div class="like-comment-container">
-      <app-like-counter></app-like-counter>
-      <app-comment-counter></app-comment-counter>
-    </div>
-    <app-interaction-bar></app-interaction-bar>
-  </div>
+  <ul class="user-team-container">
+    <li>{{ team }}</li>
+    <li>{{ user }}</li>
+    <li>{{ createdAt | date: 'dd/MM/yyy HH:mm:ss' }}</li>
+  </ul>
 </div>
+<p class="post-content">{{ excerpt }}...
+    <a [routerLink]="postIdRoute">Show more</a>
+</p>
+

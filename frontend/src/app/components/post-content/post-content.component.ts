@@ -1,14 +1,12 @@
 import { Component, Input } from '@angular/core';
-import { LikeCounterComponent } from '../like-counter/like-counter.component';
-import { CommentCounterComponent } from '../comment-counter/comment-counter.component';
-import { InteractionBarComponent } from '../interaction-bar/interaction-bar.component';
 import { Post } from '../../models/interfaces/post.interface';
 import { RouterModule } from '@angular/router';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-post-content',
   standalone: true,
-  imports: [LikeCounterComponent, CommentCounterComponent, InteractionBarComponent, RouterModule],
+  imports: [RouterModule, DatePipe],
   templateUrl: './post-content.component.html',
   styleUrl: './post-content.component.sass'
 })
@@ -37,6 +35,10 @@ export class PostContentComponent {
 
   get id(): string {
     return this.post.id;
+  }
+
+  get postIdRoute(): string {
+    return `/post/${this.id}`;
   }
 
 
