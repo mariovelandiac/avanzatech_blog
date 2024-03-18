@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { LikeCounterComponent } from './like-counter.component';
+import LikeCounterComponent from './like-counter.component';
 
 describe('LikeCounterComponent', () => {
   let component: LikeCounterComponent;
@@ -11,7 +11,7 @@ describe('LikeCounterComponent', () => {
       imports: [LikeCounterComponent]
     })
     .compileComponents();
-    
+
     fixture = TestBed.createComponent(LikeCounterComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
