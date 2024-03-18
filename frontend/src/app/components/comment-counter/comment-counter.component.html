@@ -1,3 +1,4 @@
 <div class="like-comment-home-item">
-  <p>{{ commentCounter }} Comment{{ commentPlural }}</p>
+  <p *ngIf="comments">{{ commentCounter }} Comment{{ commentPlural }}</p>
+  <p *ngIf="!comments">Loading...</p>
 </div>

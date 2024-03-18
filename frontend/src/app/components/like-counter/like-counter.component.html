@@ -1,3 +1,4 @@
 <div class="like-comment-home-item">
-  <p (click)="showLikes()">{{likeCounter}} Like{{likePlural}}</p>
+  <p *ngIf="likes" (click)="showLikes()">{{likeCounter}} Like{{likePlural}}</p>
+  <p *ngIf="!likes">Loading...</p>
 </div>
