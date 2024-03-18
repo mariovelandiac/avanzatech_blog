@@ -30,6 +30,8 @@ class UserLoginViewTests(APITestCase):
         self.assertEqual(user_db.id, int(user_id_in_request))
         self.assertIsNotNone(response.cookies)
         self.assertIsInstance(self.client.session, SessionStore)
+        self.assertEqual(response.data.get('user_id'), user_db.id)
+        self.assertEqual(response.data.get('team_id'), user_db.team.id)
 
     def test_an_existing_user_is_logged_in_successfully_and_session_id_is_returned(self):
         # Arrange

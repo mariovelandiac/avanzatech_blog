@@ -32,8 +32,10 @@ class UserLoginView(GenericAPIView):
         user = self.login(serializer)
         serialized_user_data = serializer.data
         serialized_user_data.update({
+            'user_id': user.id,
             'first_name': user.first_name,
-            'last_name': user.last_name
+            'last_name': user.last_name,
+            'team_id': user.team.id
         })
         headers = self.get_success_headers(serialized_user_data)
         return Response(serialized_user_data, status=status.HTTP_200_OK, headers=headers)
