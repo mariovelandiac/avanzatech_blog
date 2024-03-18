@@ -1,4 +1,6 @@
-import { BaseUser, UserPostDTO } from "./user.interface";
+import { CommentListDTO } from "./comment.interface";
+import { LikeListDTO } from "./like.interface";
+import { BaseUser, UserDTO } from "./user.interface";
 
 export interface Post {
   id: string;
@@ -8,6 +10,8 @@ export interface Post {
   teamName: string;
   user: BaseUser;
   category_permission: category_permission[];
+  likes?: LikeListDTO
+  comments?: CommentListDTO
 }
 
 interface category_permission {
@@ -19,7 +23,7 @@ export interface PostDTO {
   id: string;
   title: string;
   category_permission: category_permission[];
-  user: UserPostDTO;
+  user: UserDTO;
   excerpt: string;
   created_at: string;
 }

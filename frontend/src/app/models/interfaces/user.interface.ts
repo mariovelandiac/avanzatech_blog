@@ -9,7 +9,7 @@ export interface UserLogIn {
   email: string;
   password: string;
 }
-export interface UserDTO {
+export interface UserLoginDTO {
   first_name: string;
   last_name: string;
   email: string;
@@ -18,7 +18,7 @@ export interface User extends BaseUser {
   email: string;
 }
 
-export interface UserPostDTO {
+export interface UserDTO {
   id: string;
   first_name: string;
   last_name: string;
