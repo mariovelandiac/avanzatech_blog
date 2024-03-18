@@ -22,9 +22,8 @@ export class NavBarComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.isAuthenticated = this.authService.getAuthentication();
-    this.firstName = this.isAuthenticated ? this.userStateService.getUser().firstName : '';
     this.authService.isAuthenticated$.subscribe((isAuthenticated) => {
+      this.firstName = isAuthenticated ? this.userStateService.getUser().firstName : '';
       this.isAuthenticated = isAuthenticated;
     });
   }
