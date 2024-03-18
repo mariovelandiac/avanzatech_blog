@@ -5,6 +5,19 @@
       <app-like-counter [likes]="post.likes"></app-like-counter>
       <app-comment-counter [comments]="post.comments"></app-comment-counter>
     </div>
-    <app-interaction-bar *ngIf="isAuthenticated" [postId]="post.id"></app-interaction-bar>
+    <div class="interaction-bar-container">
+      <li *ngIf="isAuthenticated">
+        <app-like-action [isLiked]="post.likedByAuthenticatedUser"></app-like-action>
+      </li>
+      <li *ngIf="isAuthenticated">
+        <app-comment-action></app-comment-action>
+      </li>
+      <li>
+        <app-edit-action></app-edit-action>
+      </li>
+      <li>
+        <app-delete-action></app-delete-action>
+      </li>
+    </div>
   </div>
 </div>
