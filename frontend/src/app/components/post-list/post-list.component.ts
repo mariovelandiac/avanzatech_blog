@@ -13,13 +13,25 @@ import { LikeActionComponent } from '../like-action/like-action.component';
 import { DeleteActionComponent } from '../delete-action/delete-action.component';
 import { CommentActionComponent } from '../comment-action/comment-action.component';
 import { EditActionComponent } from '../edit-action/edit-action.component';
+import { Category } from '../../models/enums/category.enum';
+import { Permission } from '../../models/enums/permission.enum';
+import { User } from '../../models/interfaces/user.interface';
 
 @Component({
   selector: 'app-post-list',
   standalone: true,
-  imports: [PostContentComponent, LikeCounterComponent, CommentCounterComponent,LikeActionComponent, CommentActionComponent, EditActionComponent, DeleteActionComponent,CommonModule],
+  imports: [
+    PostContentComponent,
+    LikeCounterComponent,
+    CommentCounterComponent,
+    LikeActionComponent,
+    CommentActionComponent,
+    EditActionComponent,
+    DeleteActionComponent,
+    CommonModule,
+  ],
   templateUrl: './post-list.component.html',
-  styleUrl: './post-list.component.sass'
+  styleUrl: './post-list.component.sass',
 })
 export class PostListComponent implements OnInit {
   posts!: Post[];
@@ -33,42 +45,51 @@ export class PostListComponent implements OnInit {
     private userService: UserStateService
   ) {}
 
-
   ngOnInit() {
-    this.authService.isAuthenticated$.subscribe(isAuthenticated => {
+    this.authService.isAuthenticated$.subscribe((isAuthenticated) => {
       this.isAuthenticated = isAuthenticated;
     });
-    this.postService.list().subscribe(posts => {
+    this.postService.list().subscribe((posts) => {
       this.posts = posts;
       this.getLikedByUser();
-      // To do: set permissions
-      this.setPermissions();
       this.getLikes();
       this.getComments();
+      this.setPermissions();
     });
   }
 
   handleLikeAction(isLiked: boolean, postId: number): void {
-    const currentPostIndex = this.posts.findIndex(post => post.id === postId);
-    isLiked ? this.handleDeleteLike(currentPostIndex) : this.handleCreateLike(currentPostIndex);
+    const currentPostIndex = this.posts.findIndex((post) => post.id === postId);
+    const currentPost = {...this.posts[currentPostIndex]};
+    const user = this.userService.getUser();
+    if (isLiked) {
+      this.handleDeleteLike(currentPost, user.id);
+    } else {
+      this.handleCreateLike(currentPost, user);
+    }
+    this.posts[currentPostIndex] = currentPost;
   }
 
-  handleDeleteLike(currentPostIndex: number): void {
-    const currentPost = this.posts[currentPostIndex];
-    const userId = this.userService.getUser().id;
-    this.likeService.deleteLike(currentPost.id, userId).subscribe(() => {});
+  handleDeleteLike(currentPost: Post, userId: number): void {
+    this.likeService.deleteLike(currentPost.id, userId).subscribe({
+      next: () => {},
+      error: (error) => {console.error(error)}
+    });
+    // Render UI optimistically
     currentPost.likes!.count--;
+    currentPost.likes!.likedBy = currentPost.likes!.likedBy.filter(obj => obj.id !== userId);
     currentPost.likedByAuthenticatedUser = false;
-    this.posts[currentPostIndex] = { ...currentPost };
   }
 
-  handleCreateLike(currentPostIndex: number): void {
-    const currentPost = this.posts[currentPostIndex];
-    const userId = this.userService.getUser().id;
-    this.likeService.createLike(currentPost.id, userId).subscribe(() => {});
+  handleCreateLike(currentPost: Post, user: User): void {
+    this.likeService.createLike(currentPost.id, user.id).subscribe({
+      next: () => {},
+      error: (error) => {console.error(error)}
+    });
+    // Render UI optimistically
     currentPost.likes!.count++;
+    currentPost.likes!.likedBy.unshift({ id: user.id, firstName: user.firstName, lastName: user.lastName})
     currentPost.likedByAuthenticatedUser = true;
-    this.posts[currentPostIndex] = { ...currentPost };
   }
 
   getLikedByUser(): void {
@@ -77,22 +98,17 @@ export class PostListComponent implements OnInit {
     }
     const userId = this.userService.getUser().id;
     for (let post of this.posts) {
-      this.likeService.getLikesByUserAndPost(post.id, userId).subscribe(liked => {
-        post.likedByAuthenticatedUser = liked;
-      });
+      this.likeService
+        .getLikesByUserAndPost(post.id, userId)
+        .subscribe((liked) => {
+          post.likedByAuthenticatedUser = liked;
+        });
     }
-  }
-
-  setPermissions(): void {
-    // for (let post of this.posts) {
-    //   console.log(post.category_permission);
-    //   console.log(this.userService.getUser().teamId);
-    // }
   }
 
   getLikes(): void {
     for (let post of this.posts) {
-      this.likeService.getLikesByPost(post.id).subscribe(likes => {
+      this.likeService.getLikesByPost(post.id).subscribe((likes) => {
         post.likes = likes;
       });
     }
@@ -100,10 +116,70 @@ export class PostListComponent implements OnInit {
 
   getComments(): void {
     for (let post of this.posts) {
-      this.commentService.getCommentsByPost(post.id).subscribe(comments => {
+      this.commentService.getCommentsByPost(post.id).subscribe((comments) => {
         post.comments = comments;
       });
     }
   }
 
+  setPermissions(): void {
+    // Set permissions for admin user
+    const adminUser = this.userService.getUser().isAdmin;
+    if (adminUser) {
+      this.posts.map((post) => (post.canEdit = true));
+      return;
+    }
+    // Set permissions for unauthenticated user
+    if (!this.isAuthenticated) {
+      this.posts.map((post) => this.setPermissionsForUnauthenticatedUser(post));
+      return;
+    }
+    // Set permissions for bloggers Users
+    const teamUserId = this.userService.getUser().teamId;
+    const userId = this.userService.getUser().id;
+    for (let post of this.posts) {
+      const isSameTeam = post.user.team.id === teamUserId;
+      const isOwner = post.user.id === userId;
+      // Set permissions for authenticated user
+      this.setPermissionsForAuthenticatedUser(post, isSameTeam, isOwner);
+    }
+  }
+
+  private setPermissionsForUnauthenticatedUser(post: Post): void {
+    const publicAccess = post.category_permission.some(
+      (cp) =>
+        cp.category === Category.PUBLIC && cp.permission === Permission.EDIT
+    );
+    if (publicAccess) post.canEdit = true;
+  }
+
+  private setPermissionsForAuthenticatedUser(
+    post: Post,
+    isSameTeam: boolean,
+    isOwner: boolean
+  ): void {
+
+    if (isOwner) {
+      post.canEdit = this.hasPermission(post, Category.AUTHOR, Permission.EDIT);
+      return;
+    }
+    if (isSameTeam) {
+      post.canEdit = this.hasPermission(post, Category.TEAM, Permission.EDIT);
+      return;
+    }
+    const publicAccess = this.hasPermission(post, Category.PUBLIC, Permission.EDIT);
+    const authenticatedAccess = this.hasPermission(post, Category.AUTHENTICATED, Permission.EDIT);
+    post.canEdit = publicAccess || authenticatedAccess;
+  }
+
+  private hasPermission(
+    post: Post,
+    category: Category,
+    permission: Permission
+  ): boolean {
+    const hasPermission = post.category_permission.some(
+      (cp) => cp.category === category && cp.permission === permission
+    );
+    return hasPermission;
+  }
 }

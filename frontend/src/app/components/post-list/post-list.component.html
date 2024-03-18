@@ -13,10 +13,10 @@
       <li *ngIf="isAuthenticated">
         <app-comment-action></app-comment-action>
       </li>
-      <li>
+      <li *ngIf="post.canEdit">
         <app-edit-action></app-edit-action>
       </li>
-      <li>
+      <li *ngIf="post.canEdit">
         <app-delete-action></app-delete-action>
       </li>
     </div>

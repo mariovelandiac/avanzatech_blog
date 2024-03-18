@@ -18,15 +18,11 @@ export class LikeActionComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if (this.isLiked)
-      this.setLikeButton(this.isLiked);
+      this.likeIcon = this.isLiked ? faHeartSolid : faHeart;
   }
 
   likeClick() {
     this.likeClicked.emit(this.isLiked);
-  }
-
-  setLikeButton(liked: boolean) {
-    this.likeIcon = liked ? faHeartSolid : faHeart;
   }
 
 }
