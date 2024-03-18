@@ -17,4 +17,4 @@ class Like(BaseModel):
         
     class Meta:
         unique_together = ('user', 'post')
-        ordering = ["-created_at"]
+        ordering = ["-last_modified"]

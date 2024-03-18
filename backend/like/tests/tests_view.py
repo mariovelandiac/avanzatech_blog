@@ -1116,6 +1116,23 @@ class LikeListViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(count, expected_count)
 
+    def test_post_are_listed_by_last_modified_order_most_new_at_first_and_so_on(self):
+        # Arrange
+        post = PostFactory()
+        PostCategoryPermissionFactory.create(post=post, category_permission=self.factory_category_permission)
+        like_1 = LikeFactory(post=post, is_active=True)
+        like_2 = LikeFactory(post=post, is_active=True)
+        like_3 = LikeFactory(post=post, is_active=True)
+        expected_order = [like_3.id, like_2.id, like_1.id]
+        # Act
+        response = self.client.get(self.url)
+        results = response.data.get('results')
+        # Assert
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(results[0]['id'], expected_order[0])
+        self.assertEqual(results[1]['id'], expected_order[1])
+        self.assertEqual(results[2]['id'], expected_order[2])
+
 
 class LikeDeleteViewTests(APITestCase):
 
