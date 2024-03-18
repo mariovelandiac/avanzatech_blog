@@ -1,8 +1,8 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment.development';
-import { Observable, catchError, map } from 'rxjs';
-import { LikeCreateDTO, LikeDTO, LikeListDTO, LikedByUser, LikesByPost } from '../models/interfaces/like.interface';
+import { Observable, catchError, map, throwError } from 'rxjs';
+import { LikeCreateDTO, LikeDTO, LikeList, LikeListDTO } from '../models/interfaces/like.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -14,8 +14,9 @@ export class LikeService {
     private httpService: HttpClient
   ) {}
 
-  getLikesByPost(postId: number): Observable<LikeListDTO> {
+  getLikesByPost(postId: number): Observable<LikeList> {
     return this.httpService.get<LikeListDTO>(`${this.likeEndpoint}?post=${postId}&page_size=${this.pageSize}`)
+    .pipe(map((response) => this.transformLikeList(response)));
   }
 
   getLikesByUserAndPost(postId: number, userId: number): Observable<boolean> {
@@ -28,10 +29,25 @@ export class LikeService {
       user: userId,
       post: postId
     }
-    return this.httpService.post<LikeDTO>(this.likeEndpoint, body)
+    return this.httpService.post<LikeDTO>(this.likeEndpoint, body).pipe(catchError(this.handleError));
   }
 
   deleteLike(postId: number, userId: number): Observable<LikeDTO> {
-    return this.httpService.delete<LikeDTO>(`${this.likeEndpoint}${userId}/${postId}/`)
+    return this.httpService.delete<LikeDTO>(`${this.likeEndpoint}${userId}/${postId}/`).pipe(catchError(this.handleError));
+  }
+
+  handleError(error: HttpErrorResponse): Observable<never> {
+      return throwError(() => new Error(error.message))
+  }
+
+  transformLikeList(response: LikeListDTO): LikeList {
+    const count = response.count;
+    const likedBy = response.results.flatMap(like => ({
+      id: like.user.id,
+      firstName: like.user.first_name,
+      lastName: like.user.last_name,
+    }));
+
+    return { count, likedBy };
   }
 }

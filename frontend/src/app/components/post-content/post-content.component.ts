@@ -1,17 +1,18 @@
 import { Component, Input } from '@angular/core';
 import { Post } from '../../models/interfaces/post.interface';
 import { RouterModule } from '@angular/router';
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-post-content',
   standalone: true,
-  imports: [RouterModule, DatePipe],
+  imports: [CommonModule, RouterModule, DatePipe],
   templateUrl: './post-content.component.html',
   styleUrl: './post-content.component.sass'
 })
 export class PostContentComponent {
   @Input() post!: Post;
+  private maxExcerptLength = 200;
 
   get title(): string {
     return this.post.title;
@@ -26,7 +27,7 @@ export class PostContentComponent {
   }
 
   get team(): string {
-    return this.post.teamName;
+    return this.post.user.team.name;
   }
 
   get user(): string {
@@ -39,6 +40,10 @@ export class PostContentComponent {
 
   get postIdRoute(): string {
     return `/post/${this.id}`;
+  }
+
+  get displayShowMore(): boolean {
+    return this.excerpt.length >= this.maxExcerptLength;
   }
 
 

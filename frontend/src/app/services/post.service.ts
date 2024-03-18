@@ -27,12 +27,17 @@ export class PostService {
       title: post.title,
       excerpt: post.excerpt,
       createdAt: post.created_at,
-      teamName: post.user.team.name,
       user: {
+        id: post.user.id,
         firstName: post.user.first_name,
-        lastName: post.user.last_name
+        lastName: post.user.last_name,
+        team: {
+          id: post.user.team.id,
+          name: post.user.team.name
+        }
       },
-      category_permission: post.category_permission
+      category_permission: post.category_permission,
+      canEdit: false
     }
   }
 

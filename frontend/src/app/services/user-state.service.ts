@@ -46,8 +46,8 @@ export class UserStateService {
       id: user.user_id,
       firstName: user.first_name,
       lastName: user.last_name,
-      email: user.email,
       teamId: user.team_id,
+      isAdmin: user.is_admin,
     };
   }
 
