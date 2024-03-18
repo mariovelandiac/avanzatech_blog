@@ -1,8 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment.development';
-import { Observable, map } from 'rxjs';
-import { LikeListDTO, LikesByPost } from '../models/interfaces/like.interface';
+import { Observable, catchError, map } from 'rxjs';
+import { LikeDTO, LikeListDTO, LikedByUser, LikesByPost } from '../models/interfaces/like.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -16,5 +16,10 @@ export class LikeService {
 
   getLikesByPost(postId: string): Observable<LikeListDTO> {
     return this.httpService.get<LikeListDTO>(`${this.likeEndpoint}?post=${postId}&page_size=${this.pageSize}`)
+  }
+
+  getLikesByUserAndPost(postId: string, userId: string): Observable<boolean> {
+    return this.httpService.get<LikeListDTO>(`${this.likeEndpoint}?post=${postId}&user=${userId}`)
+    .pipe(map(response => Boolean(response.count)))
   }
 }

@@ -43,9 +43,11 @@ export class UserStateService {
 
   private toCamelCase(user: UserLoginDTO): User {
     return {
+      id: user.user_id,
       firstName: user.first_name,
       lastName: user.last_name,
-      email: user.email
+      email: user.email,
+      teamId: user.team_id,
     };
   }
 

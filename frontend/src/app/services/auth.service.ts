@@ -38,8 +38,10 @@ export class AuthService {
     if (error.status == 400) {
       if (error.error.email)
         errorMessage += error.error.email[0] + '. ';
-      if (error.error.password)
+      else if (error.error.password)
         errorMessage += error.error.password[0] + '. ';
+      else
+        errorMessage = 'Invalid email or password';
     }
     if (error.status == 500 || error.status == 0) {
       errorMessage = internalError;
