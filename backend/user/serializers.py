@@ -24,12 +24,13 @@ class CustomUserCreateSerializer(serializers.ModelSerializer):
 
 class CustomUserLoginSerializer(serializers.Serializer):
 
-    user_id = serializers.IntegerField(read_only=True, source='user.id');
-    email = serializers.EmailField()
+    email = serializers.EmailField(write_only=True)
     password = serializers.CharField(write_only=True)
+    user_id = serializers.IntegerField(read_only=True, source='user.id')
     first_name = serializers.CharField(read_only=True, source='user.first_name')
     last_name = serializers.CharField(read_only=True, source='user.last_name')
     team_id = serializers.IntegerField(read_only=True, source='user.team.id')
+    is_admin = serializers.BooleanField(read_only=True, source='user.is_staff')
 
     def validate(self, data):
         email = data.get('email')

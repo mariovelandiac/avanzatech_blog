@@ -35,7 +35,8 @@ class UserLoginView(GenericAPIView):
             'user_id': user.id,
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'team_id': user.team.id
+            'team_id': user.team.id,
+            'is_admin': user.is_staff,
         })
         headers = self.get_success_headers(serialized_user_data)
         return Response(serialized_user_data, status=status.HTTP_200_OK, headers=headers)
