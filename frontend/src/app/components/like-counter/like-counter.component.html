@@ -1,4 +1,8 @@
 <div class="like-comment-home-item">
-  <p *ngIf="likes" (click)="showLikes()">{{likeCounter}} Like{{likePlural}}</p>
+  <div *ngIf="showLikedBy" class="floating-message">
+    Liked by:
+    <div *ngFor="let user of likedBy">- {{ user }}</div>
+  </div>
+  <p *ngIf="likes" (click)="showLikes()" class="like-counter">{{likeCounter}} Like{{likePlural}}</p>
   <p *ngIf="!likes">Loading...</p>
 </div>

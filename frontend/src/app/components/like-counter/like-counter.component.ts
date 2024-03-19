@@ -1,6 +1,6 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { LikeList, LikeListDTO } from '../../models/interfaces/like.interface';
-import { BaseUser } from '../../models/interfaces/user.interface';
+import { BaseUser, UserLikedBy } from '../../models/interfaces/user.interface';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -12,6 +12,8 @@ import { CommonModule } from '@angular/common';
 })
 export class LikeCounterComponent implements OnChanges {
   @Input() likes: LikeList | undefined;
+  likedBy: string[] = [];
+  showLikedBy: boolean = false;
   likeCounter = 0;
   likePlural = 's';
 
@@ -23,13 +25,9 @@ export class LikeCounterComponent implements OnChanges {
   }
 
   showLikes(): void {
-    const likedBy: string[] = []
     if (!this.likes) return;
-    for (let like of this.likes.likedBy) {
-      likedBy.push(like.firstName + ' ' + like.lastName)
-    }
-    // TODO POPUP
-    console.log(likedBy);
+    this.likedBy = this.likes.likedBy.map((user: UserLikedBy) => `${user.firstName} ${user.lastName}`);
+    this.showLikedBy = !this.showLikedBy;
   }
 
 }
