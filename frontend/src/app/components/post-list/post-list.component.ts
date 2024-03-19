@@ -20,6 +20,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { PostDeleteDialogComponent } from '../post-delete-dialog/post-delete-dialog.component';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { Pagination } from '../../models/enums/constants.enum';
+import { UnexpectedErrorComponent } from '../unexpected-error/unexpected-error.component';
 
 @Component({
   selector: 'app-post-list',
@@ -32,18 +33,21 @@ import { Pagination } from '../../models/enums/constants.enum';
     CommentActionComponent,
     EditActionComponent,
     DeleteActionComponent,
+    UnexpectedErrorComponent,
     CommonModule,
     MatPaginatorModule,
   ],
   templateUrl: './post-list.component.html',
   styleUrl: './post-list.component.sass',
 })
-export class PostListComponent implements OnInit {
+export class PostListComponent implements OnInit, OnDestroy {
   posts!: Post[];
   previousPosts: Post[] | undefined;
   count: number = 0;
   previousPageIndex = 0;
   isAuthenticated = false;
+  wasAnError = false;
+  errorMessage = '';
 
   constructor(
     private postService: PostService,
@@ -62,6 +66,11 @@ export class PostListComponent implements OnInit {
     this.fetchData(initialPage);
   }
 
+  ngOnDestroy(): void {
+    this.wasAnError = false;
+    this.errorMessage = '';
+  }
+
   fetchData(pageIndex: number): void {
     this.postService.list(pageIndex).subscribe({
       next: (response: PostList) => {
@@ -72,8 +81,9 @@ export class PostListComponent implements OnInit {
         this.getComments();
         this.setPermissions();
       },
-      error: (error) => {
-        console.error(error);
+      error: (errorMessage: string) => {
+        this.wasAnError = true;
+        this.errorMessage = errorMessage;
       }
     });
   }

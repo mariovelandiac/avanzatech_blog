@@ -1,7 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment.development';
-import { Observable, catchError, count, map, throwError } from 'rxjs';
+import { Observable, catchError, map, throwError } from 'rxjs';
 import { Post, PostList, PostDTO, PostListDTO } from '../models/interfaces/post.interface';
 import { Pagination } from '../models/enums/constants.enum';
 
@@ -23,7 +23,8 @@ export class PostService {
         map(({ count, results }) => ({
           count,
           posts: results.map(this.transformPost)
-        }))
+        })),
+        catchError(this.handleError)
       );
   }
 
@@ -32,8 +33,14 @@ export class PostService {
     .pipe(catchError(this.handleError));
   }
 
-  handleError(error: any): Observable<never> {
-    return throwError(() => new Error(error.message))
+  handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage = 'An unexpected error has occurred';
+    if (error.status === 0) {
+      errorMessage = 'No internet connection';
+    } else if (error.status !== 500) {
+      errorMessage = `Something went wrong. Please try again later. Status code: ${error.status}.`;
+    }
+    return throwError(() => new Error(errorMessage))
   }
 
   transformPost(post: PostDTO): Post {

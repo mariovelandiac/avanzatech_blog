@@ -1,3 +1,4 @@
+<app-unexpected-error *ngIf="wasAnError" [errorMessage]="errorMessage"></app-unexpected-error>
 <div class="post-content-container" *ngFor="let post of posts">
   <app-post-content [post]="post"></app-post-content>
   <div class="post-actions-container">
