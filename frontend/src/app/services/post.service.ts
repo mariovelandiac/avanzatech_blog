@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment.development';
-import { Observable, ObservedValueOf, map } from 'rxjs';
+import { Observable, ObservedValueOf, catchError, map, throwError } from 'rxjs';
 import { Post, PostDTO, PostListDTO } from '../models/interfaces/post.interface';
 
 @Injectable({
@@ -19,6 +19,15 @@ export class PostService {
     .pipe(map((response) => {
       return response.results.map(this.transformPost);
     }))
+  }
+
+  delete(id: number): Observable<void> {
+    return this.httpService.delete<void>(`${this.postEndpoint}${id}/`)
+    .pipe(catchError(this.handleError));
+  }
+
+  handleError(error: any): Observable<never> {
+    return throwError(() => new Error(error.message))
   }
 
   transformPost(post: PostDTO): Post {

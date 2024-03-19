@@ -1,10 +1,10 @@
 import { BaseUser, UserDTO } from "./user.interface";
 
 export interface CommentDTO {
-  id: string,
-  content: string,
+  id: number,
+  content: number,
   user: UserDTO,
-  post: string,
+  post: number,
   is_active: boolean
   created_at: string
 }
