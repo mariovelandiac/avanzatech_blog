@@ -40,9 +40,10 @@ import { Pagination } from '../../models/enums/constants.enum';
 })
 export class PostListComponent implements OnInit {
   posts!: Post[];
+  previousPosts: Post[] | undefined;
   count: number = 0;
+  previousPageIndex = 0;
   isAuthenticated = false;
-  pageIndex = 0;
 
   constructor(
     private postService: PostService,
@@ -57,11 +58,12 @@ export class PostListComponent implements OnInit {
     this.authService.isAuthenticated$.subscribe((isAuthenticated) => {
       this.isAuthenticated = isAuthenticated;
     });
-    this.fetchData();
+    const initialPage = 0;
+    this.fetchData(initialPage);
   }
 
-  fetchData(): void {
-    this.postService.list(this.pageIndex).subscribe({
+  fetchData(pageIndex: number): void {
+    this.postService.list(pageIndex).subscribe({
       next: (response: PostList) => {
         this.posts = response.posts;
         this.count = response.count;
@@ -111,9 +113,18 @@ export class PostListComponent implements OnInit {
   }
 
   handlePageChange(e: PageEvent) {
-    console.log(e);
-    this.pageIndex = e.pageIndex;
-    this.fetchData();
+    const pageIndex = e.pageIndex;
+    const moveForward = pageIndex > this.previousPageIndex;
+    this.previousPageIndex = pageIndex;
+    // First page or moving forward
+    if (!this.previousPosts || moveForward) {
+      this.previousPosts = this.posts;
+      this.fetchData(pageIndex);
+    } else {
+      // If the user is going backwards, use the previousPosts
+      this.posts = this.previousPosts;
+      this.previousPosts = undefined;
+    }
   }
 
   getLikedByUser(): void {
@@ -153,14 +164,14 @@ export class PostListComponent implements OnInit {
 
     deleteDialog.afterClosed().subscribe((result) => {
       if (!result) return;
-      this.pageIndex = 0;
+      const pageIndex = 0;
       this.postService.delete(postId).subscribe({
         next: () => {
-          this.fetchData();
+          this.fetchData(pageIndex);
         },
         error: (error) => {
           console.error(error);
-          this.fetchData();
+          this.fetchData(pageIndex);
         },
       });
     });
