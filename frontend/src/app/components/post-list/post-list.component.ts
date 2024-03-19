@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { PostContentComponent } from '../post-content/post-content.component';
-import { Post } from '../../models/interfaces/post.interface';
+import { Post, PostList } from '../../models/interfaces/post.interface';
 import { PostService } from '../../services/post.service';
 import { CommonModule } from '@angular/common';
 import { LikeCounterComponent } from '../like-counter/like-counter.component';
@@ -18,7 +18,8 @@ import { Permission } from '../../models/enums/permission.enum';
 import { User } from '../../models/interfaces/user.interface';
 import { MatDialog } from '@angular/material/dialog';
 import { PostDeleteDialogComponent } from '../post-delete-dialog/post-delete-dialog.component';
-import { NavigationExtras, Router } from '@angular/router';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { Pagination } from '../../models/enums/constants.enum';
 
 @Component({
   selector: 'app-post-list',
@@ -32,13 +33,16 @@ import { NavigationExtras, Router } from '@angular/router';
     EditActionComponent,
     DeleteActionComponent,
     CommonModule,
+    MatPaginatorModule,
   ],
   templateUrl: './post-list.component.html',
   styleUrl: './post-list.component.sass',
 })
 export class PostListComponent implements OnInit {
   posts!: Post[];
+  count: number = 0;
   isAuthenticated = false;
+  pageIndex = 0;
 
   constructor(
     private postService: PostService,
@@ -46,7 +50,7 @@ export class PostListComponent implements OnInit {
     private commentService: CommentService,
     private authService: AuthService,
     private userService: UserStateService,
-    private dialog: MatDialog
+    private deletePopUp: MatDialog
   ) {}
 
   ngOnInit() {
@@ -57,12 +61,18 @@ export class PostListComponent implements OnInit {
   }
 
   fetchData(): void {
-    this.postService.list().subscribe((posts) => {
-      this.posts = posts;
-      this.getLikedByUser();
-      this.getLikes();
-      this.getComments();
-      this.setPermissions();
+    this.postService.list(this.pageIndex).subscribe({
+      next: (response: PostList) => {
+        this.posts = response.posts;
+        this.count = response.count;
+        this.getLikedByUser();
+        this.getLikes();
+        this.getComments();
+        this.setPermissions();
+      },
+      error: (error) => {
+        console.error(error);
+      }
     });
   }
 
@@ -100,6 +110,12 @@ export class PostListComponent implements OnInit {
     currentPost.likedByAuthenticatedUser = true;
   }
 
+  handlePageChange(e: PageEvent) {
+    console.log(e);
+    this.pageIndex = e.pageIndex;
+    this.fetchData();
+  }
+
   getLikedByUser(): void {
     if (!this.isAuthenticated) {
       return;
@@ -131,12 +147,13 @@ export class PostListComponent implements OnInit {
   }
 
   openDeleteConfirmationPopUp(postId: number, postTitle: string) {
-    const deleteDialog = this.dialog.open(PostDeleteDialogComponent, {
+    const deleteDialog = this.deletePopUp.open(PostDeleteDialogComponent, {
       data: { title: postTitle },
     });
 
     deleteDialog.afterClosed().subscribe((result) => {
       if (!result) return;
+      this.pageIndex = 0;
       this.postService.delete(postId).subscribe({
         next: () => {
           this.fetchData();
@@ -208,5 +225,9 @@ export class PostListComponent implements OnInit {
       (cp) => cp.category === category && cp.permission === permission
     );
     return hasPermission;
+  }
+
+  get pageSize(): number {
+    return Pagination.POST_PAGE_SIZE;
   }
 }

@@ -22,3 +22,11 @@
     </div>
   </div>
 </div>
+<mat-paginator
+  *ngIf="count"
+  class="post-paginator"
+  [length]="count"
+  [pageSize]="pageSize"
+  [hidePageSize]="true"
+  (page)="handlePageChange($event)"
+></mat-paginator>

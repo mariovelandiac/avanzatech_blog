@@ -1,6 +1,6 @@
 import { CommentListDTO } from "./comment.interface";
-import { LikeList, LikeListDTO } from "./like.interface";
-import { BaseUser, Team, UserDTO, UserRelated } from "./user.interface";
+import { LikeList } from "./like.interface";
+import { UserDTO, UserRelated } from "./user.interface";
 
 export interface Post {
   id: number;
@@ -34,6 +34,11 @@ export interface PostListDTO {
   next: string;
   previous: string;
   results: PostDTO[];
+}
+
+export interface PostList {
+  posts: Post[];
+  count: number;
 }
 
 

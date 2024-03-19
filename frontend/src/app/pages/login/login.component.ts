@@ -24,7 +24,7 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.title.setTitle('Log In');
+    this.title.setTitle('Login');
     this.justSignUp = this.signUpService.getJustSignedUp();
     if (this.justSignUp)
       this.user = this.userState.getUserJustSignUp();

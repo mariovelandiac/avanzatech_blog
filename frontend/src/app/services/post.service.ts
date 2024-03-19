@@ -1,24 +1,30 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment.development';
-import { Observable, ObservedValueOf, catchError, map, throwError } from 'rxjs';
-import { Post, PostDTO, PostListDTO } from '../models/interfaces/post.interface';
+import { Observable, catchError, count, map, throwError } from 'rxjs';
+import { Post, PostList, PostDTO, PostListDTO } from '../models/interfaces/post.interface';
+import { Pagination } from '../models/enums/constants.enum';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PostService {
   private postEndpoint = `${environment.api}/blog/`
-  private pageSize = 10;
+  private pageSize = Pagination.POST_PAGE_SIZE;
+
   constructor(
     private httpService: HttpClient
   ) {}
 
-  list(): Observable<Post[]> {
-    return this.httpService.get<PostListDTO>(`${this.postEndpoint}?page_size=${this.pageSize}`)
-    .pipe(map((response) => {
-      return response.results.map(this.transformPost);
-    }))
+  list(pageIndex: number): Observable<PostList> {
+    const postEndpointPaginated = `${this.postEndpoint}?page=${pageIndex + 1}&page_size=${this.pageSize}`;
+    return this.httpService.get<PostListDTO>(postEndpointPaginated)
+      .pipe(
+        map(({ count, results }) => ({
+          count,
+          posts: results.map(this.transformPost)
+        }))
+      );
   }
 
   delete(id: number): Observable<void> {
