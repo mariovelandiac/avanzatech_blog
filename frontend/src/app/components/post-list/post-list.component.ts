@@ -16,6 +16,9 @@ import { EditActionComponent } from '../edit-action/edit-action.component';
 import { Category } from '../../models/enums/category.enum';
 import { Permission } from '../../models/enums/permission.enum';
 import { User } from '../../models/interfaces/user.interface';
+import { MatDialog } from '@angular/material/dialog';
+import { PostDeleteDialogComponent } from '../post-delete-dialog/post-delete-dialog.component';
+import { NavigationExtras, Router } from '@angular/router';
 
 @Component({
   selector: 'app-post-list',
@@ -42,13 +45,18 @@ export class PostListComponent implements OnInit {
     private likeService: LikeService,
     private commentService: CommentService,
     private authService: AuthService,
-    private userService: UserStateService
+    private userService: UserStateService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
     this.authService.isAuthenticated$.subscribe((isAuthenticated) => {
       this.isAuthenticated = isAuthenticated;
     });
+    this.fetchData();
+  }
+
+  fetchData(): void {
     this.postService.list().subscribe((posts) => {
       this.posts = posts;
       this.getLikedByUser();
@@ -120,6 +128,25 @@ export class PostListComponent implements OnInit {
         post.comments = comments;
       });
     }
+  }
+
+  openDeleteConfirmationPopUp(postId: number, postTitle: string) {
+    const deleteDialog = this.dialog.open(PostDeleteDialogComponent, {
+      data: { title: postTitle },
+    });
+
+    deleteDialog.afterClosed().subscribe((result) => {
+      if (!result) return;
+      this.postService.delete(postId).subscribe({
+        next: () => {
+          this.fetchData();
+        },
+        error: (error) => {
+          console.error(error);
+          this.fetchData();
+        },
+      });
+    });
   }
 
   setPermissions(): void {
