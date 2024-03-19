@@ -2,7 +2,7 @@
   <app-post-content [post]="post"></app-post-content>
   <div class="post-actions-container">
     <div class="like-comment-container">
-      <app-like-counter [likes]="post.likes"></app-like-counter>
+      <app-like-counter (pageChange)="handleLikePageChange($event, post)" [likes]="post.likes"></app-like-counter>
       <app-comment-counter [comments]="post.comments" [postId]="post.id"></app-comment-counter>
     </div>
     <div class="interaction-bar-container">
@@ -23,10 +23,10 @@
   </div>
 </div>
 <mat-paginator
-  *ngIf="count"
+  *ngIf="count > pageSize"
   class="post-paginator"
   [length]="count"
   [pageSize]="pageSize"
   [hidePageSize]="true"
-  (page)="handlePageChange($event)"
+  (page)="handlePostPageChange($event)"
 ></mat-paginator>

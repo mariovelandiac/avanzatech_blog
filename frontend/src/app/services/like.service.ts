@@ -3,19 +3,21 @@ import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment.development';
 import { Observable, catchError, map, throwError } from 'rxjs';
 import { LikeCreateDTO, LikeDTO, LikeList, LikeListDTO } from '../models/interfaces/like.interface';
+import { Pagination } from '../models/enums/constants.enum';
 
 @Injectable({
   providedIn: 'root'
 })
 export class LikeService {
   private likeEndpoint = `${environment.api}/like/`;
-  private pageSize = 15;
+  private pageSize = Pagination.LIKE_PAGE_SIZE;
   constructor(
     private httpService: HttpClient
   ) {}
 
-  getLikesByPost(postId: number): Observable<LikeList> {
-    return this.httpService.get<LikeListDTO>(`${this.likeEndpoint}?post=${postId}&page_size=${this.pageSize}`)
+  getLikesByPost(postId: number, pageIndex: number = 0): Observable<LikeList> {
+    const likeEndpointPaginated = `${this.likeEndpoint}?post=${postId}&page_size=${this.pageSize}&page=${pageIndex+1}`;
+    return this.httpService.get<LikeListDTO>(likeEndpointPaginated)
     .pipe(map((response) => this.transformLikeList(response)));
   }
 

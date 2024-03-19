@@ -2,7 +2,22 @@
   <div *ngIf="showLikedBy" class="floating-message">
     Liked by:
     <div *ngFor="let user of likedBy">- {{ user }}</div>
-  </div>
-  <p *ngIf="likes" (click)="showLikes()" class="like-counter">{{likeCounter}} Like{{likePlural}}</p>
+    <mat-paginator
+      *ngIf="likeCounter > pageSize"
+      class="like-paginator"
+      [length]="likeCounter"
+      [pageSize]="pageSize"
+      [hidePageSize]="true"
+      (page)="handlePageChange($event)"
+      ></mat-paginator>
+    </div>
+    <!-- (page)="handlePageChange($event)" -->
+  <p
+    *ngIf="likes"
+    (click)="showLikes()"
+    [style.cursor] = "mousePointer"
+    class="like-counter">
+    {{likeCounter}} Like{{likePlural}}
+  </p>
   <p *ngIf="!likes">Loading...</p>
 </div>

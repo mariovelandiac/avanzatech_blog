@@ -112,7 +112,7 @@ export class PostListComponent implements OnInit {
     currentPost.likedByAuthenticatedUser = true;
   }
 
-  handlePageChange(e: PageEvent) {
+  handlePostPageChange(e: PageEvent) {
     const pageIndex = e.pageIndex;
     const moveForward = pageIndex > this.previousPageIndex;
     this.previousPageIndex = pageIndex;
@@ -125,6 +125,10 @@ export class PostListComponent implements OnInit {
       this.posts = this.previousPosts;
       this.previousPosts = undefined;
     }
+  }
+
+  handleLikePageChange(pageIndex: number, post: Post): void {
+    this.getLikesByPost(post, pageIndex);
   }
 
   getLikedByUser(): void {
@@ -143,10 +147,14 @@ export class PostListComponent implements OnInit {
 
   getLikes(): void {
     for (let post of this.posts) {
-      this.likeService.getLikesByPost(post.id).subscribe((likes) => {
-        post.likes = likes;
-      });
+      this.getLikesByPost(post)
     }
+  }
+
+  getLikesByPost(post: Post, pageIndex: number = 0): void {
+    this.likeService.getLikesByPost(post.id, pageIndex).subscribe((likes) => {
+      post.likes = likes;
+    });
   }
 
   getComments(): void {
