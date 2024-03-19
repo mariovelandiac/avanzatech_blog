@@ -38,7 +38,7 @@ export class PostContentComponent {
     return this.post.id;
   }
 
-  get postIdRoute(): string {
+  get postDetailRoute(): string {
     return `/post/${this.id}`;
   }
 
