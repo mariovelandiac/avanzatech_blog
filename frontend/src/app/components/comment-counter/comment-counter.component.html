@@ -1,4 +1,4 @@
 <div class="like-comment-home-item">
-  <p *ngIf="comments">{{ commentCounter }} Comment{{ commentPlural }}</p>
+  <p [routerLink]="postDetailRoute" *ngIf="comments">{{ commentCounter }} Comment{{ commentPlural }}</p>
   <p *ngIf="!comments">Loading...</p>
 </div>
