@@ -1,8 +1,11 @@
+@use '@angular/material' as mat
+@include mat.core()
+
 @font-face
   font-family: 'Domine'
   src: url('./assets/fonts/Domine-Regular.ttf')
 
-$background-color-default:#0d1117
+$background-color-default: #0d1117
 $color-default: #e6edf3
 
 body
@@ -14,63 +17,64 @@ body
 
 a
   text-decoration: none
-  color: #2f81f7
+  color: #64a1f6
 
 a:hover
   text-decoration: underline
 
+fa-icon:hover
+  cursor: pointer
+
 .two-option-buttons
   display: flex
-  justify-content: space-around  // To evenly distribute buttons
+  justify-content: space-around
 
 .two-option-buttons button
-  padding: 10px 20px  // Adjust padding as needed
-  border: none
-  border-radius: 5px   // Add rounded corners
+  padding: 10px 20px
+  border-radius: 5px
   cursor: pointer
 
 .two-option-buttons button[type="submit"]:disabled
-  background-color: #ccc  // Change background color for disabled submit button
-  color: #888             // Change text color for disabled submit button
-  cursor: not-allowed     // Change cursor style for disabled submit button
+  color: #888
+  cursor: not-allowed
 
 .two-option-buttons button[type="submit"]
-  background-color: #007bff  // Change background color for submit button
-  color: #fff                 // Change text color for submit button
+  background-color: #007bff
+  color: #fff
 
 .two-option-buttons button[type="submit"]:hover
-  background-color: #0056b3  // Darker background color on hover
+  background-color: #0056b3
 
 .two-option-buttons button:not([type="submit"])
-  background-color: #f8f9fa  // Background color for cancel button
-  color: #000                 // Text color for cancel button
+  background-color: #f8f9fa
+  color: #000
 
 .two-option-buttons button:not([type="submit"]):hover
-  background-color: #e2e6ea  // Darker background color on hover
+  background-color: #e2e6ea
 
 .form-required
-  color: #dc3545  // Change color of required field indicator
+  color: #dc3545
 
 .lisu-form-group
-    margin-bottom: 20px  // Adjust as needed for spacing between fields
-    width: 100%  // Adjust as needed for field width
-    label
-        display: block  // Ensure labels are displayed as block elements
-        margin-bottom: 5px  // Adjust as needed for spacing between label and input
+  margin-bottom: 20px
+  width: 100%
+  label
+    display: block
+    margin-bottom: 5px
 
     input[type="text"],
     input[type="email"],
     input[type="password"],
     textarea
-        width: 100%  // Make inputs fill the entire width of the container
-        padding: 10px  // Adjust as needed for input padding
-        border: 1px solid #ccc  // Example border style
-        border-radius: 5px  // Example border radius
-        box-sizing: border-box  // Ensure padding and border are included in width
+      width: 100% // Make inputs fill the entire width of the container
+      padding: 10px // Adjust as needed for input padding
+      border: 1px solid #ccc // Example border style
+      border-radius: 5px // Example border radius
+      box-sizing: border-box // Ensure padding and border are included in width
 
 .lisu-form-container
-  margin: 0 auto  // Center the form container
-  width: 20%   // Adjust as needed for form width
+  margin: 0 auto // Center the form container
+  width: 20% // Adjust as needed for form width
   position: absolute
   top: 50%
   left: 50%
@@ -99,5 +103,4 @@ a:hover
 .phtitle-h1
   font-size: 2rem
 
-fa-icon:hover
-  cursor: pointer
+
