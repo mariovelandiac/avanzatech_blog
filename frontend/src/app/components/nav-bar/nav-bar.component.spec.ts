@@ -86,7 +86,6 @@ describe('NavBarComponent', () => {
     fixture.detectChanges();
     // Assert
     const elements = fixture.nativeElement.querySelectorAll('#nav-action-container.nav-item a');
-    console.log(elements);
     const loginLink = elements[0];
     expect(loginLink).toBeTruthy();
     expect(loginLink.innerText).toBe('Login');

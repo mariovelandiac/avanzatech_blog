@@ -7,6 +7,7 @@
         "createsuperuser",
         "filterset",
         "makemigrations",
+        "phtitle",
         "psycopg",
         "redgreenunittest",
         "runserver",

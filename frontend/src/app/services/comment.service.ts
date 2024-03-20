@@ -9,8 +9,8 @@ import { Pagination } from '../models/enums/constants.enum';
   providedIn: 'root'
 })
 export class CommentService {
-  private commentEndpoint = `${environment.api}/comment/`
-  private pageSize = Pagination.COMMENT_PAGE_SIZE;
+  commentEndpoint = `${environment.api}/comment/`
+  pageSize = Pagination.COMMENT_PAGE_SIZE;
   constructor(
     private httpService: HttpClient
   ) { }

@@ -15,7 +15,6 @@ export class PostContentComponent {
   private maxExcerptLength = 200;
 
   get title(): string {
-    this.post!.title = "hello world!0";
     return this.post!.title;
   }
 

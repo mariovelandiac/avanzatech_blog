@@ -1,7 +1,7 @@
 import { Observable, of } from "rxjs";
 import { CommentListDTO } from "../models/interfaces/comment.interface";
 import { mockUserDTO } from "./user.model.mock";
-import { HttpClient } from "@angular/common/http";
+import { mockCreatedAtDTO } from "./post.model.mock";
 
 export class mockCommentService {
 
@@ -17,7 +17,7 @@ export class mockCommentService {
         user: mockUserDTO,
         post: postId,
         is_active: true,
-        created_at: (new Date()).toString()
+        created_at: mockCreatedAtDTO
       },]
     })
   }

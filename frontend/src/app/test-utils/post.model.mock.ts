@@ -2,11 +2,14 @@ import { Category } from '../models/enums/category.enum';
 import { Permission } from '../models/enums/permission.enum';
 import { Post } from '../models/interfaces/post.interface';
 
+export const mockCreatedAtDTO = "2024-03-19T16:00:53.203928Z";
+export const mockCreatedAt = "19/03/2024 11:00:53"
+
 export const mockPost: Post = {
   id: 1,
   title: 'Test Post',
   excerpt: 'Test Post Excerpt',
-  createdAt: new Date().toString(),
+  createdAt: mockCreatedAtDTO,
   user: {
     id: 1,
     firstName: 'Test',
