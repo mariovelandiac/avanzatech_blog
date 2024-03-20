@@ -9,8 +9,8 @@
       <h1 class="main-title-bold">Blog</h1>
     </div>
   </div>
-  <div class="nav-item">
-    <h1 class="welcome-message" *ngIf="isAuthenticated">Welcome, {{ firstName }}</h1>
+  <div id="nav-action-container" class="nav-item">
+    <h1 *ngIf="isAuthenticated" class="welcome-message">Welcome, {{ firstName }}</h1>
     <div *ngIf="!isAuthenticated">
       <a routerLink="/login">Login</a>
       <a routerLink="/signup">Register</a>
