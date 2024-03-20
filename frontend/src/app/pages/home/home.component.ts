@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
 import { NavBarComponent } from '../../components/nav-bar/nav-bar.component';
 import { PostListComponent } from '../../components/post-list/post-list.component';
-import { FooterComponent } from '../../components/footer/footer.component';
 import { Title } from '@angular/platform-browser';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
@@ -11,7 +10,7 @@ import { RouterModule } from '@angular/router';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [NavBarComponent, PostListComponent, FooterComponent, FontAwesomeModule, RouterModule],
+  imports: [NavBarComponent, PostListComponent, FontAwesomeModule, RouterModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.sass'
 })
