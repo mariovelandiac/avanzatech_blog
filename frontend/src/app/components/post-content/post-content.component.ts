@@ -11,31 +11,32 @@ import { CommonModule, DatePipe } from '@angular/common';
   styleUrl: './post-content.component.sass'
 })
 export class PostContentComponent {
-  @Input() post!: Post;
+  @Input() post!: Post | undefined;
   private maxExcerptLength = 200;
 
   get title(): string {
-    return this.post.title;
+    this.post!.title = "hello world!0";
+    return this.post!.title;
   }
 
   get excerpt(): string {
-    return this.post.excerpt;
+    return this.post!.excerpt;
   }
 
   get createdAt(): string {
-    return this.post.createdAt;
+    return this.post!.createdAt;
   }
 
   get team(): string {
-    return this.post.user.team.name;
+    return this.post!.user.team.name;
   }
 
   get user(): string {
-    return `${this.post.user.firstName} ${this.post.user.lastName}`;
+    return `${this.post!.user.firstName} ${this.post!.user.lastName}`;
   }
 
   get id(): number {
-    return this.post.id;
+    return this.post!.id;
   }
 
   get postDetailRoute(): string {

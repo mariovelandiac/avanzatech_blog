@@ -21,7 +21,7 @@ export class LikeService {
     .pipe(map((response) => this.transformLikeList(response)));
   }
 
-  getLikesByUserAndPost(postId: number, userId: number): Observable<boolean> {
+  getLikeByUserAndPost(postId: number, userId: number): Observable<boolean> {
     return this.httpService.get<LikeListDTO>(`${this.likeEndpoint}?post=${postId}&user=${userId}`)
     .pipe(map(response => Boolean(response.count)))
   }

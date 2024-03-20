@@ -2,7 +2,7 @@ import { BaseUser, UserDTO } from "./user.interface";
 
 export interface CommentDTO {
   id: number,
-  content: number,
+  content: string,
   user: UserDTO,
   post: number,
   is_active: boolean
@@ -11,8 +11,8 @@ export interface CommentDTO {
 
 export interface CommentListDTO {
   count: number,
-  next: string,
-  previous: string,
+  next: string | null,
+  previous: string | null,
   results: CommentDTO[]
 }
 

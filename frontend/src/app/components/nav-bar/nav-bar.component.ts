@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
-import { NgSelectOption } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { UserStateService } from '../../services/user-state.service';
 import { RouterModule } from '@angular/router';

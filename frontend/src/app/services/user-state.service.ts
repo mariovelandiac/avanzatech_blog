@@ -12,7 +12,6 @@ export class UserStateService {
   constructor(private signUpService: SignUpService) {
     const storedUser = localStorage.getItem('user');
     if (storedUser)
-
       this.user = JSON.parse(storedUser);
   }
 

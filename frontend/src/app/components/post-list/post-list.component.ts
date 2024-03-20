@@ -148,7 +148,7 @@ export class PostListComponent implements OnInit, OnDestroy {
     const userId = this.userService.getUser().id;
     for (let post of this.posts) {
       this.likeService
-        .getLikesByUserAndPost(post.id, userId)
+        .getLikeByUserAndPost(post.id, userId)
         .subscribe((liked) => {
           post.likedByAuthenticatedUser = liked;
         });

@@ -1,14 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { LogInFormComponent } from './login-form.component';
 import { AuthService } from '../../services/auth.service';
-import { RotateProp } from '@fortawesome/fontawesome-svg-core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { UserStateService } from '../../services/user-state.service';
 import { ReactiveFormsModule } from '@angular/forms';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { mockLoginSuccessfulResponse, mockLoginUser } from '../../test-utils/login.mock';
+import { mockLoginSuccessfulResponse, mockLoginUser } from '../../test-utils/user.model.mock';
 import { of } from 'rxjs';
+import { RouterTestingModule } from '@angular/router/testing';
 
 describe('LogInFormComponent', () => {
   let component: LogInFormComponent;
@@ -20,7 +19,7 @@ describe('LogInFormComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ReactiveFormsModule, HttpClientTestingModule],
+      imports: [ReactiveFormsModule, HttpClientTestingModule, RouterTestingModule.withRoutes([])],
       providers: [
         {
           provide: AuthService,
@@ -29,10 +28,6 @@ describe('LogInFormComponent', () => {
         {
           provide: UserStateService,
           useValue: jasmine.createSpyObj('UserStateService', ['clearUserJustSignUp', 'setUser'])
-        },
-        {
-          provide: Router,
-          useValue: jasmine.createSpyObj('Router', ['navigate'])
         }
       ]
     })
@@ -167,9 +162,9 @@ describe('LogInFormComponent', () => {
 
     it('should handle successful request', () => {
       // Arrange
-      const mockUser = mockLoginUser;
       const authServiceSpy = authService.logIn as jasmine.Spy;
       authServiceSpy.and.returnValue(of(mockLoginSuccessfulResponse));
+      spyOn(router, 'navigate')
       // Act
       component.onSubmit();
       // Assert

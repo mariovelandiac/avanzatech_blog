@@ -3,14 +3,14 @@ import {UserDTO, UserLikedBy} from "./user.interface";
 export interface LikeDTO {
   id: number,
   user: UserDTO,
-  post: string,
+  post: number,
   is_active: boolean
 }
 
 export interface LikeListDTO {
   count: number,
-  next: string,
-  previous: string,
+  next: string | null,
+  previous: string | null,
   results: LikeDTO[]
 }
 

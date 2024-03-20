@@ -6,7 +6,7 @@ import { Title } from '@angular/platform-browser';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
 import { faSquarePlus } from '@fortawesome/free-regular-svg-icons';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -19,7 +19,6 @@ export class HomeComponent {
   createPostIcon: IconDefinition = faSquarePlus;
   constructor(
     private titleService: Title,
-    private router: Router
     ) {
     this.titleService.setTitle('Home');
   }

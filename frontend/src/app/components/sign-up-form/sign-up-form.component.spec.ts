@@ -8,6 +8,9 @@ import { formSignUp, requestSignUp,} from '../../models/interfaces/sign-up.inter
 import { of, throwError } from 'rxjs';
 import { mockFormSignUp, mockSingUpSuccessResponse } from '../../test-utils/sign-up.mock';
 import { UserStateService } from '../../services/user-state.service';
+import { ActivatedRoute } from '@angular/router';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 
 export class SignUpServiceStub {
   public error = false;
@@ -31,7 +34,7 @@ describe('SignUpFormComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ReactiveFormsModule],
+      imports: [ReactiveFormsModule, HttpClientTestingModule, RouterTestingModule.withRoutes([])],
       providers: [
         { provide: SignUpService, useClass: SignUpServiceStub },
         {
@@ -39,10 +42,6 @@ describe('SignUpFormComponent', () => {
           useValue: jasmine.createSpyObj('UserStateService', [
             'setUserJustSignUp',
           ]),
-        },
-        {
-          provide: Router,
-          useValue: jasmine.createSpyObj('Router', ['navigate']),
         },
       ],
     }).compileComponents();
@@ -161,6 +160,7 @@ describe('SignUpFormComponent', () => {
       );
 
       spyOn(signUpService, 'setJustSignedUp');
+      spyOn(router, 'navigate');
 
       // Act
       component.onSubmit();

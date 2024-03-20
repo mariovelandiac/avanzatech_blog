@@ -1,6 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
-import LikeCounterComponent from './like-counter.component';
+import { LikeCounterComponent } from './like-counter.component';
 
 describe('LikeCounterComponent', () => {
   let component: LikeCounterComponent;

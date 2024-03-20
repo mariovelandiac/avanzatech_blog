@@ -3,13 +3,14 @@ import { environment } from '../../environments/environment.development';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CommentListDTO } from '../models/interfaces/comment.interface';
+import { Pagination } from '../models/enums/constants.enum';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CommentService {
   private commentEndpoint = `${environment.api}/comment/`
-  private pageSize = 5;
+  private pageSize = Pagination.COMMENT_PAGE_SIZE;
   constructor(
     private httpService: HttpClient
   ) { }

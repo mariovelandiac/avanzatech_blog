@@ -2,9 +2,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { LoginComponent } from './login.component';
 import { SignUpService } from '../../services/sign-up.service';
 import { UserStateService } from '../../services/user-state.service';
-import { SignUpServiceStub } from '../../components/sign-up-form/sign-up-form.component.spec';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { mockUserGreetings } from '../../test-utils/login.mock';
+import { mockUserGreetings } from '../../test-utils/user.model.mock';
+import { ActivatedRoute } from '@angular/router';
+import { RouterTestingModule } from '@angular/router/testing';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -14,7 +15,7 @@ describe('LoginComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
+      imports: [HttpClientTestingModule, RouterTestingModule.withRoutes([])],
       providers: [
         {
           provide: SignUpService,
@@ -23,7 +24,7 @@ describe('LoginComponent', () => {
         {
           provide: UserStateService,
           useValue: jasmine.createSpyObj('UserStateService', ['getUserJustSignUp'])
-        }
+        },
       ]
     })
     .compileComponents();
@@ -75,7 +76,7 @@ describe('LoginComponent', () => {
 
   it('should set the title', () => {
     // Arrange
-    const title = 'Log In';
+    const title = 'Login';
     // Act & Assert
     expect(document.title).toBe(title)
   });
