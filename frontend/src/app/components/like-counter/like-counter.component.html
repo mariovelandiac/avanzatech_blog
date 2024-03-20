@@ -9,9 +9,8 @@
       [pageSize]="pageSize"
       [hidePageSize]="true"
       (page)="handlePageChange($event)"
-      ></mat-paginator>
-    </div>
-    <!-- (page)="handlePageChange($event)" -->
+    ></mat-paginator>
+  </div>
   <p
     *ngIf="likes"
     (click)="showLikes()"

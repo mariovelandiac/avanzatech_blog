@@ -11,7 +11,7 @@ describe('RequiredFieldComponent', () => {
       imports: [RequiredFieldComponent]
     })
     .compileComponents();
-    
+
     fixture = TestBed.createComponent(RequiredFieldComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -19,5 +19,10 @@ describe('RequiredFieldComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should have a red asterisk', () => {
+    const compiled = fixture.nativeElement;
+    expect(compiled.querySelector('span').textContent).toContain('*');
   });
 });

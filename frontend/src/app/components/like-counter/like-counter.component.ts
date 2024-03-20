@@ -22,9 +22,11 @@ export class LikeCounterComponent implements OnChanges {
   previousPageIndex = 0;
 
   ngOnChanges() {
-    if (this.likes) {
-      this.likeCounter = +this.likes.count;
-      this.likePlural = this.likeCounter == 1 ? '' : 's';
+    if (!this.likes) return;
+    this.likeCounter = this.likes.count;
+    this.likePlural = this.likeCounter == 1 ? '' : 's';
+    if (this.likes.count > this.pageSize) {
+      this.likes.likedBy = this.likes.likedBy.slice(0, this.pageSize);
     }
   }
 
@@ -37,7 +39,7 @@ export class LikeCounterComponent implements OnChanges {
     const pageIndex = e.pageIndex;
     const moveForward = pageIndex > this.previousPageIndex;
     this.previousPageIndex = pageIndex;
-    // First page or moving forward
+    // Moving forward
     if (!this.previousLikes || moveForward) {
       this.previousLikes = this.likes;
       this.pageChange.emit(pageIndex);
