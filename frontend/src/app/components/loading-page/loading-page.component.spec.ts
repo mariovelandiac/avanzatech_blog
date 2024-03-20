@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { LoadingPageComponent } from './loading-page.component';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 describe('LoadingPageComponent', () => {
   let component: LoadingPageComponent;
@@ -11,7 +12,7 @@ describe('LoadingPageComponent', () => {
       imports: [LoadingPageComponent]
     })
     .compileComponents();
-    
+
     fixture = TestBed.createComponent(LoadingPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -19,5 +20,10 @@ describe('LoadingPageComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should set spinner', () => {
+    const icon = component.loadingIcon;
+    expect(icon).toBe(faSpinner);
   });
 });
