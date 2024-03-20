@@ -11,7 +11,7 @@ describe('ApiErrorDisplayComponent', () => {
       imports: [ApiErrorDisplayComponent]
     })
     .compileComponents();
-    
+
     fixture = TestBed.createComponent(ApiErrorDisplayComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -20,4 +20,12 @@ describe('ApiErrorDisplayComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should render error message', () => {
+    const error = 'Test error';
+    component.errorMessage = error;
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement;
+    expect(compiled.querySelector('p').textContent).toContain(error);
+  })
 });
