@@ -13,4 +13,8 @@ export class mockUserStateService {
     return this.user;
   }
 
+  setUser(user: User): void {
+    this.user = user;
+  }
+
 }

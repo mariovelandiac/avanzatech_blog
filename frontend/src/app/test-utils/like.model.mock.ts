@@ -1,4 +1,5 @@
-import { LikeList } from "../models/interfaces/like.interface";
+import { LikeList, LikeListDTO } from "../models/interfaces/like.interface";
+import { mockUserDTO } from "./user.model.mock";
 
 export const mockLikeList: LikeList = {
   count: 15,
@@ -80,3 +81,97 @@ export const mockLikeList: LikeList = {
     }
   ]
 }
+
+export const mockLikeListDTO: LikeListDTO = {
+  count: 15,
+  next: null,
+  previous: null,
+  results: [
+    {
+      user: mockUserDTO,
+      post: 2,
+      is_active: false,
+      id: 2
+    },
+    {
+      user: mockUserDTO,
+      post: 3,
+      is_active: true,
+      id: 3
+    },
+    {
+      user: mockUserDTO,
+      post: 4,
+      is_active: false,
+      id: 4
+    },
+    {
+      user: mockUserDTO,
+      post: 5,
+      is_active: true,
+      id: 5
+    },
+    {
+      user: mockUserDTO,
+      post: 6,
+      is_active: false,
+      id: 6
+    },
+    {
+      user: mockUserDTO,
+      post: 7,
+      is_active: true,
+      id: 7
+    },
+    {
+      user: mockUserDTO,
+      post: 8,
+      is_active: false,
+      id: 8
+    },
+    {
+      user: mockUserDTO,
+      post: 9,
+      is_active: true,
+      id: 9
+    },
+    {
+      user: mockUserDTO,
+      post: 10,
+      is_active: false,
+      id: 10
+    },
+    {
+      user: mockUserDTO,
+      post: 11,
+      is_active: true,
+      id: 11
+    },
+    {
+      user: mockUserDTO,
+      post: 12,
+      is_active: false,
+      id: 12
+    },
+    {
+      user: mockUserDTO,
+      post: 13,
+      is_active: true,
+      id: 13
+    },
+    {
+      user: mockUserDTO,
+      post: 14,
+      is_active: false,
+      id: 14
+    },
+    {
+      user: mockUserDTO,
+      post: 15,
+      is_active: true,
+      id: 15
+    }
+  ]
+}
+
+

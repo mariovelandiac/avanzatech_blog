@@ -9,8 +9,8 @@ import { Pagination } from '../models/enums/constants.enum';
   providedIn: 'root'
 })
 export class LikeService {
-  private likeEndpoint = `${environment.api}/like/`;
-  private pageSize = Pagination.LIKE_PAGE_SIZE;
+  likeEndpoint = `${environment.api}/like/`;
+  pageSize = Pagination.LIKE_PAGE_SIZE;
   constructor(
     private httpService: HttpClient
   ) {}
