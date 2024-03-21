@@ -113,7 +113,7 @@ class PostUnauthenticatedUserRetrieveViewTests(APITestCase):
             AccessCategory.AUTHOR: AccessPermission.EDIT
         }
 
-    def test_unauthenticated_user_receive_user_first_and_last_name_when_lists_public_posts(self):
+    def test_unauthenticated_user_receive_user_first_and_last_name_when_retrieve_public_posts(self):
         # Arrange
         self.factory_category_permission[AccessCategory.PUBLIC] = AccessPermission.READ
         post = PostFactory()
