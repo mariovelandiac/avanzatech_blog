@@ -1,4 +1,9 @@
 <div class="home-container">
   <app-post-list></app-post-list>
-  <fa-icon [routerLink]="createPostRoute" [icon]="createPostIcon" class="create-new-post-icon"></fa-icon>
+  <fa-icon
+      *ngIf="isAuthenticated"
+      [routerLink]="createPostRoute"
+      [icon]="createPostIcon"
+      class="create-new-post-icon">
+  </fa-icon>
 </div>

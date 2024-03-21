@@ -43,7 +43,12 @@ export class PostService {
 
   delete(id: number): Observable<void> {
     return this.httpService.delete<void>(`${this.postEndpoint}${id}/`)
-    .pipe(catchError(this.handleListDeleteErrors));
+    .pipe(
+      tap(() => {
+        this.cachedPosts = {};
+      }),
+      catchError(this.handleListDeleteErrors)
+      );
   }
 
   handleListDeleteErrors(error: HttpErrorResponse): Observable<never> {

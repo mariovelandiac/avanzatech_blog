@@ -182,8 +182,9 @@ export class PostListComponent implements OnInit, OnDestroy {
       data: { title: postTitle },
     });
 
-    deleteDialog.afterClosed().subscribe((result) => {
-      if (!result) return;
+    deleteDialog.afterClosed().subscribe((result: string) => {
+      const cancelOperation = result === "false" || result === undefined;
+      if (cancelOperation) return;
       const pageIndex = 0;
       this.postService.delete(postId).subscribe({
         next: () => {
