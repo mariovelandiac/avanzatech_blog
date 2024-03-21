@@ -11,6 +11,8 @@ import { Title } from '@angular/platform-browser';
 import { LikeCounterComponent } from '../../components/like-counter/like-counter.component';
 import { LikeList } from '../../models/interfaces/like.interface';
 import { CommentList, CommentListDTO } from '../../models/interfaces/comment.interface';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { Pagination } from '../../models/enums/constants.enum';
 
 @Component({
   selector: 'app-post-detail',
@@ -18,8 +20,9 @@ import { CommentList, CommentListDTO } from '../../models/interfaces/comment.int
   imports: [
     PostTitleTeamUserComponent,
     LikeCounterComponent,
+    MatPaginatorModule,
     CommonModule,
-    DatePipe
+    DatePipe,
   ],
   templateUrl: './post-detail.component.html',
   styleUrl: './post-detail.component.sass'
@@ -30,7 +33,9 @@ export class PostDetailComponent implements OnInit {
   post: PostRetrieve | undefined;
   likes: LikeList | undefined;
   comments: CommentList | undefined;
-  initialCommentIndexPage = 0;
+  previousComments: CommentList | undefined;
+  previousCommentPageIndex = 0;
+  commentPageSize = Pagination.COMMENT_PAGE_SIZE;
   pageTitle = 'Post Detail';
 
   constructor(
@@ -77,6 +82,21 @@ export class PostDetailComponent implements OnInit {
     this.getLikesByPost(pageIndexLikes);
   }
 
+  handleCommentPageChange(e: PageEvent): void {
+    const currentPageIndex = e.pageIndex;
+    const moveForward = currentPageIndex > this.previousCommentPageIndex;
+    this.previousCommentPageIndex = currentPageIndex;
+    // Move forward
+    if (!this.previousComments || moveForward) {
+      this.previousComments = this.comments;
+      this.getCommentsByPost(currentPageIndex);
+    } else {
+      // If the user is moving backwards, use the previousComments
+      this.comments = this.previousComments;
+      this.previousComments = undefined;
+    }
+  }
+
   getCommentsByPost(pageIndexComments: number = 0): void {
     this.commentService.getCommentsByPost(this.postId, pageIndexComments).subscribe((comments) => {
       this.comments = comments;
@@ -89,5 +109,9 @@ export class PostDetailComponent implements OnInit {
 
   get content() {
     return this.post?.content;
+  }
+
+  get commentCount() {
+    return this.comments!.count;
   }
 }

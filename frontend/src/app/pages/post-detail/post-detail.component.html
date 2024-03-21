@@ -7,15 +7,23 @@
       class = "like-counter-post-detail"
       [isPostDetail]="true"
   >
-</app-like-counter>
-<div *ngIf="comments">
-  <h2>Comments</h2>
-  <div *ngFor="let comment of commentsBy" class="comment-detail-container">
-    <ul class="user-name-created-at-container">
-      <li>{{ comment.user.firstName }} {{ comment.user.lastName }}</li>
-      <li>{{ comment.createdAt | date: 'dd/MM/yyy HH:mm:ss' }}</li>
-    </ul>
-    <p class="comment-content-container">{{ comment.content }}</p>
+  </app-like-counter>
+  <div *ngIf="comments">
+    <h2>Comments</h2>
+    <div *ngFor="let comment of commentsBy" class="comment-detail-container">
+      <ul class="user-name-created-at-container">
+        <li>{{ comment.user.firstName }} {{ comment.user.lastName }}</li>
+        <li>{{ comment.createdAt | date: 'dd/MM/yyy HH:mm:ss' }}</li>
+      </ul>
+      <p class="comment-content-container">{{ comment.content }}</p>
+    </div>
+    <mat-paginator
+      *ngIf="commentCount > commentPageSize"
+      class="comment-paginator"
+      [length]="commentCount"
+      [pageSize]="commentPageSize"
+      [hidePageSize]="true"
+      (page)="handleCommentPageChange($event)"
+  ></mat-paginator>
   </div>
-</div>
 </div>
