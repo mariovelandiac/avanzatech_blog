@@ -197,8 +197,8 @@ export class PostListComponent implements OnInit, OnDestroy {
 
   setPermissions(): void {
     // Set permissions for admin user
-    const adminUser = this.userService.getUser().isAdmin;
-    if (adminUser) {
+    const user = this.userService.getUser()
+    if (user.isAdmin) {
       this.posts.map((post) => (post.canEdit = true));
       return;
     }
@@ -208,11 +208,9 @@ export class PostListComponent implements OnInit, OnDestroy {
       return;
     }
     // Set permissions for bloggers Users
-    const teamUserId = this.userService.getUser().teamId;
-    const userId = this.userService.getUser().id;
     for (let post of this.posts) {
-      const isSameTeam = post.user.team.id === teamUserId;
-      const isOwner = post.user.id === userId;
+      const isSameTeam = post.user.team.id === user.teamId;
+      const isOwner = post.user.id === user.id;
       // Set permissions for authenticated user
       this.setPermissionsForAuthenticatedUser(post, isSameTeam, isOwner);
     }
