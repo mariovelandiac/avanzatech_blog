@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { PostContentComponent } from '../post-content/post-content.component';
+import { PostExcerptComponent } from '../post-excerpt/post-excerpt.component';
 import { Post, PostList } from '../../models/interfaces/post.interface';
 import { PostService } from '../../services/post.service';
 import { CommonModule } from '@angular/common';
@@ -21,12 +21,14 @@ import { PostDeleteDialogComponent } from '../post-delete-dialog/post-delete-dia
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { Pagination } from '../../models/enums/constants.enum';
 import { UnexpectedErrorComponent } from '../unexpected-error/unexpected-error.component';
+import { PostTitleTeamUserComponent } from '../post-title-team-user/post-title-team-user.component';
 
 @Component({
   selector: 'app-post-list',
   standalone: true,
   imports: [
-    PostContentComponent,
+    PostTitleTeamUserComponent,
+    PostExcerptComponent,
     LikeCounterComponent,
     CommentCounterComponent,
     LikeActionComponent,

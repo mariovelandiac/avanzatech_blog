@@ -1,6 +1,7 @@
 <app-unexpected-error *ngIf="wasAnError" [errorMessage]="errorMessage"></app-unexpected-error>
 <div class="post-content-container" *ngFor="let post of posts">
-  <app-post-content [post]="post"></app-post-content>
+  <app-post-title-team-user [post]="post"></app-post-title-team-user>
+  <app-post-excerpt [postId]=post.id [excerpt]="post.excerpt"></app-post-excerpt>
   <div class="post-actions-container">
     <div class="like-comment-container">
       <app-like-counter (pageChange)="handleLikePageChange($event, post)" [likes]="post.likes"></app-like-counter>
