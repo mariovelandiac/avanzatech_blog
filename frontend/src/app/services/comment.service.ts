@@ -48,7 +48,6 @@ export class CommentService {
   }
 
   transformComment(response: CommentCreatedDTO): CommentCreated {
-    console.log(response)
     return {
       id: response.id,
       user: response.user,

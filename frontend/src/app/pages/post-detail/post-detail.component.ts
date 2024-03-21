@@ -134,8 +134,8 @@ export class PostDetailComponent implements OnInit {
   }
 
   addCommentToLayout(comment: CommentCreated, user: User) {
-    // If pagination is applied, the comment will be added to the next page
-    if (this.commentCount >= this.commentPageSize) return;
+    // If pagination is applied, the comment will be added to the next page, and fetched by page event
+    if (this.comments!.results.length == this.commentPageSize) return;
     const layOutComment = {
       user: {
         firstName: user.firstName,
