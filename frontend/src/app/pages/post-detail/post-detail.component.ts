@@ -4,7 +4,7 @@ import { PostService } from '../../services/post.service';
 import { LikeService } from '../../services/like.service';
 import { CommentService } from '../../services/comment.service';
 import { AuthService } from '../../services/auth.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { PostRetrieve } from '../../models/interfaces/post.interface';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Title } from '@angular/platform-browser';
@@ -17,6 +17,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { UnexpectedErrorComponent } from '../../components/unexpected-error/unexpected-error.component';
 import { UserStateService } from '../../services/user-state.service';
 import { User } from '../../models/interfaces/user.interface';
+import { BackButtonComponent } from '../../components/back-button/back-button.component';
 
 @Component({
   selector: 'app-post-detail',
@@ -28,7 +29,8 @@ import { User } from '../../models/interfaces/user.interface';
     CommonModule,
     DatePipe,
     ReactiveFormsModule,
-    UnexpectedErrorComponent
+    UnexpectedErrorComponent,
+    BackButtonComponent
   ],
   templateUrl: './post-detail.component.html',
   styleUrl: './post-detail.component.sass'
@@ -55,6 +57,7 @@ export class PostDetailComponent implements OnInit {
     private authService: AuthService,
     private userService: UserStateService,
     private route: ActivatedRoute,
+    private router: Router,
     private title: Title,
     private formBuilder: FormBuilder
   ) {}
@@ -150,6 +153,10 @@ export class PostDetailComponent implements OnInit {
 
   onCancel() {
     this.commentForm.reset();
+  }
+
+  goBack() {
+    this.router.navigate(['/home']);
   }
 
   get commentsBy() {

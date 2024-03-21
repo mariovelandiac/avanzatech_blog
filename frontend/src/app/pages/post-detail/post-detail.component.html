@@ -1,4 +1,5 @@
 <app-unexpected-error *ngIf="wasAnError" [errorMessage]="errorMessage"></app-unexpected-error>
+<app-back-button (click)="goBack()"></app-back-button>
 <div *ngIf=post class="post-detail-container">
   <app-post-title-team-user [post]="post"></app-post-title-team-user>
   <p class="post-content-container">{{ content }}</p>
