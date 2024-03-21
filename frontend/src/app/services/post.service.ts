@@ -9,8 +9,8 @@ import { Pagination } from '../models/enums/constants.enum';
   providedIn: 'root'
 })
 export class PostService {
-  private postEndpoint = `${environment.api}/blog/`
-  private pageSize = Pagination.POST_PAGE_SIZE;
+  postEndpoint = `${environment.api}/blog/`
+  pageSize = Pagination.POST_PAGE_SIZE;
 
   constructor(
     private httpService: HttpClient

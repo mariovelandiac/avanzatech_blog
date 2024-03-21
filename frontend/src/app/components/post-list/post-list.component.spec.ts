@@ -67,6 +67,12 @@ describe('PostListComponent', () => {
     const user = userService.getUser();
     user.isAdmin = false;
     component.posts.every(post => post.canEdit = false);
+    component.posts.every(post => {
+      delete post.likes;
+      delete post.comments;
+      delete post.likedByAuthenticatedUser
+      post.canEdit = false;
+    });
   });
 
   it('should create', () => {

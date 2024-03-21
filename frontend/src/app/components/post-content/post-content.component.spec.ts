@@ -71,6 +71,8 @@ describe('PostContentComponent', () => {
     expect(showMore).toBeTruthy();
     expect(showMore.textContent).toContain('Show more');
     expect(showMore.getAttribute('href')).toContain(`/post/${component.id}`);
+    // Revert changes
+    component.post!.excerpt = 'Test Post Excerpt';
   });
 
   it('should not display show more link if excerpt is shorter than 200 characters', () => {
@@ -81,5 +83,7 @@ describe('PostContentComponent', () => {
     const showMore = fixture.nativeElement.querySelector('.post-content a');
     // Assert
     expect(showMore).toBeFalsy();
+    // Revert changes
+    component.post!.excerpt = 'Test Post Excerpt';
   });
 });

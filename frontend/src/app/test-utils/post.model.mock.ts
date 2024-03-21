@@ -39,3 +39,51 @@ export const mockPost: Post = {
   ],
   canEdit: false,
 };
+
+
+export const mockPostDTO = {
+  id: 1,
+  title: 'Test Post',
+  excerpt: 'Test Post Excerpt',
+  created_at: mockCreatedAtDTO,
+  user: {
+    id: 1,
+    first_name: 'Test',
+    last_name: 'User',
+    team: {
+      id: 1,
+      name: 'Test Team',
+    },
+  },
+  category_permission: [
+    {
+      category: Category.PUBLIC,
+      permission: Permission.READ,
+    },
+    {
+      category: Category.AUTHENTICATED,
+      permission: Permission.READ,
+    },
+    {
+      category: Category.TEAM,
+      permission: Permission.READ,
+    },
+    {
+      category: Category.AUTHOR,
+      permission: Permission.READ,
+    },
+  ],
+};
+
+export const mockPostListDTO = {
+  count: 1,
+  next: null,
+  previous: null,
+  results: [mockPostDTO],
+};
+
+export const mockPostList = {
+  posts: [mockPost],
+  count: 1,
+};
+
