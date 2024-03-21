@@ -139,9 +139,7 @@ describe('LikeCounterComponent', () => {
     it('should should show pageSize pages at most per page when a new like is added', () => {
       // Arrange
       const likes = {...mockLikeList};
-      likes.likedBy = [...mockLikeList.likedBy]
       likes.count = 16;
-      likes.likedBy.unshift(mockLikeList.likedBy[0]);
       const likeCounter = fixture.nativeElement.querySelector('.like-counter');
       // Act
       component.likes = likes;
@@ -194,41 +192,6 @@ describe('LikeCounterComponent', () => {
       component.handlePageChange({pageIndex: 1} as PageEvent);
       // Assert
       expect(spy).toHaveBeenCalled();
-    });
-
-    it('should set previousLikes when the user goes to the next page', () => {
-      // Arrange
-      const likeCounter = fixture.nativeElement.querySelector('.like-counter');
-      const likes = {...mockLikeList};
-      likes.count *= 2;
-      component.likes = likes;
-      component.ngOnChanges();
-      // Act
-      likeCounter.click();
-      fixture.detectChanges();
-      component.handlePageChange({pageIndex: 1} as PageEvent);
-      // Assert
-      expect(component.previousLikes).toEqual(likes);
-    });
-
-    it('should set likes to previousLikes when the user goes to the previous page', () => {
-      // Arrange
-      const likeCounter = fixture.nativeElement.querySelector('.like-counter');
-      const likes = {...mockLikeList};
-      likes.count *= 2;
-      component.likes = likes;
-      component.ngOnChanges();
-      component.handlePageChange({pageIndex: 1} as PageEvent);
-      likes.likedBy.reverse()
-      let nextLikes = {...likes};
-      component.likes = nextLikes;
-      component.ngOnChanges();
-      // Act
-      likeCounter.click();
-      fixture.detectChanges();
-      component.handlePageChange({pageIndex: 0} as PageEvent);
-      // Assert
-      expect(component.likes).toEqual(likes);
     });
   });
 });

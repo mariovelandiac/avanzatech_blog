@@ -23,11 +23,9 @@ export class LikeCounterComponent implements OnChanges {
 
   ngOnChanges() {
     if (!this.likes) return;
+    console.log(this.likes)
     this.likeCounter = this.likes.count;
     this.likePlural = this.likeCounter == 1 ? '' : 's';
-    if (this.likes.count > this.pageSize) {
-      this.likes.likedBy = this.likes.likedBy.slice(0, this.pageSize);
-    }
   }
 
   showLikes(): void {
@@ -36,18 +34,7 @@ export class LikeCounterComponent implements OnChanges {
   }
 
   handlePageChange(e: PageEvent): void {
-    const pageIndex = e.pageIndex;
-    const moveForward = pageIndex > this.previousPageIndex;
-    this.previousPageIndex = pageIndex;
-    // Moving forward
-    if (!this.previousLikes || moveForward) {
-      this.previousLikes = this.likes;
-      this.pageChange.emit(pageIndex);
-    } else {
-      // If the user is going backwards, use the previousLikes
-      this.likes = this.previousLikes;
-      this.previousLikes = undefined;
-    }
+    this.pageChange.emit(e.pageIndex);
   }
 
   get mousePointer() {
