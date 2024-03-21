@@ -11,7 +11,7 @@ describe('PostDetailComponent', () => {
       imports: [PostDetailComponent]
     })
     .compileComponents();
-    
+
     fixture = TestBed.createComponent(PostDetailComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { PostExcerptComponent } from '../post-excerpt/post-excerpt.component';
-import { Post, PostList } from '../../models/interfaces/post.interface';
+import { Post, PostCommon, PostList } from '../../models/interfaces/post.interface';
 import { PostService } from '../../services/post.service';
 import { CommonModule } from '@angular/common';
 import { LikeCounterComponent } from '../like-counter/like-counter.component';

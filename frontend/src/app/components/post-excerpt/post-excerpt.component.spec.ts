@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { PostExcerptComponent } from './post-excerpt.component';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Router } from '@angular/router';
-import { mockCreatedAt, mockPost } from '../../test-utils/post.model.mock';
+import { mockPost } from '../../test-utils/post.model.mock';
 
 describe('PostContentComponent', () => {
   let component: PostExcerptComponent;

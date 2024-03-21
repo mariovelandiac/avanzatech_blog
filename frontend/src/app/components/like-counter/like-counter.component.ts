@@ -23,7 +23,6 @@ export class LikeCounterComponent implements OnChanges {
 
   ngOnChanges() {
     if (!this.likes) return;
-    console.log(this.likes)
     this.likeCounter = this.likes.count;
     this.likePlural = this.likeCounter == 1 ? '' : 's';
   }

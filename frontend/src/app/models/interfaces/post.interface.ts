@@ -2,31 +2,36 @@ import { CommentListDTO } from "./comment.interface";
 import { LikeList } from "./like.interface";
 import { UserDTO, UserRelated } from "./user.interface";
 
-export interface Post {
-  id: number;
-  title: string;
-  excerpt: string;
-  createdAt: string;
-  user: UserRelated;
-  category_permission: category_permission[];
-  canEdit: boolean;
-  likes?: LikeList;
-  comments?: CommentListDTO;
-  likedByAuthenticatedUser?: boolean;
-}
-
 interface category_permission {
   category: number;
   permission: number;
 }
-
-export interface PostDTO {
+interface BasePost {
   id: number;
   title: string;
   category_permission: category_permission[];
-  user: UserDTO;
-  excerpt: string;
+}
+
+interface BasePostDTO extends BasePost {
   created_at: string;
+  user: UserDTO;
+}
+
+export interface PostDTO extends BasePostDTO {
+  excerpt: string;
+}
+
+export interface PostCommon extends BasePost {
+  createdAt: string;
+  user: UserRelated;
+  canEdit: boolean;
+}
+
+export interface Post extends PostCommon {
+  excerpt: string;
+  likes?: LikeList;
+  comments?: CommentListDTO;
+  likedByAuthenticatedUser?: boolean;
 }
 
 export interface PostListDTO {
@@ -39,6 +44,14 @@ export interface PostListDTO {
 export interface PostList {
   posts: Post[];
   count: number;
+}
+
+export interface PostRetrieveDTO extends BasePostDTO {
+  content: string;
+}
+
+export interface PostRetrieve extends PostCommon {
+  content: string;
 }
 
 

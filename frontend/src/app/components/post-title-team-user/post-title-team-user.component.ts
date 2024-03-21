@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { Post } from '../../models/interfaces/post.interface';
+import { Post, PostCommon } from '../../models/interfaces/post.interface';
 import { DatePipe } from '@angular/common';
 
 @Component({
@@ -10,7 +10,7 @@ import { DatePipe } from '@angular/common';
   styleUrl: './post-title-team-user.component.sass'
 })
 export class PostTitleTeamUserComponent {
-  @Input() post: Post | undefined;
+  @Input() post: PostCommon | undefined;
 
   get id(): number {
     return this.post!.id;
