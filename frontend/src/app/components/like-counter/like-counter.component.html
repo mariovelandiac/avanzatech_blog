@@ -1,5 +1,8 @@
 <div class="like-comment-home-item">
-  <div *ngIf="showLikedBy" class="floating-message">
+  <div
+      *ngIf="showLikedBy"
+      [ngClass] = "{'floating-message': !isPostDetail, 'floating-message-post-detail': isPostDetail}"
+  >
     Liked by:
     <div *ngFor="let user of likedBy">- {{ user }}</div>
     <mat-paginator

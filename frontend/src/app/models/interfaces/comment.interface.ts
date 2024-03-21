@@ -16,3 +16,15 @@ export interface CommentListDTO {
   results: CommentDTO[]
 }
 
+export interface CommentList {
+  count: number,
+  results: Comment[]
+}
+
+export interface Comment {
+  id: number,
+  user: BaseUser
+  content: string,
+  createdAt: string,
+}
+

@@ -1,5 +1,5 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { CommentListDTO } from '../../models/interfaces/comment.interface';
+import { CommentList } from '../../models/interfaces/comment.interface';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
   styleUrl: './comment-counter.component.sass'
 })
 export class CommentCounterComponent implements OnChanges {
-  @Input() comments: CommentListDTO | undefined
+  @Input() comments: CommentList | undefined
   @Input() postId: number | undefined;
   commentCounter = 0;
   commentPlural = 's';

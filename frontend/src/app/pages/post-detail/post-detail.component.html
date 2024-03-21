@@ -1,3 +1,21 @@
 <div *ngIf=post class="post-detail-container">
   <app-post-title-team-user [post]="post"></app-post-title-team-user>
+  <p class="post-content-container">{{ content }}</p>
+  <app-like-counter
+      [likes]="likes"
+      (pageChange)="handleLikePageChange($event)"
+      class = "like-counter-post-detail"
+      [isPostDetail]="true"
+  >
+</app-like-counter>
+<div *ngIf="comments">
+  <h2>Comments</h2>
+  <div *ngFor="let comment of commentsBy" class="comment-detail-container">
+    <ul class="user-name-created-at-container">
+      <li>{{ comment.user.firstName }} {{ comment.user.lastName }}</li>
+      <li>{{ comment.createdAt | date: 'dd/MM/yyy HH:mm:ss' }}</li>
+    </ul>
+    <p class="comment-content-container">{{ comment.content }}</p>
+  </div>
+</div>
 </div>

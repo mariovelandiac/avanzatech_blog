@@ -1,4 +1,4 @@
-import { CommentListDTO } from "./comment.interface";
+import { CommentList } from "./comment.interface";
 import { LikeList } from "./like.interface";
 import { UserDTO, UserRelated } from "./user.interface";
 
@@ -30,7 +30,7 @@ export interface PostCommon extends BasePost {
 export interface Post extends PostCommon {
   excerpt: string;
   likes?: LikeList;
-  comments?: CommentListDTO;
+  comments?: CommentList;
   likedByAuthenticatedUser?: boolean;
 }
 

@@ -14,6 +14,7 @@ import { Pagination } from '../../models/enums/constants.enum';
 })
 export class LikeCounterComponent implements OnChanges {
   @Input() likes: LikeList | undefined;
+  @Input() isPostDetail = false;
   @Output() pageChange = new EventEmitter<number>();
   previousLikes: LikeList | undefined;
   showLikedBy: boolean = false;
