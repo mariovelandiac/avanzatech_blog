@@ -254,8 +254,10 @@ describe('PostListComponent', () => {
     // Arrange
     const user = userService.getUser();
     user.isAdmin = false;
+    authService.setAuthentication(true);
     const postEdit = component.posts[0];
     postEdit.category_permission[3].permission = Permission.EDIT;
+    console.log(postEdit)
     // Act
     component.setPermissions();
     // Assert
