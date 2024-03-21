@@ -1,12 +1,21 @@
 import { BaseUser, UserDTO } from "./user.interface";
 
-export interface CommentDTO {
+interface BaseComment {
   id: number,
   content: string,
-  user: UserDTO,
   post: number,
-  is_active: boolean
+  is_active: boolean,
   created_at: string
+}
+
+interface CommentCommon {
+  id: number,
+  content: string,
+  createdAt: string,
+}
+
+export interface CommentDTO extends BaseComment {
+  user: UserDTO,
 }
 
 export interface CommentListDTO {
@@ -16,15 +25,19 @@ export interface CommentListDTO {
   results: CommentDTO[]
 }
 
+export interface Comment extends CommentCommon {
+  user: BaseUser
+}
+
 export interface CommentList {
   count: number,
   results: Comment[]
 }
 
-export interface Comment {
-  id: number,
-  user: BaseUser
-  content: string,
-  createdAt: string,
+export interface CommentCreatedDTO extends BaseComment {
+  user: number
+}
+export interface CommentCreated extends CommentCommon {
+  user: number
 }
 

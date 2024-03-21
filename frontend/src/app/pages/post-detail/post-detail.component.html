@@ -1,3 +1,4 @@
+<app-unexpected-error *ngIf="wasAnError" [errorMessage]="errorMessage"></app-unexpected-error>
 <div *ngIf=post class="post-detail-container">
   <app-post-title-team-user [post]="post"></app-post-title-team-user>
   <p class="post-content-container">{{ content }}</p>
@@ -8,8 +9,8 @@
       [isPostDetail]="true"
   >
   </app-like-counter>
-  <div *ngIf="comments">
-    <h2>Comments</h2>
+  <div *ngIf="commentCount">
+    <h2 class="comment-title">Comments</h2>
     <div *ngFor="let comment of commentsBy" class="comment-detail-container">
       <ul class="user-name-created-at-container">
         <li>{{ comment.user.firstName }} {{ comment.user.lastName }}</li>
@@ -26,4 +27,22 @@
       (page)="handleCommentPageChange($event)"
   ></mat-paginator>
   </div>
+  <form
+    *ngIf="isAuthenticated"
+    [formGroup]="commentForm"
+    (ngSubmit)="onSubmit()"
+  >
+    <div class="lisu-form-group">
+      <label for="new-comment" class="add-comment-title">Add New Comment:</label>
+      <textarea
+        formControlName="content"
+        id="new-comment"
+        placeholder="Write your comment here..."
+      ></textarea>
+    </div>
+    <div class="two-option-buttons" id="post-detail-submit-buttons">
+      <button type="submit" [disabled]="!commentForm.valid">Submit</button>
+      <button type="button" (click)="onCancel()">Cancel</button>
+    </div>
+  </form>
 </div>

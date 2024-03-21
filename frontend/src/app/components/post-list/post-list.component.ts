@@ -198,15 +198,15 @@ export class PostListComponent implements OnInit, OnDestroy {
   }
 
   setPermissions(): void {
+    // Set permissions for unauthenticated user
+    if (!this.isAuthenticated) {
+      this.posts.map((post) => this.setPermissionsForUnauthenticatedUser(post));
+      return;
+    }
     // Set permissions for admin user
     const user = this.userService.getUser()
     if (user.isAdmin) {
       this.posts.map((post) => (post.canEdit = true));
-      return;
-    }
-    // Set permissions for unauthenticated user
-    if (!this.isAuthenticated) {
-      this.posts.map((post) => this.setPermissionsForUnauthenticatedUser(post));
       return;
     }
     // Set permissions for bloggers Users

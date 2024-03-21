@@ -10,9 +10,13 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { Title } from '@angular/platform-browser';
 import { LikeCounterComponent } from '../../components/like-counter/like-counter.component';
 import { LikeList } from '../../models/interfaces/like.interface';
-import { CommentList, CommentListDTO } from '../../models/interfaces/comment.interface';
+import { CommentList, CommentCreated } from '../../models/interfaces/comment.interface';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { Pagination } from '../../models/enums/constants.enum';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UnexpectedErrorComponent } from '../../components/unexpected-error/unexpected-error.component';
+import { UserStateService } from '../../services/user-state.service';
+import { User } from '../../models/interfaces/user.interface';
 
 @Component({
   selector: 'app-post-detail',
@@ -23,34 +27,46 @@ import { Pagination } from '../../models/enums/constants.enum';
     MatPaginatorModule,
     CommonModule,
     DatePipe,
+    ReactiveFormsModule,
+    UnexpectedErrorComponent
   ],
   templateUrl: './post-detail.component.html',
   styleUrl: './post-detail.component.sass'
 })
 export class PostDetailComponent implements OnInit {
   isAuthenticated = false;
+  pageTitle = 'Post Detail';
   postId!: number;
   post: PostRetrieve | undefined;
   likes: LikeList | undefined;
   comments: CommentList | undefined;
+  commentCount: number = 0;
   previousComments: CommentList | undefined;
   previousCommentPageIndex = 0;
   commentPageSize = Pagination.COMMENT_PAGE_SIZE;
-  pageTitle = 'Post Detail';
+  commentForm!: FormGroup;
+  wasAnError = false;
+  errorMessage: string = '';
 
   constructor(
     private postService: PostService,
     private likeService: LikeService,
     private commentService: CommentService,
     private authService: AuthService,
+    private userService: UserStateService,
     private route: ActivatedRoute,
-    private title: Title
+    private title: Title,
+    private formBuilder: FormBuilder
   ) {}
 
   ngOnInit(): void {
     this.title.setTitle(this.pageTitle);
     this.authService.isAuthenticated$.subscribe((isAuthenticated) => {
       this.isAuthenticated = isAuthenticated;
+      if (!isAuthenticated) return;
+      this.commentForm = this.formBuilder.group({
+        content: ['', [Validators.required]],
+      });
     });
     this.route.paramMap.subscribe((params) => {
       this.postId = +params.get('id')!;
@@ -67,7 +83,8 @@ export class PostDetailComponent implements OnInit {
         this.getCommentsByPost();
       },
       error: (error) => {
-        console.error(error);
+        this.wasAnError = true;
+        this.errorMessage = error.message;
       }
     });
   }
@@ -80,6 +97,13 @@ export class PostDetailComponent implements OnInit {
 
   handleLikePageChange(pageIndexLikes: number): void {
     this.getLikesByPost(pageIndexLikes);
+  }
+
+  getCommentsByPost(pageIndexComments: number = 0): void {
+    this.commentService.getCommentsByPost(this.postId, pageIndexComments).subscribe((comments) => {
+      this.comments = comments;
+      this.commentCount = comments.count;
+    });
   }
 
   handleCommentPageChange(e: PageEvent): void {
@@ -97,10 +121,35 @@ export class PostDetailComponent implements OnInit {
     }
   }
 
-  getCommentsByPost(pageIndexComments: number = 0): void {
-    this.commentService.getCommentsByPost(this.postId, pageIndexComments).subscribe((comments) => {
-      this.comments = comments;
+
+  onSubmit() {
+    if (this.commentForm.invalid || !this.isAuthenticated) return;
+    const content = this.commentForm.value.content;
+    const user = this.userService.getUser();
+    this.commentService.createComment(this.postId, user.id, content).subscribe((comment) => {
+      this.addCommentToLayout(comment, user);
+      this.commentCount++;
+      this.commentForm.reset();
     });
+  }
+
+  addCommentToLayout(comment: CommentCreated, user: User) {
+    // If pagination is applied, the comment will be added to the next page
+    if (this.commentCount >= this.commentPageSize) return;
+    const layOutComment = {
+      user: {
+        firstName: user.firstName,
+        lastName: user.lastName
+      },
+      content: comment.content,
+      createdAt: comment.createdAt,
+      id: comment.id
+    }
+    this.comments!.results.push(layOutComment);
+  }
+
+  onCancel() {
+    this.commentForm.reset();
   }
 
   get commentsBy() {
@@ -111,7 +160,4 @@ export class PostDetailComponent implements OnInit {
     return this.post?.content;
   }
 
-  get commentCount() {
-    return this.comments!.count;
-  }
 }
