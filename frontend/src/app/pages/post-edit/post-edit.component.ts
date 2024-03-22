@@ -11,6 +11,8 @@ import { Category, CategoryDescription } from '../../models/enums/category.enum'
 import { InversePermissionMap, PermissionDescription } from '../../models/enums/permission.enum';
 import { PermissionFormComponent } from '../../components/permission-form/permission-form.component';
 import { setCategoryPermissions } from '../../shared/utils';
+import { MatDialog } from '@angular/material/dialog';
+import { TwoOptionsPopUpComponent } from '../../components/two-options-pop-up/two-options-pop-up.component';
 
 @Component({
   selector: 'app-post-edit',
@@ -35,7 +37,6 @@ export class PostEditComponent implements OnInit {
   ownerPermission!: PermissionDescription;
   wasAnError = false;
   errorMessage: string = '';
-  successMessage: string = '';
 
   constructor(
     private router: Router,
@@ -43,7 +44,8 @@ export class PostEditComponent implements OnInit {
     private postService: PostService,
     private formBuilder: FormBuilder,
     private title: Title,
-    private location: Location
+    private location: Location,
+    private popUpService: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -92,15 +94,28 @@ export class PostEditComponent implements OnInit {
     };
     this.postService.update(post).subscribe({
       next: () => {
-        this.successMessage = 'Post updated successfully';
-        setTimeout(() => {
-          this.router.navigate(['/post', this.postId]);
-        }, 2000);
+        this.displayPopUp(true);
+        this.router.navigate(['/post', this.postId]);
+
       },
       error: (error) => {
+        this.displayPopUp(false);
         this.wasAnError = true;
         this.errorMessage = error;
       }
+    });
+  }
+
+  displayPopUp(success: boolean) {
+    const data = {
+      title: 'Post edit',
+      question: '',
+      content: success ? `Post has been edited successfully` : 'Failed to edit post, please try again.',
+      action: 'Ok',
+      hideCancel: true,
+    }
+    this.popUpService.open(TwoOptionsPopUpComponent, {
+      data: data
     });
   }
 

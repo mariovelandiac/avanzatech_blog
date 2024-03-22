@@ -13,6 +13,8 @@ import { category_permission } from '../../models/interfaces/post.interface';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { setCategoryPermissions } from '../../shared/utils';
+import { MatDialog } from '@angular/material/dialog';
+import { TwoOptionsPopUpComponent } from '../../components/two-options-pop-up/two-options-pop-up.component';
 
 @Component({
   selector: 'app-post-create',
@@ -40,7 +42,8 @@ export class PostCreateComponent implements OnInit {
     private formBuilder: FormBuilder,
     private postService: PostService,
     private router: Router,
-    private location: Location
+    private location: Location,
+    private popUpService: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -67,17 +70,30 @@ export class PostCreateComponent implements OnInit {
     };
     this.postService.create(post).subscribe({
       next: (response) => {
+        this.displayPopUp(true);
         this.postForm.reset();
-        this.successMessage = 'Post created successfully';
-        setTimeout(() => {
-          this.router.navigate(['/home']);
-        }, 2000);
+        this.router.navigate(['/home']);
+
       },
       error: (error) => {
         this.errorMessage = error;
         this.wasAnError = true;
+        this.displayPopUp(false);
       }
     })
+  }
+
+  displayPopUp(success: boolean) {
+    const data = {
+      title: 'Post creation',
+      question: '',
+      content: success ? `Post: ${this.titleControl!.value} has been created successfully` : 'Failed to create post, please try again.',
+      action: 'Ok',
+      hideCancel: true,
+    }
+    this.popUpService.open(TwoOptionsPopUpComponent, {
+      data: data
+    });
   }
 
   setCategoryPermissions(): category_permission[] {

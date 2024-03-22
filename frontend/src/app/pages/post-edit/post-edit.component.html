@@ -32,7 +32,6 @@
       [defaultPermission]="ownerPermission"
       ></app-permission-form>
     </div>
-    <p *ngIf="successMessage" class="success-message">{{ successMessage }}</p>
     <div class="two-option-buttons post-submit-buttons">
       <button type="submit" [disabled]="!postForm.valid">Save</button>
       <button type="button" (click)="onCancel()">Cancel</button>
