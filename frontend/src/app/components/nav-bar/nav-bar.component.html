@@ -10,7 +10,10 @@
     </div>
   </div>
   <div id="nav-action-container" class="nav-item">
-    <h1 *ngIf="isAuthenticated" class="welcome-message">Welcome, {{ firstName }}</h1>
+    <div *ngIf="isAuthenticated" class="welcome-logout-container">
+      <h1 class="welcome-message">Welcome, {{ firstName }}</h1>
+      <fa-icon *ngIf="!isIconDisabled" [icon]="logoutIcon" (click)="onLogout()"></fa-icon>
+    </div>
     <div *ngIf="!isAuthenticated">
       <a routerLink="/login">Login</a>
       <a routerLink="/signup">Register</a>

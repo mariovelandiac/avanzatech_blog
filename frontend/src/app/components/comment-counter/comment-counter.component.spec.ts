@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CommentCounterComponent } from './comment-counter.component';
 import { RouterTestingModule } from '@angular/router/testing';
-import { mockCommentListDTO } from '../../test-utils/comment.model.mock';
+import { mockCommentList, mockCommentListDTO } from '../../test-utils/comment.model.mock';
 import { Router } from '@angular/router';
 
 describe('CommentCounterComponent', () => {
@@ -17,7 +17,7 @@ describe('CommentCounterComponent', () => {
 
     fixture = TestBed.createComponent(CommentCounterComponent);
     component = fixture.componentInstance;
-    component.comments = mockCommentListDTO;
+    component.comments = mockCommentList;
     component.postId = mockCommentListDTO.results[0].post;
     router = TestBed.inject(Router);
     fixture.detectChanges();

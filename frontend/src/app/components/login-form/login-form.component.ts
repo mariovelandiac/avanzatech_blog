@@ -41,6 +41,7 @@ export class LogInFormComponent implements OnInit {
 
   onSubmit() {
     this.errorMessage = '';
+    this.emailToLowerCase();
     this.authService.logIn(this.logInForm.value).subscribe({
       next: (response: UserLoginDTO) => {
         this.userService.clearUserJustSignUp();
@@ -56,6 +57,11 @@ export class LogInFormComponent implements OnInit {
 
   onCancel() {
     this.logInForm.reset();
+  }
+
+  emailToLowerCase() {
+    const email = this.emailControl!.value;
+    this.emailControl!.setValue(email.toLowerCase());
   }
 
   togglePasswordVisibility() {

@@ -17,11 +17,11 @@ import { Category } from '../../models/enums/category.enum';
 import { Permission } from '../../models/enums/permission.enum';
 import { User } from '../../models/interfaces/user.interface';
 import { MatDialog } from '@angular/material/dialog';
-import { PostDeleteDialogComponent } from '../post-delete-dialog/post-delete-dialog.component';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { Pagination } from '../../models/enums/constants.enum';
 import { UnexpectedErrorComponent } from '../unexpected-error/unexpected-error.component';
 import { PostTitleTeamUserComponent } from '../post-title-team-user/post-title-team-user.component';
+import { TwoOptionsPopUpComponent } from '../two-options-pop-up/two-options-pop-up.component';
 
 @Component({
   selector: 'app-post-list',
@@ -38,6 +38,7 @@ import { PostTitleTeamUserComponent } from '../post-title-team-user/post-title-t
     UnexpectedErrorComponent,
     CommonModule,
     MatPaginatorModule,
+    TwoOptionsPopUpComponent,
   ],
   templateUrl: './post-list.component.html',
   styleUrl: './post-list.component.sass',
@@ -57,12 +58,15 @@ export class PostListComponent implements OnInit, OnDestroy {
     private commentService: CommentService,
     private authService: AuthService,
     private userService: UserStateService,
-    private deletePopUp: MatDialog
+    private popUpService: MatDialog
   ) {}
 
   ngOnInit() {
     this.authService.isAuthenticated$.subscribe((isAuthenticated) => {
       this.isAuthenticated = isAuthenticated;
+      if (!isAuthenticated) {
+        this.fetchData(0);
+      }
     });
     const initialPage = 0;
     this.fetchData(initialPage);
@@ -178,13 +182,18 @@ export class PostListComponent implements OnInit, OnDestroy {
   }
 
   openDeleteConfirmationPopUp(postId: number, postTitle: string) {
-    const deleteDialog = this.deletePopUp.open(PostDeleteDialogComponent, {
-      data: { title: postTitle },
+    const deleteDialog = this.popUpService.open(TwoOptionsPopUpComponent, {
+      data: {
+        title: "Alert",
+        content: postTitle,
+        question: 'Are you sure you want to delete ',
+        action: 'Delete',
+        hideCancel: true,
+      },
     });
 
-    deleteDialog.afterClosed().subscribe((result: string) => {
-      const cancelOperation = result === "false" || result === undefined;
-      if (cancelOperation) return;
+    deleteDialog.afterClosed().subscribe((result: boolean) => {
+      if (!result) return;
       const pageIndex = 0;
       this.postService.delete(postId).subscribe({
         next: () => {
