@@ -6,7 +6,8 @@ import { PostDetailComponent } from './pages/post-detail/post-detail.component';
 import { PostEditComponent } from './pages/post-edit/post-edit.component';
 import { PostCreateComponent } from './pages/post-create/post-create.component';
 import { LayoutComponent } from './pages/layout/layout.component';
-import { loginSignUpGuard, postCreateGuard } from './guards/auth.guard';
+import { postCreateGuard } from './guards/login-signup.guard';
+import { loginSignupGuard } from './guards/login-signup.guard';
 
 export const routes: Routes = [
   {
@@ -40,12 +41,12 @@ export const routes: Routes = [
   {
     path: 'signup',
     component: SignUpComponent,
-    canActivate: [loginSignUpGuard],
+    canActivate: [loginSignupGuard],
   },
   {
     path: 'login',
     component: LoginComponent,
-    canActivate: [loginSignUpGuard],
+    canActivate: [loginSignupGuard],
   },
 
   {
