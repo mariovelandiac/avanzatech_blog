@@ -12,6 +12,7 @@ import { PostService } from '../../services/post.service';
 import { category_permission } from '../../models/interfaces/post.interface';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
+import { setCategoryPermissions } from '../../shared/utils';
 
 @Component({
   selector: 'app-post-create',
@@ -62,7 +63,7 @@ export class PostCreateComponent implements OnInit {
     const post = {
       title: this.titleControl?.value as string,
       content: this.contentControl?.value as string,
-      category_permission: this.setCategoryPermissions()
+      category_permission: setCategoryPermissions(this.postForm)
     };
     this.postService.create(post).subscribe({
       next: (response) => {
@@ -70,7 +71,7 @@ export class PostCreateComponent implements OnInit {
         this.successMessage = 'Post created successfully';
         setTimeout(() => {
           this.router.navigate(['/home']);
-        }, 3000);
+        }, 2000);
       },
       error: (error) => {
         this.errorMessage = error;
@@ -100,21 +101,5 @@ export class PostCreateComponent implements OnInit {
 
   get editPermission() {
     return PermissionDescription.EDIT;
-  }
-
-  get public() {
-    return CategoryDescription.PUBLIC
-  }
-
-  get authenticated() {
-    return CategoryDescription.AUTHENTICATED
-  }
-
-  get team() {
-    return CategoryDescription.TEAM
-  }
-
-  get owner() {
-    return CategoryDescription.OWNER
   }
  }

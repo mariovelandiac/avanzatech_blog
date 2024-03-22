@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment.development';
 import { Observable, catchError, map, of, tap, throwError } from 'rxjs';
-import { Post, PostList, PostDTO, PostListDTO, PostRetrieveDTO, PostRetrieve, PostCommon, PostCreateDTO } from '../models/interfaces/post.interface';
+import { Post, PostList, PostDTO, PostListDTO, PostRetrieveDTO, PostRetrieve, PostCommon, PostCreateDTO, PostUpdateDTO } from '../models/interfaces/post.interface';
 import { Pagination } from '../models/enums/constants.enum';
 
 @Injectable({
@@ -21,6 +21,14 @@ export class PostService {
     return this.httpService.post<PostDTO>(this.postEndpoint, post)
     .pipe(
       map(() => true),
+      catchError(this.handleError)
+    );
+  }
+
+  update(post: PostUpdateDTO): Observable<PostRetrieve> {
+    return this.httpService.put<PostRetrieveDTO>(`${this.postEndpoint}${post.id}/`, post)
+    .pipe(
+      map(this.transformPostRetrieve),
       catchError(this.handleError)
     );
   }

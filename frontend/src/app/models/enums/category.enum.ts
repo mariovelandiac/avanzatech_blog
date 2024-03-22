@@ -17,4 +17,13 @@ export const CategoryMap: Readonly<{[key in CategoryDescription]: Category}> = {
   [CategoryDescription.OWNER]: Category.AUTHOR,
 };
 
+export const InverseCategoryMap: Readonly<{[key in Category]: CategoryDescription}> = {
+  [Category.PUBLIC]: CategoryDescription.PUBLIC,
+  [Category.AUTHENTICATED]: CategoryDescription.AUTHENTICATED,
+  [Category.TEAM]: CategoryDescription.TEAM,
+  [Category.AUTHOR]: CategoryDescription.OWNER,
+};
+
 export const CategoriesAT: readonly string[] = Object.keys(CategoryMap);
+
+export const CategoriesId: ReadonlyArray<number> = Object.values(CategoryMap);

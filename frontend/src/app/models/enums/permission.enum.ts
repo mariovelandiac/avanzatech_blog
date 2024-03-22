@@ -17,4 +17,10 @@ export const PermissionMap: Readonly<{[key in PermissionDescription]: Permission
   [PermissionDescription.NO_PERMISSION]: Permission.NO_PERMISSION
 }
 
+export const InversePermissionMap: Readonly<{[key in Permission]: PermissionDescription}> = {
+  [Permission.READ]: PermissionDescription.READ,
+  [Permission.EDIT]: PermissionDescription.EDIT,
+  [Permission.NO_PERMISSION]: PermissionDescription.NO_PERMISSION
+};
+
 export const PermissionsAT: readonly string[] = Object.keys(PermissionMap);

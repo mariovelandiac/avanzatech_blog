@@ -1,10 +1,12 @@
+import { Category } from "../enums/category.enum";
+import { Permission } from "../enums/permission.enum";
 import { CommentList } from "./comment.interface";
 import { LikeList } from "./like.interface";
 import { UserDTO, UserRelated } from "./user.interface";
 
 export interface category_permission {
-  category: number;
-  permission: number;
+  category: Category;
+  permission: Permission;
 }
 interface BasePost {
   id: number;
@@ -56,6 +58,13 @@ export interface PostRetrieve extends PostCommon {
 
 
 export interface PostCreateDTO {
+  title: string;
+  content: string;
+  category_permission: category_permission[];
+}
+
+export interface PostUpdateDTO {
+  id: number;
   title: string;
   content: string;
   category_permission: category_permission[];

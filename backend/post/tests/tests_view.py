@@ -1532,7 +1532,7 @@ class PostAuthenticatedUserUpdateViewTests(APITestCase):
         post = PostFactory()
         PostCategoryPermissionFactory(post=post, category_permission=self.factory_category_permission)
         url = reverse('post-retrieve-update-delete', args=[post.id])
-        # The sending category_permission should be the same as the current category_permissin in the db
+        # The sending category_permission should be the same as the current category_permission in the db
         category_permission = create_custom_category_permissions_handler(self.categories, self.permissions, self.factory_category_permission)
         data = {
             'title': 'New title',
