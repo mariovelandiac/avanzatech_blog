@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment.development';
 import { Observable, catchError, map, of, tap, throwError } from 'rxjs';
-import { Post, PostList, PostDTO, PostListDTO, PostRetrieveDTO, PostRetrieve, PostCommon } from '../models/interfaces/post.interface';
+import { Post, PostList, PostDTO, PostListDTO, PostRetrieveDTO, PostRetrieve, PostCommon, PostCreateDTO } from '../models/interfaces/post.interface';
 import { Pagination } from '../models/enums/constants.enum';
 
 @Injectable({
@@ -17,6 +17,14 @@ export class PostService {
     private httpService: HttpClient
   ) {}
 
+  create(post: PostCreateDTO): Observable<boolean> {
+    return this.httpService.post<PostDTO>(this.postEndpoint, post)
+    .pipe(
+      map(() => true),
+      catchError(this.handleError)
+    );
+  }
+
   list(pageIndex: number): Observable<PostList> {
     if (this.cachedPosts[pageIndex]) {
       return of(this.cachedPosts[pageIndex]);
@@ -29,7 +37,7 @@ export class PostService {
           posts: results.map(this.transformPost)
         })),
         tap((posts) => this.cachedPosts[pageIndex] = posts),
-        catchError(this.handleListDeleteErrors)
+        catchError(this.handleError)
       );
   }
 
@@ -37,7 +45,7 @@ export class PostService {
     return this.httpService.get<PostRetrieveDTO>(`${this.postEndpoint}${id}/`)
       .pipe(
         map(this.transformPostRetrieve),
-        catchError(this.handleRetrieveError)
+        catchError(this.handleError)
       );
   }
 
@@ -47,30 +55,29 @@ export class PostService {
       tap(() => {
         this.cachedPosts = {};
       }),
-      catchError(this.handleListDeleteErrors)
+      catchError(this.handleError)
       );
   }
 
-  handleListDeleteErrors(error: HttpErrorResponse): Observable<never> {
-    let errorMessage = 'An unexpected error has occurred';
-    if (error.status === 0) {
-      errorMessage = 'No internet connection';
-    } else if (error.status !== 500 && error.status !== undefined) {
-      errorMessage = `Something went wrong. Please try again later. Status code: ${error.status}.`;
-    }
-    return throwError(() => new Error(errorMessage))
-  }
-
-  handleRetrieveError(error: HttpErrorResponse): Observable<never> {
-    let errorMessage = 'An unexpected error has occurred';
-    if (error.status === 0) {
-      errorMessage = 'No internet connection';
-    } else if (error.status === 404) {
-      errorMessage = 'Error 404: Post not found';
-    } else if (error.status === 400) {
-      errorMessage = `Error 400: Bad request: ${error.error.detail}`;
-    } else {
-      errorMessage = `Something went wrong. Please try again later. Status code: ${error.status}.`;
+  handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage: string;
+    const errorStatus = error.status;
+    switch (errorStatus) {
+      case 0:
+        errorMessage = 'No internet connection';
+        break;
+      case 404:
+        errorMessage = 'Error 404: Post not found';
+        break;
+      case 400:
+        errorMessage = `Error 400: Bad request: ${error.error.detail}`;
+        break;
+      case 500:
+        errorMessage = 'Error 500: Internal server error';
+        break;
+      default:
+          errorMessage = `Something went wrong. Please try again later. Status code: ${errorStatus}.`;
+        break;
     }
     return throwError(() => new Error(errorMessage))
   }

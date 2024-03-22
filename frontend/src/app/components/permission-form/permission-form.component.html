@@ -1,0 +1,6 @@
+<div *ngIf="category" class="category-permission-container">
+  <label>{{ category }}</label>
+  <select [formControlName]="category" class="permission-select">
+    <option *ngFor="let permission of permissions" [value]="permission">{{ permission }}</option>
+  </select>
+</div>

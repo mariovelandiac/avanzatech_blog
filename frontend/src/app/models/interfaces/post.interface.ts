@@ -2,7 +2,7 @@ import { CommentList } from "./comment.interface";
 import { LikeList } from "./like.interface";
 import { UserDTO, UserRelated } from "./user.interface";
 
-interface category_permission {
+export interface category_permission {
   category: number;
   permission: number;
 }
@@ -55,3 +55,8 @@ export interface PostRetrieve extends PostCommon {
 }
 
 
+export interface PostCreateDTO {
+  title: string;
+  content: string;
+  category_permission: category_permission[];
+}

@@ -1,1 +1,41 @@
-<p>post-create works!</p>
+<app-unexpected-error *ngIf="wasAnError" [errorMessage]="errorMessage"></app-unexpected-error>
+<app-back-button (click)="goBack()"></app-back-button>
+<div *ngIf="!wasAnError">
+  <form [formGroup]="postForm" class="post-form-container" (ngSubmit)="onSubmit()">
+    <div class="lisu-form-group">
+      <label for="title" id="title-label">Title:<app-required-field *ngIf="titleControl?.invalid"/></label>
+      <textarea formControlName="title" id="title" placeholder="Write your title here..."></textarea>
+    </div>
+    <div class="lisu-form-group">
+      <label for="content" id="content-label">Content:<app-required-field *ngIf="contentControl?.invalid"/></label>
+      <textarea formControlName="content" id="content" placeholder="Write your content here..."></textarea>
+    </div>
+    <div class="access-form-container">
+      <div class="access-form-titles">
+        <h2>Category</h2>
+        <h2>Access</h2>
+      </div>
+      <app-permission-form
+      [category]="public"
+      [defaultPermission]="readPermission"
+      ></app-permission-form>
+      <app-permission-form
+      [category]="authenticated"
+      [defaultPermission]="readPermission"
+      ></app-permission-form>
+      <app-permission-form
+      [category]="team"
+      [defaultPermission]="editPermission"
+      ></app-permission-form>
+      <app-permission-form
+      [category]="owner"
+      [defaultPermission]="editPermission"
+      ></app-permission-form>
+    </div>
+    <p *ngIf="successMessage" id="success-message">{{ successMessage }}</p>
+    <div class="two-option-buttons" id="post-create-submit-buttons">
+      <button type="submit" [disabled]="!postForm.valid">Save</button>
+      <button type="button" (click)="onCancel()">Cancel</button>
+    </div>
+  </form>
+</div>
