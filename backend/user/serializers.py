@@ -42,3 +42,6 @@ class CustomUserLoginSerializer(serializers.Serializer):
         if not CustomUser.objects.filter(email=email).exists():
             raise serializers.ValidationError('A user with this email was not found.')
         return data
+
+class CustomUserLogoutSerializer(serializers.Serializer):
+    pass

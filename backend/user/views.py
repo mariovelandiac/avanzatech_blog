@@ -4,10 +4,10 @@ from django.shortcuts import render, redirect
 from rest_framework.settings import api_settings
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, CreateAPIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
-from user.serializers import CustomUserCreateSerializer, CustomUserLoginSerializer
+from user.serializers import CustomUserCreateSerializer, CustomUserLoginSerializer, CustomUserLogoutSerializer
 
 
 def logout_view(request):
@@ -55,5 +55,12 @@ class UserLoginView(GenericAPIView):
             return {'Location': str(data[api_settings.URL_FIELD_NAME])}
         except (TypeError, KeyError):
             return {}
+
+class UserLogoutView(GenericAPIView):
+    serializer_class = CustomUserLogoutSerializer
+    permission_classes = [IsAuthenticated,]
+    def post(self, request):
+        logout(request)
+        return Response(status=status.HTTP_200_OK)
 
 

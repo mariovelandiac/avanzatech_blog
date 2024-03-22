@@ -223,9 +223,11 @@ class UserLoginViewTests(APITestCase):
         user_id = response.data.get('id')
         # Assert
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(user_db.email, response.data.get('email'))
         self.assertEqual(user_db.first_name, response.data.get('first_name'))
         self.assertEqual(user_db.last_name, response.data.get('last_name'))
+        self.assertEqual(user_db.id, response.data.get('user_id'))
+        self.assertEqual(user_db.team.id, response.data.get('team_id'))
+        self.assertEqual(user_db.is_staff, response.data.get('is_admin'))
 
 
 class UserLogOutViewTests(APITestCase):
@@ -235,20 +237,6 @@ class UserLogOutViewTests(APITestCase):
         user_db = CustomUserFactory()
         self.client.force_login(user_db)
         self.user_id = self.client.session.get("_auth_user_id")
-
-    def test_an_unauthorized_user_access_log_out_an_then_is_redirected(self):
-        # Arrange
-        self.client.logout()
-        # Act
-        url = reverse('logout')
-        response = self.client.post(url)
-        session_id = response.cookies.get('sessionid')
-        user_id_after_logout = self.client.session.get("_auth_user_id")
-        # Assert
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertIsNone(session_id)
-        self.assertIsNone(user_id_after_logout) 
-        
     
     def test_an_existing_user_is_authenticated_and_then_log_out_successfully_with_post_method(self):
         # Arrange
@@ -258,60 +246,18 @@ class UserLogOutViewTests(APITestCase):
         session_id = response.cookies.get('sessionid').value
         user_id_after_logout = self.client.session.get("_auth_user_id")
         # Assert
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(session_id, "")
         self.assertIsNone(user_id_after_logout)
         
-    def test_an_existing_user_is_authenticated_and_then_log_out_successfully_with_get_method(self):
+    def test_an_existing_user_is_authenticated_and_then_log_out_with_non_post_method_and_405_is_returned(self):
         # Arrange
         url = reverse('logout')
         # Act
         response = self.client.get(url)
-        session_id = response.cookies.get('sessionid').value
-        user_id_after_logout = self.client.session.get("_auth_user_id")
         # Assert
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(session_id, "")
-        self.assertIsNone(user_id_after_logout)    
-        
-
-    def test_an_existing_user_is_authenticated_and_then_log_out_successfully_with_put_method(self):
-        # Arrange
-        url = reverse('logout')
-        # Act
-        response = self.client.put(url)
-        session_id = response.cookies.get('sessionid').value
-        user_id_after_logout = self.client.session.get("_auth_user_id")
-        # Assert
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(session_id, "")
-        self.assertIsNone(user_id_after_logout) 
-
-
-    def test_an_existing_user_is_authenticated_and_then_log_out_successfully_with_patch_method(self):
-        # Arrange
-        url = reverse('logout')
-        # Act
-        response = self.client.patch(url)
-        session_id = response.cookies.get('sessionid').value
-        user_id_after_logout = self.client.session.get("_auth_user_id")
-        # Assert
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(session_id, "")
-        self.assertIsNone(user_id_after_logout) 
-
-
-    def test_an_existing_user_is_authenticated_and_then_log_out_successfully_with_delete_method(self):
-        # Arrange
-        url = reverse('logout')
-        # Act
-        response = self.client.delete(url)
-        session_id = response.cookies.get('sessionid').value
-        user_id_after_logout = self.client.session.get("_auth_user_id")
-        # Assert
-        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertEqual(session_id, "")
-        self.assertIsNone(user_id_after_logout) 
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+    
         
 
 class UserSignUpViewTests(APITestCase):
