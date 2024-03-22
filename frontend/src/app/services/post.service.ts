@@ -11,7 +11,6 @@ import { Pagination } from '../models/enums/constants.enum';
 export class PostService {
   postEndpoint = `${environment.api}/blog/`
   pageSize = Pagination.POST_PAGE_SIZE;
-  cachedPosts: { [pageIndex: number]: PostList } = {}
 
   constructor(
     private httpService: HttpClient
@@ -34,9 +33,6 @@ export class PostService {
   }
 
   list(pageIndex: number): Observable<PostList> {
-    if (this.cachedPosts[pageIndex]) {
-      return of(this.cachedPosts[pageIndex]);
-    }
     const postEndpointPaginated = `${this.postEndpoint}?page=${pageIndex + 1}&page_size=${this.pageSize}`;
     return this.httpService.get<PostListDTO>(postEndpointPaginated)
       .pipe(
@@ -44,7 +40,6 @@ export class PostService {
           count,
           posts: results.map(this.transformPost)
         })),
-        tap((posts) => this.cachedPosts[pageIndex] = posts),
         catchError(this.handleError)
       );
   }
@@ -60,9 +55,6 @@ export class PostService {
   delete(id: number): Observable<void> {
     return this.httpService.delete<void>(`${this.postEndpoint}${id}/`)
     .pipe(
-      tap(() => {
-        this.cachedPosts = {};
-      }),
       catchError(this.handleError)
       );
   }

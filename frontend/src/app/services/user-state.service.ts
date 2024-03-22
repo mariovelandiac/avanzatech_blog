@@ -7,7 +7,7 @@ import { SignUpService } from './sign-up.service';
 })
 export class UserStateService {
   private userJustSignedUp!: UserJustSignUp;
-  private user!: User;
+  private user!: User | null;
 
   constructor(private signUpService: SignUpService) {
     const storedUser = localStorage.getItem('user');
@@ -21,7 +21,7 @@ export class UserStateService {
   }
 
   getUser(): User {
-    return this.user;
+    return this.user!;
   }
 
   setUserJustSignUp(user: UserJustSignUp) {
@@ -30,6 +30,11 @@ export class UserStateService {
 
   getUserJustSignUp() {
     return this.userJustSignedUp;
+  }
+
+  clearUser() {
+    this.user = null;
+    localStorage.removeItem('user');
   }
 
   clearUserJustSignUp() {

@@ -1,18 +1,23 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, catchError, tap, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, tap, throwError } from 'rxjs';
 import { UserLoginDTO, UserLogIn } from '../models/interfaces/user.interface';
 import { environment } from '../../environments/environment.development';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { UserStateService } from './user-state.service';
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
 
   private loginEndpoint = `${environment.api}/user/login/`;
+  private logoutEndpoint = `${environment.api}/user/logout/`;
   private isAuthenticated = new BehaviorSubject<boolean>(false);
   isAuthenticated$ = this.isAuthenticated.asObservable();
 
-  constructor(private httpService: HttpClient) {
+  constructor(
+    private httpService: HttpClient,
+    private userService: UserStateService
+    ) {
       // Initialize the authentication status
       const storedAuth = localStorage.getItem('isAuthenticated');
       if (storedAuth)
@@ -30,6 +35,21 @@ export class AuthService {
       .pipe(
         catchError(this.handleError)
       );
+  }
+
+  logOut(): Observable<boolean> {
+    return this.httpService.post(this.logoutEndpoint, {})
+    .pipe(
+      map(() => true),
+      tap(() => this.clearAuth()),
+      catchError(this.handleError)
+    );
+  }
+
+  clearAuth() {
+    this.setAuthentication(false);
+    localStorage.removeItem('token');
+    this.userService.clearUser();
   }
 
   handleError(error: HttpErrorResponse) {
@@ -58,7 +78,11 @@ export class AuthService {
 
   setAuthentication(isAuthenticated: boolean) {
     this.isAuthenticated.next(isAuthenticated);
-    localStorage.setItem('isAuthenticated', JSON.stringify(isAuthenticated));
+    if (isAuthenticated) {
+      localStorage.setItem('isAuthenticated', JSON.stringify(isAuthenticated));
+    } else {
+      localStorage.removeItem('isAuthenticated');
+    }
   }
 
   getAuthentication(): boolean {

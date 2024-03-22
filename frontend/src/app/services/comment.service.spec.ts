@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { CommentService } from './comment.service';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { mockCommentListDTO } from '../test-utils/comment.model.mock';
+import { mockCommentList, mockCommentListDTO } from '../test-utils/comment.model.mock';
 
 describe('CommentService', () => {
   let service: CommentService;
@@ -26,7 +26,7 @@ describe('CommentService', () => {
     // Act
     service.getCommentsByPost(postId).subscribe((data) => {
       // Assert
-      expect(data).toEqual(mockCommentListDTO);
+      expect(data).toEqual(mockCommentList);
     });
     // Assert
     const req = httpMock.expectOne(`${service.commentEndpoint}?page_size=${service.pageSize}&post=${postId}`);
