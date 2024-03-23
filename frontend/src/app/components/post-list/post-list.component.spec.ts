@@ -235,14 +235,18 @@ describe('PostListComponent', () => {
     });
   });
 
-  it('should set permissions', () => {
+  it('should set permissions for admin user', () => {
     // Arrange
+    component.isAuthenticated = true;
     const user = userService.getUser();
     user.isAdmin = true;
     // Act
     component.setPermissions();
     // Assert
     expect(component.posts.every(post => post.canEdit)).toBeTrue();
+    // Revert changes
+    component.posts.every(post => post.canEdit = false);
+    user.isAdmin = false;
   });
 
   it('should set permissions for unauthenticated user', () => {

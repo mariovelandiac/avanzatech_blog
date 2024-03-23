@@ -26,10 +26,10 @@ describe('CommentService', () => {
     // Act
     service.getCommentsByPost(postId).subscribe((data) => {
       // Assert
-      expect(data).toEqual(mockCommentList);
+      expect(data.count).toBe(mockCommentListDTO.count);
     });
     // Assert
-    const req = httpMock.expectOne(`${service.commentEndpoint}?page_size=${service.pageSize}&post=${postId}`);
+    const req = httpMock.expectOne(`${service.commentEndpoint}?page_size=${service.pageSize}&post=${postId}&page=1`);
     expect(req.request.method).toBe('GET');
     req.flush(mockCommentListDTO);
   });

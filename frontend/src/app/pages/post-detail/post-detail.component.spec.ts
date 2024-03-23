@@ -1,6 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { PostDetailComponent } from './post-detail.component';
+import { PostService } from '../../services/post.service';
+import { mockPostService } from '../../test-utils/post.service.mock';
+import { LikeService } from '../../services/like.service';
+import { mockLikeService } from '../../test-utils/like.service.mock';
+import { CommentService } from '../../services/comment.service';
+import { mockCommentService } from '../../test-utils/comment.service.mock';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { RouterTestingHarness, RouterTestingModule } from '@angular/router/testing';
 
 describe('PostDetailComponent', () => {
   let component: PostDetailComponent;
@@ -8,7 +16,21 @@ describe('PostDetailComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PostDetailComponent]
+      imports: [HttpClientTestingModule, RouterTestingModule.withRoutes([])],
+      providers: [
+        {
+          provide: PostService,
+          useClass: mockPostService
+        },
+        {
+          provide: LikeService,
+          useClass: mockLikeService
+        },
+        {
+          provide: CommentService,
+          useClass: mockCommentService
+        }
+      ]
     })
     .compileComponents();
 

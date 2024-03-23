@@ -35,4 +35,9 @@ export const mockUser: User  = {
   isAdmin: false
 }
 
+export const mockBaseUser: BaseUser = {
+  firstName: 'Test',
+  lastName: 'Test'
+}
+
 

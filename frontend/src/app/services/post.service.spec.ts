@@ -60,7 +60,7 @@ describe('PostService', () => {
       next: () => {fail('The request should have failed')},
       error: (error) => {
         expect(error).toBeInstanceOf(Error);
-        expect(error.message).toBe('An unexpected error has occurred');
+        expect(error.message).toBe('Error 500: Internal server error');
       }
     })
     // Assert
